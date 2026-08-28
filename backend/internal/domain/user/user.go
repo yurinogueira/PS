@@ -13,7 +13,7 @@ type User struct {
 	EmailVerificationExpiresAt *time.Time `json:"-"`
 	PasswordResetTokenHash     string     `json:"-"`
 	PasswordResetExpiresAt     *time.Time `json:"-"`
-	MaxVehicles                int        `json:"maxVehicles"`
+	TenantID                   string     `json:"tenantId"`
 	CreatedAt                  time.Time  `json:"createdAt"`
 	UpdatedAt                  time.Time  `json:"updatedAt,omitempty"`
 }

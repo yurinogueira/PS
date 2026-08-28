@@ -14,22 +14,24 @@ func NewService(repo season.Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) Create(ctx context.Context, season *domain.Season) error {
+func (s *Service) Create(ctx context.Context, season *domain.Season, tenantID string) error {
+	season.TenantID = tenantID
 	return s.repo.Create(ctx, season)
 }
 
-func (s *Service) GetByID(ctx context.Context, id string) (*domain.Season, error) {
-	return s.repo.GetByID(ctx, id)
+func (s *Service) GetByID(ctx context.Context, id, tenantID string) (*domain.Season, error) {
+	return s.repo.GetByID(ctx, id, tenantID)
 }
 
-func (s *Service) List(ctx context.Context) ([]*domain.Season, error) {
-	return s.repo.List(ctx)
+func (s *Service) List(ctx context.Context, tenantID string) ([]*domain.Season, error) {
+	return s.repo.List(ctx, tenantID)
 }
 
-func (s *Service) Update(ctx context.Context, season *domain.Season) error {
+func (s *Service) Update(ctx context.Context, season *domain.Season, tenantID string) error {
+	season.TenantID = tenantID
 	return s.repo.Update(ctx, season)
 }
 
-func (s *Service) Delete(ctx context.Context, id string) error {
-	return s.repo.Delete(ctx, id)
+func (s *Service) Delete(ctx context.Context, id, tenantID string) error {
+	return s.repo.Delete(ctx, id, tenantID)
 }

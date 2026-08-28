@@ -18,7 +18,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import { AuthHeroBanner } from "../components/AuthHeroBanner";
 import { authService } from "../services/auth.service";
 import { useAuthStore } from "../state/auth.store";
@@ -120,7 +120,7 @@ export function LoginPage() {
                   justifyContent: "center",
                 }}
               >
-                <DirectionsCarIcon sx={{ fontSize: 24, color: "#FFFFFF" }} />
+                <CameraAltIcon sx={{ fontSize: 24, color: "#FFFFFF" }} />
               </Box>
               <Typography
                 variant="h6"
@@ -139,7 +139,7 @@ export function LoginPage() {
                 Bem-vindo de volta
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Digite suas credenciais para acessar sua frota.
+                Digite suas credenciais para acessar o painel.
               </Typography>
             </Box>
 

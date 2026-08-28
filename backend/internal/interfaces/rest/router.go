@@ -70,18 +70,36 @@ func NewRouter(cfg config.Config, users userport.Repository, hasher portauth.Pas
 	mux.Handle("GET /api/v1/auth/me", middleware.Chain(http.HandlerFunc(authHandler.Me), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
 	mux.Handle("POST /api/v1/auth/logout", middleware.Chain(http.HandlerFunc(authHandler.Logout), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
 
-	mux.Handle("GET /api/v1/user/profile", middleware.Chain(http.HandlerFunc(userHandler.GetProfile), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
-	mux.Handle("PUT /api/v1/user/profile", middleware.Chain(http.HandlerFunc(userHandler.UpdateProfile), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
-	mux.Handle("PUT /api/v1/user/password", middleware.Chain(http.HandlerFunc(userHandler.UpdatePassword), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
+	// Protected routes wrapper (requires authentication)
+	protectedChain := func(h http.HandlerFunc) http.Handler {
+		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
+	}
 
-	mux.Handle("GET /api/v1/seasons", middleware.Chain(http.HandlerFunc(seasonHandler.List), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
-	mux.Handle("POST /api/v1/seasons", middleware.Chain(http.HandlerFunc(seasonHandler.Create), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
-	mux.Handle("GET /api/v1/photographers", middleware.Chain(http.HandlerFunc(photographerHandler.List), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
-	mux.Handle("POST /api/v1/photographers", middleware.Chain(http.HandlerFunc(photographerHandler.Create), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
-	mux.Handle("GET /api/v1/people", middleware.Chain(http.HandlerFunc(personHandler.List), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
-	mux.Handle("POST /api/v1/people", middleware.Chain(http.HandlerFunc(personHandler.Create), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
-	mux.Handle("GET /api/v1/clients", middleware.Chain(http.HandlerFunc(clientHandler.List), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
-	mux.Handle("POST /api/v1/clients", middleware.Chain(http.HandlerFunc(clientHandler.Create), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
+	// Business routes wrapper (requires authentication + tenant)
+	businessChain := func(h http.HandlerFunc) http.Handler {
+		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequireTenant(), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
+	}
+
+	mux.Handle("GET /api/v1/user/profile", protectedChain(userHandler.GetProfile))
+	mux.Handle("PUT /api/v1/user/profile", protectedChain(userHandler.UpdateProfile))
+	mux.Handle("PUT /api/v1/user/password", protectedChain(userHandler.UpdatePassword))
+
+	mux.Handle("GET /api/v1/seasons", businessChain(seasonHandler.List))
+	mux.Handle("POST /api/v1/seasons", businessChain(seasonHandler.Create))
+	mux.Handle("GET /api/v1/photographers", businessChain(photographerHandler.List))
+	mux.Handle("POST /api/v1/photographers", businessChain(photographerHandler.Create))
+
+	mux.Handle("GET /api/v1/people", businessChain(personHandler.List))
+	mux.Handle("POST /api/v1/people", businessChain(personHandler.Create))
+	mux.Handle("GET /api/v1/people/{id}", businessChain(personHandler.GetByID))
+	mux.Handle("PUT /api/v1/people/{id}", businessChain(personHandler.Update))
+	mux.Handle("DELETE /api/v1/people/{id}", businessChain(personHandler.Delete))
+
+	mux.Handle("GET /api/v1/clients", businessChain(clientHandler.List))
+	mux.Handle("POST /api/v1/clients", businessChain(clientHandler.Create))
+	mux.Handle("GET /api/v1/clients/{id}", businessChain(clientHandler.GetByID))
+	mux.Handle("PUT /api/v1/clients/{id}", businessChain(clientHandler.Update))
+	mux.Handle("DELETE /api/v1/clients/{id}", businessChain(clientHandler.Delete))
 
 	handler := middleware.SecurityHeaders(
 		middleware.CORS(

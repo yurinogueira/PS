@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"ps/internal/application/usecase/photographer"
 	domain "ps/internal/domain/photographer"
+	"ps/internal/shared/middleware"
 )
 
 type PhotographerHandler struct {
@@ -16,13 +17,14 @@ func NewPhotographerHandler(service *photographer.Service) *PhotographerHandler 
 }
 
 func (h *PhotographerHandler) Create(w http.ResponseWriter, r *http.Request) {
+	tenantID := middleware.GetTenantID(r.Context())
 	var req domain.Photographer
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := h.service.Create(r.Context(), &req); err != nil {
+	if err := h.service.Create(r.Context(), &req, tenantID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -32,7 +34,8 @@ func (h *PhotographerHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PhotographerHandler) List(w http.ResponseWriter, r *http.Request) {
-	list, err := h.service.List(r.Context())
+	tenantID := middleware.GetTenantID(r.Context())
+	list, err := h.service.List(r.Context(), tenantID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

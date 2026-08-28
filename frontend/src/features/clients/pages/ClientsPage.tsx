@@ -13,11 +13,14 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Checkbox,
   FormControlLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
@@ -143,50 +146,48 @@ export const ClientsPage = () => {
         </Button>
       </Box>
 
-      {clients.map((c) => {
-        const person = people.find((p) => p.id === c.person_id);
-        return (
-          <Accordion key={c.id} sx={{ mb: 1 }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6">
-                {person?.name || "Desconhecido"}
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              {c.dogs?.map((dog, i) => (
-                <Box
-                  key={i}
-                  sx={{
-                    mb: 3,
-                    p: 2,
-                    border: "1px solid #e0e0e0",
-                    borderRadius: 1,
-                  }}
-                >
-                  <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                    Cachorro: {dog.breed || "Sem raça informada"}
-                  </Typography>
-                  <Typography variant="body2">
-                    Juiz: {dog.judge} | Competições ganhas:{" "}
-                    {dog.competitions_won}
-                  </Typography>
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2">Fotos:</Typography>
-                    {dog.photos?.map((photo, j) => (
-                      <Paper key={j} sx={{ p: 1, my: 1, bgcolor: "#f5f5f5" }}>
-                        <Typography variant="body2">
-                          Arquivo: {photo.file_number} - Pagamento:{" "}
-                          {photo.payment_method}
-                        </Typography>
-                      </Paper>
-                    ))}
-                  </Box>
-                </Box>
-              ))}
-            </AccordionDetails>
-          </Accordion>
-        );
-      })}
+      <Paper sx={{ width: "100%", overflow: "hidden" }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Pessoa</TableCell>
+                <TableCell>Cachorros</TableCell>
+                <TableCell>Total de Fotos</TableCell>
+                <TableCell align="right">Ações</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {clients.map((c) => {
+                const person = people.find((p) => p.id === c.person_id);
+                const totalPhotos =
+                  c.dogs?.reduce(
+                    (acc, dog) => acc + (dog.photos?.length || 0),
+                    0,
+                  ) || 0;
+                return (
+                  <TableRow key={c.id}>
+                    <TableCell>{person?.name || "Desconhecido"}</TableCell>
+                    <TableCell>{c.dogs?.length || 0}</TableCell>
+                    <TableCell>{totalPhotos}</TableCell>
+                    <TableCell align="right">
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() =>
+                          (window.location.href = `/clients/${c.id}`)
+                        }
+                      >
+                        Detalhes
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
 
       <Dialog
         open={open}

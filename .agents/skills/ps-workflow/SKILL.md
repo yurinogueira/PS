@@ -34,7 +34,6 @@ flowchart LR
   - **Com Issue vinculada**: `<tipo>/<id_da_issue>-<descricao-curta>`
     - `feat/20-workflow-standardization`: Novas funcionalidades ou melhorias vinculadas à issue #20.
     - `fix/21-auth-session-timeout`: Correções de bugs vinculadas à issue #21.
-    - `feat/22-fipe-cache-integration`: Features vinculadas à issue #22.
   - **Sem Issue vinculada (manutenções internas/skills)**: `<tipo>/<descricao-curta>`
     - `chore/skills-enhancement`: Ajustes de documentação interna e skills.
     - `docs/readme-update`: Atualizações de documentação.
@@ -55,7 +54,6 @@ flowchart LR
   - **Com Issue**: `<tipo>(<escopo>): <descrição clara no imperativo> (#<id_da_issue>)`
     - `feat(workflows): unificar e padronizar pipelines de ci e deploy (#20)`
     - `fix(auth): implementar silent refresh e sessao de 24h (#21)`
-    - `feat(cars): integrar fipe api com cache multinivel no mongodb (#22)`
   - **Sem Issue**: `<tipo>(<escopo>): <descrição clara no imperativo>`
     - `chore(skills): enhance ps-issues and ps-workflow guidelines`
 

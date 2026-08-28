@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import { AuthHeroBanner } from "../components/AuthHeroBanner";
 import { authService } from "../services/auth.service";
 import { useAuthStore } from "../state/auth.store";
@@ -131,9 +130,7 @@ export function VerifyEmailPage() {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
-              >
-                <DirectionsCarIcon sx={{ fontSize: 24, color: "#FFFFFF" }} />
-              </Box>
+              ></Box>
               <Typography
                 variant="h6"
                 sx={{ fontWeight: 800, color: "primary.main" }}
@@ -167,8 +164,8 @@ export function VerifyEmailPage() {
                   variant="body2"
                   sx={{ color: "text.secondary", mb: 4 }}
                 >
-                  Sua conta foi confirmada. Agora você tem acesso liberado para
-                  cadastrar e gerenciar todos os seus veículos no PS.
+                  Seu e-mail foi confirmado com sucesso. Agora você já pode
+                  cadastrar e gerenciar as fotos da sua temporada no PS.
                 </Typography>
                 <Button
                   onClick={() =>

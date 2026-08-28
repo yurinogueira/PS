@@ -71,7 +71,6 @@ jobs:
       TF_VAR_private_key: ${{ secrets.OCI_PRIVATE_KEY }}
       TF_VAR_private_key_path: /tmp/oci_api_key.pem
       TF_VAR_region: ${{ secrets.OCI_REGION || 'sa-saopaulo-1' }}
-      TF_VAR_availability_domain: ${{ secrets.OCI_AVAILABILITY_DOMAIN }}
       TF_VAR_ssh_public_key: ${{ secrets.OCI_SSH_PUBLIC_KEY }}
       TF_VAR_atlas_org_id: ${{ secrets.MONGODB_ATLAS_ORG_ID }}
       TF_VAR_atlas_public_key: ${{ secrets.MONGODB_ATLAS_PUBLIC_KEY }}

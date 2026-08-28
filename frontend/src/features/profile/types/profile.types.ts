@@ -2,8 +2,6 @@ import { User } from "../../auth/types/auth.types";
 
 export interface ProfileData {
   user: User;
-  vehiclesCount: number;
-  maxVehicles: number;
 }
 
 export interface UpdateProfilePayload {

@@ -16,7 +16,6 @@ import {
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import { AuthHeroBanner } from "../components/AuthHeroBanner";
 import { authService } from "../services/auth.service";
 import { useDocumentTitle } from "../../shared";
@@ -116,9 +115,7 @@ export function ForgotPasswordPage() {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
-              >
-                <DirectionsCarIcon sx={{ fontSize: 24, color: "#FFFFFF" }} />
-              </Box>
+              ></Box>
               <Typography
                 variant="h6"
                 sx={{ fontWeight: 800, color: "primary.main" }}

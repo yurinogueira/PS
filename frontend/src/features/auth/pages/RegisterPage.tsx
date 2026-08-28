@@ -19,7 +19,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutlineOutlined";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import { AuthHeroBanner } from "../components/AuthHeroBanner";
 import { authService } from "../services/auth.service";
 import { useAuthStore } from "../state/auth.store";
@@ -163,7 +163,7 @@ export function RegisterPage() {
                   justifyContent: "center",
                 }}
               >
-                <DirectionsCarIcon sx={{ fontSize: 24, color: "#FFFFFF" }} />
+                <CameraAltIcon sx={{ fontSize: 24, color: "#FFFFFF" }} />
               </Box>
               <Typography
                 variant="h6"
@@ -182,7 +182,8 @@ export function RegisterPage() {
                 Criar uma conta
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Comece a gerenciar seus veículos de forma simples e organizada.
+                Comece a gerenciar as fotos da sua temporada de forma simples e
+                organizada.
               </Typography>
             </Box>
 

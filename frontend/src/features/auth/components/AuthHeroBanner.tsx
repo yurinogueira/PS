@@ -1,6 +1,5 @@
 import { Box, Typography, Stack } from "@mui/material";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
-import BuildCircleIcon from "@mui/icons-material/BuildCircle";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import ShieldCheckIcon from "@mui/icons-material/VerifiedUser";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { brandColors } from "../../../styles/theme";
@@ -62,7 +61,7 @@ export function AuthHeroBanner() {
               backdropFilter: "blur(8px)",
             }}
           >
-            <DirectionsCarIcon sx={{ fontSize: 32, color: "#FFFFFF" }} />
+            <CameraAltIcon sx={{ fontSize: 32, color: "#FFFFFF" }} />
           </Box>
           <Typography
             component="div"
@@ -80,7 +79,7 @@ export function AuthHeroBanner() {
             color: "rgba(255, 255, 255, 0.9)",
           }}
         >
-          Photo Storage • Gestão de Fotos
+          Photo Storage • Gestão de Fotos de Competição
         </Typography>
       </Box>
 
@@ -97,7 +96,7 @@ export function AuthHeroBanner() {
             color: "#FFFFFF",
           }}
         >
-          O controle total da sua frota em um só lugar.
+          O controle total do seu evento em um só lugar.
         </Typography>
         <Typography
           variant="body1"
@@ -110,8 +109,8 @@ export function AuthHeroBanner() {
             color: "rgba(255, 255, 255, 0.95)",
           }}
         >
-          Acompanhe revisões, manutenções preventivas, histórico de
-          quilometragem e custos dos seus veículos com clareza e precisão.
+          Acompanhe fotógrafos, clientes, cachorros vencedores e o histórico de
+          vendas de fotos com clareza e precisão.
         </Typography>
 
         {/* Feature Highlights */}
@@ -126,15 +125,13 @@ export function AuthHeroBanner() {
                 backdropFilter: "blur(4px)",
               }}
             >
-              <BuildCircleIcon
-                sx={{ fontSize: 20, color: brandColors.secondary }}
-              />
+              <CameraAltIcon sx={{ fontSize: 20, color: "#FFFFFF" }} />
             </Box>
             <Typography
               variant="body2"
               sx={{ fontWeight: 500, color: "#FFFFFF" }}
             >
-              Histórico detalhado de manutenções e comprovantes
+              Cadastro organizado de fotos por cachorro e cliente
             </Typography>
           </Stack>
 
@@ -148,15 +145,13 @@ export function AuthHeroBanner() {
                 backdropFilter: "blur(4px)",
               }}
             >
-              <TrendingUpIcon
-                sx={{ fontSize: 20, color: brandColors.tertiary }}
-              />
+              <TrendingUpIcon sx={{ fontSize: 20, color: "#FFFFFF" }} />
             </Box>
             <Typography
               variant="body2"
               sx={{ fontWeight: 500, color: "#FFFFFF" }}
             >
-              Controle de quilometragem e alertas de revisão periódica
+              Controle rápido de formas de pagamento e valores recebidos
             </Typography>
           </Stack>
 
@@ -170,15 +165,13 @@ export function AuthHeroBanner() {
                 backdropFilter: "blur(4px)",
               }}
             >
-              <ShieldCheckIcon
-                sx={{ fontSize: 20, color: brandColors.quaternary }}
-              />
+              <ShieldCheckIcon sx={{ fontSize: 20, color: "#FFFFFF" }} />
             </Box>
             <Typography
               variant="body2"
               sx={{ fontWeight: 500, color: "#FFFFFF" }}
             >
-              Compartilhamento seguro com outros motoristas e gestores
+              Filtro global por temporada para organização financeira
             </Typography>
           </Stack>
         </Stack>

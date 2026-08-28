@@ -4,6 +4,7 @@ import "time"
 
 type Person struct {
 	ID               string    `json:"id" bson:"_id,omitempty"`
+	TenantID         string    `json:"tenant_id" bson:"tenant_id"`
 	Name             string    `json:"name" bson:"name"`
 	Email            string    `json:"email" bson:"email"`
 	AlternativeEmail string    `json:"alternative_email" bson:"alternative_email"`

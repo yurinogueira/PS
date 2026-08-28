@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	userport "ps/internal/application/ports/user"
-	domainuser "ps/internal/domain/user"
-	mongoinfra "ps/internal/infrastructure/database/mongo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	userport "ps/internal/application/ports/user"
+	domainuser "ps/internal/domain/user"
+	mongoinfra "ps/internal/infrastructure/database/mongo"
 )
 
 type userDoc struct {
@@ -25,16 +25,12 @@ type userDoc struct {
 	EmailVerificationExpiresAt *time.Time `bson:"emailVerificationExpiresAt,omitempty"`
 	PasswordResetTokenHash     string     `bson:"passwordResetTokenHash,omitempty"`
 	PasswordResetExpiresAt     *time.Time `bson:"passwordResetExpiresAt,omitempty"`
-	MaxVehicles                int        `bson:"maxVehicles"`
+	TenantID                   string     `bson:"tenantId"`
 	CreatedAt                  time.Time  `bson:"createdAt"`
 	UpdatedAt                  time.Time  `bson:"updatedAt,omitempty"`
 }
 
 func (d userDoc) toDomain() domainuser.User {
-	maxVehicles := d.MaxVehicles
-	if maxVehicles <= 0 {
-		maxVehicles = 3
-	}
 	return domainuser.User{
 		ID:                         d.ID,
 		Name:                       d.Name,
@@ -46,7 +42,7 @@ func (d userDoc) toDomain() domainuser.User {
 		EmailVerificationExpiresAt: d.EmailVerificationExpiresAt,
 		PasswordResetTokenHash:     d.PasswordResetTokenHash,
 		PasswordResetExpiresAt:     d.PasswordResetExpiresAt,
-		MaxVehicles:                maxVehicles,
+		TenantID:                   d.TenantID,
 		CreatedAt:                  d.CreatedAt,
 		UpdatedAt:                  d.UpdatedAt,
 	}
@@ -100,9 +96,6 @@ func (r *Repository) Create(ctx context.Context, user domainuser.User) (domainus
 	if user.CreatedAt.IsZero() {
 		user.CreatedAt = time.Now().UTC()
 	}
-	if user.MaxVehicles <= 0 {
-		user.MaxVehicles = 3
-	}
 
 	doc := userDoc{
 		ID:                         user.ID,
@@ -115,7 +108,7 @@ func (r *Repository) Create(ctx context.Context, user domainuser.User) (domainus
 		EmailVerificationExpiresAt: user.EmailVerificationExpiresAt,
 		PasswordResetTokenHash:     user.PasswordResetTokenHash,
 		PasswordResetExpiresAt:     user.PasswordResetExpiresAt,
-		MaxVehicles:                user.MaxVehicles,
+		TenantID:                   user.TenantID,
 		CreatedAt:                  user.CreatedAt,
 		UpdatedAt:                  user.UpdatedAt,
 	}
@@ -133,10 +126,6 @@ func (r *Repository) Update(ctx context.Context, user domainuser.User) (domainus
 		return domainuser.User{}, userport.ErrNotFound
 	}
 	user.ID = cleanID
-
-	if user.MaxVehicles <= 0 {
-		user.MaxVehicles = 3
-	}
 	if user.UpdatedAt.IsZero() {
 		user.UpdatedAt = time.Now().UTC()
 	}
@@ -152,7 +141,7 @@ func (r *Repository) Update(ctx context.Context, user domainuser.User) (domainus
 			"emailVerificationExpiresAt": user.EmailVerificationExpiresAt,
 			"passwordResetTokenHash":     user.PasswordResetTokenHash,
 			"passwordResetExpiresAt":     user.PasswordResetExpiresAt,
-			"maxVehicles":                user.MaxVehicles,
+			"tenantId":                   user.TenantID,
 			"updatedAt":                  user.UpdatedAt,
 		},
 	}

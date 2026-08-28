@@ -4,8 +4,8 @@ import (
 	"context"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
-	domain "ps/internal/domain/client"
 	"ps/internal/application/ports/client"
+	domain "ps/internal/domain/client"
 )
 
 type repository struct {
@@ -22,17 +22,17 @@ func (r *repository) Create(ctx context.Context, client *domain.SeasonClient) er
 	return err
 }
 
-func (r *repository) GetByID(ctx context.Context, id string) (*domain.SeasonClient, error) {
+func (r *repository) GetByID(ctx context.Context, id, tenantID string) (*domain.SeasonClient, error) {
 	var client domain.SeasonClient
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&client)
+	err := r.collection.FindOne(ctx, bson.M{"_id": id, "tenant_id": tenantID}).Decode(&client)
 	if err != nil {
 		return nil, err
 	}
 	return &client, nil
 }
 
-func (r *repository) List(ctx context.Context) ([]*domain.SeasonClient, error) {
-	cursor, err := r.collection.Find(ctx, bson.M{})
+func (r *repository) List(ctx context.Context, tenantID string) ([]*domain.SeasonClient, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{"tenant_id": tenantID})
 	if err != nil {
 		return nil, err
 	}
@@ -46,11 +46,11 @@ func (r *repository) List(ctx context.Context) ([]*domain.SeasonClient, error) {
 }
 
 func (r *repository) Update(ctx context.Context, client *domain.SeasonClient) error {
-	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": client.ID}, bson.M{"$set": client})
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": client.ID, "tenant_id": client.TenantID}, bson.M{"$set": client})
 	return err
 }
 
-func (r *repository) Delete(ctx context.Context, id string) error {
-	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+func (r *repository) Delete(ctx context.Context, id, tenantID string) error {
+	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id, "tenant_id": tenantID})
 	return err
 }
