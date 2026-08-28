@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	userport "ps/internal/application/ports/user"
-	domainuser "ps/internal/domain/user"
-	mongoinfra "ps/internal/infrastructure/database/mongo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	userport "ps/internal/application/ports/user"
+	domainuser "ps/internal/domain/user"
+	mongoinfra "ps/internal/infrastructure/database/mongo"
 )
 
 type userDoc struct {
@@ -25,6 +25,7 @@ type userDoc struct {
 	EmailVerificationExpiresAt *time.Time `bson:"emailVerificationExpiresAt,omitempty"`
 	PasswordResetTokenHash     string     `bson:"passwordResetTokenHash,omitempty"`
 	PasswordResetExpiresAt     *time.Time `bson:"passwordResetExpiresAt,omitempty"`
+	TenantID                   string     `bson:"tenantId"`
 	MaxVehicles                int        `bson:"maxVehicles"`
 	CreatedAt                  time.Time  `bson:"createdAt"`
 	UpdatedAt                  time.Time  `bson:"updatedAt,omitempty"`
@@ -46,6 +47,7 @@ func (d userDoc) toDomain() domainuser.User {
 		EmailVerificationExpiresAt: d.EmailVerificationExpiresAt,
 		PasswordResetTokenHash:     d.PasswordResetTokenHash,
 		PasswordResetExpiresAt:     d.PasswordResetExpiresAt,
+		TenantID:                   d.TenantID,
 		MaxVehicles:                maxVehicles,
 		CreatedAt:                  d.CreatedAt,
 		UpdatedAt:                  d.UpdatedAt,
@@ -115,6 +117,7 @@ func (r *Repository) Create(ctx context.Context, user domainuser.User) (domainus
 		EmailVerificationExpiresAt: user.EmailVerificationExpiresAt,
 		PasswordResetTokenHash:     user.PasswordResetTokenHash,
 		PasswordResetExpiresAt:     user.PasswordResetExpiresAt,
+		TenantID:                   user.TenantID,
 		MaxVehicles:                user.MaxVehicles,
 		CreatedAt:                  user.CreatedAt,
 		UpdatedAt:                  user.UpdatedAt,
@@ -152,6 +155,7 @@ func (r *Repository) Update(ctx context.Context, user domainuser.User) (domainus
 			"emailVerificationExpiresAt": user.EmailVerificationExpiresAt,
 			"passwordResetTokenHash":     user.PasswordResetTokenHash,
 			"passwordResetExpiresAt":     user.PasswordResetExpiresAt,
+			"tenantId":                   user.TenantID,
 			"maxVehicles":                user.MaxVehicles,
 			"updatedAt":                  user.UpdatedAt,
 		},

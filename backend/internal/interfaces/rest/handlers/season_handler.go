@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"ps/internal/application/usecase/season"
 	domain "ps/internal/domain/season"
+	"ps/internal/shared/middleware"
 )
 
 type SeasonHandler struct {
@@ -16,13 +17,14 @@ func NewSeasonHandler(service *season.Service) *SeasonHandler {
 }
 
 func (h *SeasonHandler) Create(w http.ResponseWriter, r *http.Request) {
+	tenantID := middleware.GetTenantID(r.Context())
 	var req domain.Season
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := h.service.Create(r.Context(), &req); err != nil {
+	if err := h.service.Create(r.Context(), &req, tenantID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -32,7 +34,8 @@ func (h *SeasonHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SeasonHandler) List(w http.ResponseWriter, r *http.Request) {
-	list, err := h.service.List(r.Context())
+	tenantID := middleware.GetTenantID(r.Context())
+	list, err := h.service.List(r.Context(), tenantID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

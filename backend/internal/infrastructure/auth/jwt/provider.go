@@ -25,6 +25,7 @@ type Provider struct {
 type jwtClaims struct {
 	Subject   string `json:"sub"`
 	Email     string `json:"email,omitempty"`
+	TenantID  string `json:"tenantId,omitempty"`
 	Type      string `json:"type"`
 	IssuedAt  int64  `json:"iat"`
 	ExpiresAt int64  `json:"exp"`
@@ -60,6 +61,7 @@ func (p *Provider) GenerateAccessToken(user domainuser.User) (string, error) {
 	return p.signJWT(p.accessSecret, jwtClaims{
 		Subject:   user.ID,
 		Email:     user.Email,
+		TenantID:  user.TenantID,
 		Type:      "access",
 		IssuedAt:  time.Now().UTC().Unix(),
 		ExpiresAt: time.Now().UTC().Add(p.accessTTL).Unix(),
@@ -82,7 +84,7 @@ func (p *Provider) ParseAccessToken(token string) (portauth.TokenClaims, error) 
 	if err != nil {
 		return portauth.TokenClaims{}, err
 	}
-	return portauth.TokenClaims{UserID: claims.Subject, Email: claims.Email}, nil
+	return portauth.TokenClaims{UserID: claims.Subject, Email: claims.Email, TenantID: claims.TenantID}, nil
 }
 
 func (p *Provider) ParseRefreshToken(token string) (portauth.TokenClaims, error) {

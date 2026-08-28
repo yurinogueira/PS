@@ -167,8 +167,8 @@ export function VerifyEmailPage() {
                   variant="body2"
                   sx={{ color: "text.secondary", mb: 4 }}
                 >
-                  Sua conta foi confirmada. Agora você tem acesso liberado para
-                  cadastrar e gerenciar todos os seus veículos no PS.
+                  Seu e-mail foi confirmado com sucesso. Agora você já pode
+                  cadastrar e gerenciar as fotos da sua temporada no PS.
                 </Typography>
                 <Button
                   onClick={() =>

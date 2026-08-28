@@ -41,7 +41,6 @@ export function Sidebar({
 }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const theme = useTheme();
 
   const handleNavigation = (path: string) => {
     navigate(path);

@@ -33,12 +33,6 @@ variable "region" {
   default = "sa-saopaulo-1"
 }
 
-variable "availability_domain" {
-  description = "Availability Domain"
-  type        = string
-  default     = ""
-}
-
 variable "project_name" {
   description = "Nome do projeto"
   type        = string

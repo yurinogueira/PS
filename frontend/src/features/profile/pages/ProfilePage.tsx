@@ -225,7 +225,7 @@ export function ProfilePage() {
           Meu Perfil & Configurações
         </Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
-          Gerencie seus dados de acesso, status de e-mail e limites de frota.
+          Gerencie seus dados de acesso e status de e-mail.
         </Typography>
       </Box>
 
@@ -300,8 +300,8 @@ export function ProfilePage() {
                   }}
                 >
                   {isEmailVerified
-                    ? "Seu endereço de e-mail está verificado e seguro. Você tem permissão total para cadastrar veículos."
-                    : "Você precisa confirmar seu e-mail para cadastrar novos veículos na plataforma."}
+                    ? "Seu endereço de e-mail está verificado e seguro."
+                    : "Você precisa confirmar seu e-mail para usar a plataforma completamente."}
                 </Typography>
               </Box>
 
@@ -348,79 +348,6 @@ export function ProfilePage() {
                       : "Reenviar e-mail de confirmação"}
                 </Button>
               )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Card 2: Cota de Veículos */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card
-            elevation={0}
-            sx={{
-              height: "100%",
-              borderRadius: 3,
-              border: "1px solid #E2E8F0",
-              p: 1,
-            }}
-          >
-            <CardContent>
-              <Stack
-                direction="row"
-                spacing={1.5}
-                sx={{ alignItems: "center", mb: 2 }}
-              >
-                <DirectionsCarRoundedIcon
-                  sx={{ color: "primary.main", fontSize: 28 }}
-                />
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Cota de Veículos
-                </Typography>
-              </Stack>
-
-              <Box sx={{ mb: 3 }}>
-                <Stack
-                  direction="row"
-                  sx={{
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 1,
-                  }}
-                >
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    Consumo Atual
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: 700, color: "primary.main" }}
-                  >
-                    {vehiclesCount} de {maxVehicles} veículos
-                  </Typography>
-                </Stack>
-                <LinearProgress
-                  variant="determinate"
-                  value={quotaPercent}
-                  sx={{
-                    height: 10,
-                    borderRadius: 5,
-                    bgcolor: "#E2E8F0",
-                    "& .MuiLinearProgress-bar": {
-                      bgcolor:
-                        quotaPercent >= 100
-                          ? "error.main"
-                          : quotaPercent >= 66
-                            ? "warning.main"
-                            : "primary.main",
-                      borderRadius: 5,
-                    },
-                  }}
-                />
-              </Box>
-
-              <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                {vehiclesCount >= maxVehicles
-                  ? "Você atingiu a cota máxima de veículos cadastrados na sua conta. Entre em contato com o suporte caso necessite expandir o limite."
-                  : `Você ainda pode cadastrar mais ${maxVehicles - vehiclesCount} veículo(s) com sua cota atual.`}
-              </Typography>
             </CardContent>
           </Card>
         </Grid>

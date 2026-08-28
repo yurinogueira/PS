@@ -13,8 +13,19 @@ export const personService = {
     const { data } = await apiClient.get<Person[]>("/people");
     return data;
   },
+  getById: async (id: string) => {
+    const { data } = await apiClient.get<Person>(`/people/${id}`);
+    return data;
+  },
   create: async (person: Omit<Person, "id">) => {
     const { data } = await apiClient.post<Person>("/people", person);
     return data;
+  },
+  update: async (id: string, person: Person) => {
+    const { data } = await apiClient.put<Person>(`/people/${id}`, person);
+    return data;
+  },
+  delete: async (id: string) => {
+    await apiClient.delete(`/people/${id}`);
   },
 };

@@ -4,8 +4,8 @@ import (
 	"context"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
-	domain "ps/internal/domain/person"
 	"ps/internal/application/ports/person"
+	domain "ps/internal/domain/person"
 )
 
 type repository struct {
@@ -22,17 +22,17 @@ func (r *repository) Create(ctx context.Context, person *domain.Person) error {
 	return err
 }
 
-func (r *repository) GetByID(ctx context.Context, id string) (*domain.Person, error) {
+func (r *repository) GetByID(ctx context.Context, id, tenantID string) (*domain.Person, error) {
 	var person domain.Person
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&person)
+	err := r.collection.FindOne(ctx, bson.M{"_id": id, "tenant_id": tenantID}).Decode(&person)
 	if err != nil {
 		return nil, err
 	}
 	return &person, nil
 }
 
-func (r *repository) List(ctx context.Context) ([]*domain.Person, error) {
-	cursor, err := r.collection.Find(ctx, bson.M{})
+func (r *repository) List(ctx context.Context, tenantID string) ([]*domain.Person, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{"tenant_id": tenantID})
 	if err != nil {
 		return nil, err
 	}
@@ -46,11 +46,11 @@ func (r *repository) List(ctx context.Context) ([]*domain.Person, error) {
 }
 
 func (r *repository) Update(ctx context.Context, person *domain.Person) error {
-	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": person.ID}, bson.M{"$set": person})
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": person.ID, "tenant_id": person.TenantID}, bson.M{"$set": person})
 	return err
 }
 
-func (r *repository) Delete(ctx context.Context, id string) error {
-	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+func (r *repository) Delete(ctx context.Context, id, tenantID string) error {
+	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id, "tenant_id": tenantID})
 	return err
 }

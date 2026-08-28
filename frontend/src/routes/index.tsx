@@ -10,6 +10,11 @@ const LoginPage = lazy(() =>
     default: m.LoginPage,
   })),
 );
+const RegisterPage = lazy(() =>
+  import("../features/auth/pages/RegisterPage").then((m) => ({
+    default: m.RegisterPage,
+  })),
+);
 const DashboardPage = lazy(() =>
   import("../features/dashboard/pages/DashboardPage").then((m) => ({
     default: m.DashboardPage,
@@ -42,12 +47,18 @@ const ClientsPage = lazy(() =>
     default: m.ClientsPage,
   })),
 );
+const ClientDetailsPage = lazy(() =>
+  import("../features/clients/pages/ClientDetailsPage").then((m) => ({
+    default: m.ClientDetailsPage,
+  })),
+);
 
 export function AppRoutes() {
   return (
     <Suspense fallback={<PageLoadingFallback />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
@@ -57,6 +68,7 @@ export function AppRoutes() {
             <Route path="/photographers" element={<PhotographersPage />} />
             <Route path="/people" element={<PeoplePage />} />
             <Route path="/clients" element={<ClientsPage />} />
+            <Route path="/clients/:id" element={<ClientDetailsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
         </Route>

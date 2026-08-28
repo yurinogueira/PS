@@ -2,6 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  tenantId?: string;
   emailVerified?: boolean;
   emailVerifiedAt?: string;
   maxVehicles?: number;
