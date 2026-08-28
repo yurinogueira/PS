@@ -3,6 +3,7 @@ import { apiClient } from "./client";
 import { personService } from "./person.service";
 import { photographerService } from "./photographer.service";
 import { seasonService } from "./season.service";
+import { clientService } from "./client.service";
 
 describe("Entity API Services", () => {
   beforeEach(() => {
@@ -167,6 +168,79 @@ describe("Entity API Services", () => {
 
       await seasonService.delete("s1");
       expect(apiClient.delete).toHaveBeenCalledWith("/seasons/s1");
+    });
+  });
+
+  describe("clientService", () => {
+    it("lists clients with pagination and search parameters", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "c1",
+            person_id: "p1",
+            season_id: "s1",
+            dogs: [],
+          },
+        ],
+        total: 1,
+        page: 1,
+        limit: 10,
+      };
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce({ data: mockResponse });
+
+      const params = { season_id: "s1", search: "Rex", page: 1, limit: 10 };
+      const res = await clientService.list(params);
+      expect(apiClient.get).toHaveBeenCalledWith("/clients", { params });
+      expect(res).toEqual(mockResponse);
+    });
+
+    it("gets client by id", async () => {
+      const mockClient = {
+        id: "c1",
+        person_id: "p1",
+        season_id: "s1",
+        dogs: [],
+      };
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce({ data: mockClient });
+
+      const res = await clientService.getById("c1");
+      expect(apiClient.get).toHaveBeenCalledWith("/clients/c1");
+      expect(res).toEqual(mockClient);
+    });
+
+    it("creates client", async () => {
+      const newClient = {
+        person_id: "p1",
+        season_id: "s1",
+        dogs: [],
+      };
+      const created = { id: "c1", ...newClient };
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce({ data: created });
+
+      const res = await clientService.create(newClient);
+      expect(apiClient.post).toHaveBeenCalledWith("/clients", newClient);
+      expect(res).toEqual(created);
+    });
+
+    it("updates client", async () => {
+      const updateData = {
+        id: "c1",
+        person_id: "p1",
+        season_id: "s1",
+        dogs: [],
+      };
+      vi.spyOn(apiClient, "put").mockResolvedValueOnce({ data: updateData });
+
+      const res = await clientService.update("c1", updateData);
+      expect(apiClient.put).toHaveBeenCalledWith("/clients/c1", updateData);
+      expect(res).toEqual(updateData);
+    });
+
+    it("deletes client", async () => {
+      vi.spyOn(apiClient, "delete").mockResolvedValueOnce({});
+
+      await clientService.delete("c1");
+      expect(apiClient.delete).toHaveBeenCalledWith("/clients/c1");
     });
   });
 });

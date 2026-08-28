@@ -33,14 +33,32 @@ func (m *mockRepo) GetByID(ctx context.Context, id, tenantID string) (*domain.Se
 	return c, nil
 }
 
-func (m *mockRepo) List(ctx context.Context, tenantID string) ([]*domain.SeasonClient, error) {
+func (m *mockRepo) List(ctx context.Context, tenantID string, filter domain.ListFilter) (*domain.PaginatedClients, error) {
 	var res []*domain.SeasonClient
 	for _, c := range m.items {
 		if c.TenantID == tenantID {
+			if filter.SeasonID != "" && c.SeasonID != filter.SeasonID {
+				continue
+			}
 			res = append(res, c)
 		}
 	}
-	return res, nil
+	total := int64(len(res))
+	page := filter.Page
+	if page <= 0 {
+		page = 1
+	}
+	limit := filter.Limit
+	if limit <= 0 {
+		limit = 10
+	}
+
+	return &domain.PaginatedClients{
+		Data:  res,
+		Total: total,
+		Page:  page,
+		Limit: limit,
+	}, nil
 }
 
 func (m *mockRepo) Update(ctx context.Context, c *domain.SeasonClient) error {
@@ -108,12 +126,24 @@ func TestClientService(t *testing.T) {
 	}
 
 	// 3. List
-	list, err := svc.List(ctx, tenantID)
+	paginated, err := svc.List(ctx, tenantID, domain.ListFilter{SeasonID: "season-123"})
 	if err != nil {
 		t.Fatalf("unexpected error on List: %v", err)
 	}
-	if len(list) != 1 {
-		t.Fatalf("expected 1 item, got %d", len(list))
+	if paginated.Total != 1 || len(paginated.Data) != 1 {
+		t.Fatalf("expected 1 item in paginated response, got total %d, data len %d", paginated.Total, len(paginated.Data))
+	}
+	if paginated.Page != 1 || paginated.Limit != 10 {
+		t.Fatalf("expected default page 1 and limit 10, got page %d, limit %d", paginated.Page, paginated.Limit)
+	}
+
+	// 3.1 List with other season
+	otherSeason, err := svc.List(ctx, tenantID, domain.ListFilter{SeasonID: "other-season"})
+	if err != nil {
+		t.Fatalf("unexpected error on List other season: %v", err)
+	}
+	if otherSeason.Total != 0 || len(otherSeason.Data) != 0 {
+		t.Fatalf("expected 0 items for other season, got %d", otherSeason.Total)
 	}
 
 	// 4. Update

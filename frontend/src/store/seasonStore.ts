@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { safeStorage } from "../services/storage/storage";
 
-interface Season {
+export interface Season {
   id: string;
   name: string;
 }
@@ -11,14 +11,29 @@ interface SeasonState {
   setActiveSeason: (season: Season | null) => void;
 }
 
-export const useSeasonStore = create<SeasonState>()(
-  persist(
-    (set) => ({
-      activeSeason: null,
-      setActiveSeason: (season) => set({ activeSeason: season }),
-    }),
-    {
-      name: "season-storage",
+const getStoredSeason = (): Season | null => {
+  const seasonStr = safeStorage.getItem("season-storage");
+  if (seasonStr) {
+    try {
+      return JSON.parse(seasonStr);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
+export const useSeasonStore = create<SeasonState>((set) => {
+  const activeSeason = getStoredSeason();
+  return {
+    activeSeason,
+    setActiveSeason: (season) => {
+      if (season) {
+        safeStorage.setItem("season-storage", JSON.stringify(season));
+      } else {
+        safeStorage.removeItem("season-storage");
+      }
+      set({ activeSeason: season });
     },
-  ),
-);
+  };
+});

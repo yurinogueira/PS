@@ -59,14 +59,12 @@ export const ClientsPage = () => {
 
   const load = async () => {
     if (!activeSeason) return;
-    const [cData, pData, photogData] = await Promise.all([
-      clientService.list(),
+    const [cRes, pData, photogData] = await Promise.all([
+      clientService.list({ season_id: activeSeason.id, limit: 100 }),
       personService.list(),
       photographerService.list(),
     ]);
-    setClients(
-      (cData || []).filter((c: any) => c.season_id === activeSeason.id),
-    );
+    setClients(cRes?.data || []);
     setPeople(pData || []);
     setPhotographers(photogData || []);
   };
