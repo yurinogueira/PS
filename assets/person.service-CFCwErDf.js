@@ -1,1 +1,0 @@
-import{o as e}from"./index-Dfgo1MpT.js";var t={list:async()=>{let{data:t}=await e.get(`/people`);return t},getById:async t=>{let{data:n}=await e.get(`/people/${t}`);return n},create:async t=>{let{data:n}=await e.post(`/people`,t);return n},update:async(t,n)=>{let{data:r}=await e.put(`/people/${t}`,n);return r},delete:async t=>{await e.delete(`/people/${t}`)}};export{t};

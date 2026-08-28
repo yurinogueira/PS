@@ -1,0 +1,1 @@
+import{o as e}from"./index-BQzy8sb9.js";var t={list:async()=>{let{data:t}=await e.get(`/clients`);return t||[]},getById:async t=>{let{data:n}=await e.get(`/clients/${t}`);return n},create:async t=>{let{data:n}=await e.post(`/clients`,t);return n},update:async(t,n)=>{let{data:r}=await e.put(`/clients/${t}`,n);return r},delete:async t=>{await e.delete(`/clients/${t}`)}};export{t};

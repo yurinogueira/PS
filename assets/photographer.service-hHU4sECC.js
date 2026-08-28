@@ -1,1 +1,0 @@
-import{o as e}from"./index-Dfgo1MpT.js";var t={list:async()=>{let{data:t}=await e.get(`/photographers`);return t},create:async t=>{let{data:n}=await e.post(`/photographers`,t);return n}};export{t};
