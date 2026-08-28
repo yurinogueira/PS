@@ -3,6 +3,7 @@ export interface User {
   name: string;
   email: string;
   tenantId?: string;
+  superAdmin?: boolean;
   emailVerified?: boolean;
   emailVerifiedAt?: string;
   createdAt?: string;

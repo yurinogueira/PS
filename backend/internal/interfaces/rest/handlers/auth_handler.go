@@ -82,6 +82,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 			"email":         output.User.Email,
 			"emailVerified": output.User.EmailVerified,
 			"tenantId":      output.User.TenantID,
+			"superAdmin":    output.User.SuperAdmin,
 			"createdAt":     output.User.CreatedAt,
 		},
 	})
@@ -117,6 +118,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			"email":           output.User.Email,
 			"emailVerified":   output.User.EmailVerified,
 			"tenantId":        output.User.TenantID,
+			"superAdmin":      output.User.SuperAdmin,
 			"emailVerifiedAt": output.User.EmailVerifiedAt,
 			"createdAt":       output.User.CreatedAt,
 		},
@@ -150,6 +152,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 			"email":           output.User.Email,
 			"emailVerified":   output.User.EmailVerified,
 			"tenantId":        output.User.TenantID,
+			"superAdmin":      output.User.SuperAdmin,
 			"emailVerifiedAt": output.User.EmailVerifiedAt,
 			"createdAt":       output.User.CreatedAt,
 		},
@@ -182,6 +185,7 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		"email":           user.Email,
 		"emailVerified":   user.EmailVerified,
 		"tenantId":        user.TenantID,
+		"superAdmin":      user.SuperAdmin,
 		"emailVerifiedAt": user.EmailVerifiedAt,
 		"createdAt":       user.CreatedAt,
 	})

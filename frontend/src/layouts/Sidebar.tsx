@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
+  Divider,
   Drawer,
   List,
   ListItem,
@@ -8,13 +9,15 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
-  useTheme,
 } from "@mui/material";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
 import CameraAltRoundedIcon from "@mui/icons-material/CameraAltRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import CollectionsIcon from "@mui/icons-material/Collections";
+import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
+import SupervisorAccountRoundedIcon from "@mui/icons-material/SupervisorAccountRounded";
+import { useAuthStore } from "../features/auth/state/auth.store";
 
 interface SidebarProps {
   mobileOpen: boolean;
@@ -34,6 +37,19 @@ const menuItems = [
   { text: "Clientes e Fotos", icon: <CollectionsIcon />, path: "/clients" },
 ];
 
+const adminMenuItems = [
+  {
+    text: "Organizações (Tenants)",
+    icon: <BusinessRoundedIcon />,
+    path: "/admin/tenants",
+  },
+  {
+    text: "Usuários & Acessos",
+    icon: <SupervisorAccountRoundedIcon />,
+    path: "/admin/users",
+  },
+];
+
 export function Sidebar({
   mobileOpen,
   onDrawerToggle,
@@ -41,6 +57,7 @@ export function Sidebar({
 }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -72,17 +89,17 @@ export function Sidebar({
         </Typography>
       </Box>
 
-      <List sx={{ px: 2, py: 3, flex: 1 }}>
+      <List sx={{ px: 2, py: 2, flex: 1, overflowY: "auto" }}>
         {menuItems.map((item) => {
           const isActive = location.pathname.startsWith(item.path);
           return (
-            <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
+            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
               <ListItemButton
                 onClick={() => handleNavigation(item.path)}
                 selected={isActive}
                 sx={{
                   borderRadius: 2,
-                  py: 1.5,
+                  py: 1.2,
                   "&.Mui-selected": {
                     bgcolor: "primary.main",
                     color: "primary.contrastText",
@@ -122,6 +139,76 @@ export function Sidebar({
             </ListItem>
           );
         })}
+
+        {user?.superAdmin && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <Typography
+              variant="overline"
+              sx={{
+                px: 2,
+                color: "text.secondary",
+                fontWeight: 700,
+                letterSpacing: "0.8px",
+              }}
+            >
+              Administração
+            </Typography>
+            {adminMenuItems.map((item) => {
+              const isActive = location.pathname.startsWith(item.path);
+              return (
+                <ListItem
+                  key={item.text}
+                  disablePadding
+                  sx={{ mt: 0.5, mb: 0.5 }}
+                >
+                  <ListItemButton
+                    onClick={() => handleNavigation(item.path)}
+                    selected={isActive}
+                    sx={{
+                      borderRadius: 2,
+                      py: 1.2,
+                      "&.Mui-selected": {
+                        bgcolor: "secondary.main",
+                        color: "secondary.contrastText",
+                        "&:hover": {
+                          bgcolor: "secondary.dark",
+                        },
+                        "& .MuiListItemIcon-root": {
+                          color: "secondary.contrastText",
+                        },
+                      },
+                      "&:hover:not(.Mui-selected)": {
+                        bgcolor: "action.hover",
+                      },
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 40,
+                        color: isActive ? "inherit" : "text.secondary",
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <Typography
+                          sx={{
+                            fontWeight: isActive ? 600 : 500,
+                            fontSize: "0.95rem",
+                          }}
+                        >
+                          {item.text}
+                        </Typography>
+                      }
+                    />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
+          </>
+        )}
       </List>
     </Box>
   );

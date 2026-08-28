@@ -10,6 +10,7 @@ import (
 	"ps/internal/application/ports/person"
 	"ps/internal/application/ports/photographer"
 	"ps/internal/application/ports/season"
+	tenantport "ps/internal/application/ports/tenant"
 	userport "ps/internal/application/ports/user"
 	"ps/internal/config"
 	bcryptinfra "ps/internal/infrastructure/auth/bcrypt"
@@ -20,6 +21,7 @@ import (
 	personMongo "ps/internal/infrastructure/person/mongo"
 	photographerMongo "ps/internal/infrastructure/photographer/mongo"
 	seasonMongo "ps/internal/infrastructure/season/mongo"
+	tenantMongo "ps/internal/infrastructure/tenant/mongo"
 	userMongo "ps/internal/infrastructure/user/mongo"
 	"ps/internal/interfaces/rest"
 
@@ -34,6 +36,7 @@ type App struct {
 func New(ctx context.Context, cfg config.Config) (*App, error) {
 	var (
 		users         userport.Repository
+		tenants       tenantport.Repository
 		seasons       season.Repository
 		photographers photographer.Repository
 		persons       person.Repository
@@ -62,18 +65,20 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 
 	db := mongoClient.Database(cfg.MongoDatabase)
 	uMongo := userMongo.NewRepository(db)
+	tMongo := tenantMongo.NewRepository(db)
 	sMongo := seasonMongo.NewRepository(db)
 	pMongo := photographerMongo.NewRepository(db)
 	peMongo := personMongo.NewRepository(db)
 	cMongo := clientMongo.NewRepository(db)
 
 	users = uMongo
+	tenants = tMongo
 	seasons = sMongo
 	photographers = pMongo
 	persons = peMongo
 	clients = cMongo
 
-	handler := rest.NewRouter(cfg, users, hasher, tokens, emailSender, seasons, photographers, persons, clients)
+	handler := rest.NewRouter(cfg, users, tenants, hasher, tokens, emailSender, seasons, photographers, persons, clients)
 	return &App{
 		handler:     handler,
 		mongoClient: mongoClient,

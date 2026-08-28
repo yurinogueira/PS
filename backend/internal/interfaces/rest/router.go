@@ -6,6 +6,7 @@ import (
 	_ "ps/docs"
 	portauth "ps/internal/application/ports/auth"
 	emailport "ps/internal/application/ports/email"
+	tenantport "ps/internal/application/ports/tenant"
 	userport "ps/internal/application/ports/user"
 	"ps/internal/config"
 	"ps/internal/interfaces/rest/handlers"
@@ -16,10 +17,12 @@ import (
 	"ps/internal/application/ports/person"
 	"ps/internal/application/ports/photographer"
 	"ps/internal/application/ports/season"
+	adminusecase "ps/internal/application/usecase/admin"
 	clientusecase "ps/internal/application/usecase/client"
 	personusecase "ps/internal/application/usecase/person"
 	photographerusecase "ps/internal/application/usecase/photographer"
 	seasonusecase "ps/internal/application/usecase/season"
+	tenantusecase "ps/internal/application/usecase/tenant"
 
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
@@ -28,11 +31,26 @@ type Router struct {
 	handler http.Handler
 }
 
-func NewRouter(cfg config.Config, users userport.Repository, hasher portauth.PasswordHasher, tokens portauth.TokenService, emailSender emailport.Sender, seasons season.Repository, photographers photographer.Repository, persons person.Repository, clients client.Repository) *Router {
+func NewRouter(
+	cfg config.Config,
+	users userport.Repository,
+	tenants tenantport.Repository,
+	hasher portauth.PasswordHasher,
+	tokens portauth.TokenService,
+	emailSender emailport.Sender,
+	seasons season.Repository,
+	photographers photographer.Repository,
+	persons person.Repository,
+	clients client.Repository,
+) *Router {
 	mux := http.NewServeMux()
 	healthHandler := handlers.NewHealthHandler()
 	authHandler := handlers.NewAuthHandler(users, hasher, tokens, emailSender, cfg.CookieDomain, cfg.CookieSecure)
 	userHandler := handlers.NewUserHandler(users, nil, hasher, tokens)
+
+	tenantSvc := tenantusecase.NewService(tenants)
+	adminSvc := adminusecase.NewService(users, tenants)
+	adminHandler := handlers.NewAdminHandler(tenantSvc, adminSvc)
 
 	seasonSvc := seasonusecase.NewService(seasons)
 	photographerSvc := photographerusecase.NewService(photographers)
@@ -79,15 +97,28 @@ func NewRouter(cfg config.Config, users userport.Repository, hasher portauth.Pas
 		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
 	}
 
+	// SuperAdmin routes wrapper (requires authentication + superAdmin)
+	adminChain := func(h http.HandlerFunc) http.Handler {
+		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequireSuperAdmin(), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
+	}
+
 	// Business routes wrapper (requires authentication + tenant)
 	businessChain := func(h http.HandlerFunc) http.Handler {
 		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequireTenant(), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
 	}
 
+	// Admin routes
+	mux.Handle("GET /api/v1/admin/tenants", adminChain(adminHandler.ListTenants))
+	mux.Handle("POST /api/v1/admin/tenants", adminChain(adminHandler.CreateTenant))
+	mux.Handle("GET /api/v1/admin/users", adminChain(adminHandler.ListUsers))
+	mux.Handle("PUT /api/v1/admin/users/{id}/tenant", adminChain(adminHandler.AssignTenant))
+
+	// User routes
 	mux.Handle("GET /api/v1/user/profile", protectedChain(userHandler.GetProfile))
 	mux.Handle("PUT /api/v1/user/profile", protectedChain(userHandler.UpdateProfile))
 	mux.Handle("PUT /api/v1/user/password", protectedChain(userHandler.UpdatePassword))
 
+	// Business entity routes
 	mux.Handle("GET /api/v1/seasons", businessChain(seasonHandler.List))
 	mux.Handle("POST /api/v1/seasons", businessChain(seasonHandler.Create))
 	mux.Handle("GET /api/v1/seasons/{id}", businessChain(seasonHandler.GetByID))

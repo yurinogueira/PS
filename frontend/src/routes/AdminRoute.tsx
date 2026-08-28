@@ -1,8 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuthStore } from "../features/auth/state/auth.store";
-import { PendingApprovalPage } from "../features/auth/pages/PendingApprovalPage";
 
-export function ProtectedRoute() {
+export function AdminRoute() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
   const location = useLocation();
@@ -11,8 +10,8 @@ export function ProtectedRoute() {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user && !user.tenantId && !user.superAdmin) {
-    return <PendingApprovalPage />;
+  if (!user?.superAdmin) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Outlet />;
