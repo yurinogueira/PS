@@ -90,8 +90,15 @@ func NewRouter(cfg config.Config, users userport.Repository, hasher portauth.Pas
 
 	mux.Handle("GET /api/v1/seasons", businessChain(seasonHandler.List))
 	mux.Handle("POST /api/v1/seasons", businessChain(seasonHandler.Create))
+	mux.Handle("GET /api/v1/seasons/{id}", businessChain(seasonHandler.GetByID))
+	mux.Handle("PUT /api/v1/seasons/{id}", businessChain(seasonHandler.Update))
+	mux.Handle("DELETE /api/v1/seasons/{id}", businessChain(seasonHandler.Delete))
+
 	mux.Handle("GET /api/v1/photographers", businessChain(photographerHandler.List))
 	mux.Handle("POST /api/v1/photographers", businessChain(photographerHandler.Create))
+	mux.Handle("GET /api/v1/photographers/{id}", businessChain(photographerHandler.GetByID))
+	mux.Handle("PUT /api/v1/photographers/{id}", businessChain(photographerHandler.Update))
+	mux.Handle("DELETE /api/v1/photographers/{id}", businessChain(photographerHandler.Delete))
 
 	mux.Handle("GET /api/v1/people", businessChain(personHandler.List))
 	mux.Handle("POST /api/v1/people", businessChain(personHandler.Create))

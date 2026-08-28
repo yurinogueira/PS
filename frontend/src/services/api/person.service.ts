@@ -6,6 +6,8 @@ export interface Person {
   email: string;
   alternative_email: string;
   phone: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const personService = {
@@ -21,7 +23,7 @@ export const personService = {
     const { data } = await apiClient.post<Person>("/people", person);
     return data;
   },
-  update: async (id: string, person: Person) => {
+  update: async (id: string, person: Partial<Person>) => {
     const { data } = await apiClient.put<Person>(`/people/${id}`, person);
     return data;
   },

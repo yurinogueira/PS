@@ -16,6 +16,12 @@ import {
   Checkbox,
   FormControlLabel,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
@@ -50,6 +56,16 @@ export const ClientDetailsPage = () => {
   const [client, setClient] = useState<SeasonClient | null>(null);
   const [person, setPerson] = useState<Person | null>(null);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const load = async () => {
     if (!id) return;
@@ -74,14 +90,37 @@ export const ClientDetailsPage = () => {
 
   const handleSave = async () => {
     if (!client || !id) return;
-    await clientService.update(id, client);
-    load();
+    try {
+      await clientService.update(id, client);
+      setSnackbar({
+        open: true,
+        message: "Cliente atualizado com sucesso!",
+        severity: "success",
+      });
+      load();
+    } catch (e) {
+      console.error(e);
+      setSnackbar({
+        open: true,
+        message: "Erro ao salvar alterações do cliente.",
+        severity: "error",
+      });
+    }
   };
 
-  const handleDelete = async () => {
-    if (!id || !confirm("Tem certeza que deseja excluir?")) return;
-    await clientService.delete(id);
-    navigate("/clients");
+  const handleConfirmDelete = async () => {
+    if (!id) return;
+    try {
+      await clientService.delete(id);
+      navigate("/clients");
+    } catch (e) {
+      console.error(e);
+      setSnackbar({
+        open: true,
+        message: "Erro ao excluir cliente.",
+        severity: "error",
+      });
+    }
   };
 
   const addDog = () => {
@@ -160,7 +199,11 @@ export const ClientDetailsPage = () => {
         </IconButton>
         <Typography variant="h4">Detalhes do Cliente</Typography>
         <Box sx={{ flexGrow: 1 }} />
-        <Button variant="outlined" color="error" onClick={handleDelete}>
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={() => setDeleteDialogOpen(true)}
+        >
           Excluir Cliente
         </Button>
         <Button variant="contained" onClick={handleSave}>
@@ -328,6 +371,44 @@ export const ClientDetailsPage = () => {
           </AccordionDetails>
         </Accordion>
       ))}
+
+      {/* Modal Confirmação de Exclusão */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Confirmar Exclusão</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Tem certeza que deseja excluir o cadastro deste cliente na
+            temporada?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+          >
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Feedback Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
