@@ -34,7 +34,8 @@ ssh "${SSH_OPTS[@]}" "$USER@$HOST" << 'EOF'
 set -euo pipefail
 
 # Instalar binário
-sudo install -m 755 -o ps -g ps /tmp/ps-deploy/ps-api /opt/ps/ps-api
+sudo mkdir -p /opt/ps /etc/ps
+sudo install -m 755 -o ubuntu -g ubuntu /tmp/ps-deploy/ps-api /opt/ps/ps-api
 
 # Atualizar Caddyfile e recarregar Caddy
 if [ -f /tmp/ps-deploy/Caddyfile ]; then

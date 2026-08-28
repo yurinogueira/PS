@@ -27,13 +27,12 @@ if ! command -v caddy &> /dev/null; then
     apt-get install -y caddy
 fi
 
-# 4. Criar usuário e diretórios da aplicação PS
-echo "=== Configurando usuário e diretórios ==="
-id -u ps &>/dev/null || useradd -r -s /bin/false -d /opt/ps ps
+# 4. Configurar diretórios da aplicação PS
+echo "=== Configurando diretórios ==="
 mkdir -p /opt/ps /etc/ps
 touch /etc/ps/backend.env
-chown -R ps:ps /opt/ps
-chown -R root:ps /etc/ps
+chown -R ubuntu:ubuntu /opt/ps
+chown -R root:ubuntu /etc/ps
 chmod 750 /etc/ps
 chmod 640 /etc/ps/backend.env
 
