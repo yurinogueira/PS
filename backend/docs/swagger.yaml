@@ -61,8 +61,8 @@ info:
   contact:
     email: suporte@ps.com
     name: Suporte PS
-  description: API REST para gestão inteligente de veículos, revisões e manutenções
-    do PS (Photo Storage).
+  description: API REST para gestão inteligente de fotografias e eventos caninos do
+    PS (Photo Storage).
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT

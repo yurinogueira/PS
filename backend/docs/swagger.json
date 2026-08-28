@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "API REST para gestão inteligente de veículos, revisões e manutenções do PS (Photo Storage).",
+        "description": "API REST para gestão inteligente de fotografias e eventos caninos do PS (Photo Storage).",
         "title": "PS API",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {

@@ -15,6 +15,21 @@ const RegisterPage = lazy(() =>
     default: m.RegisterPage,
   })),
 );
+const VerifyEmailPage = lazy(() =>
+  import("../features/auth/pages/VerifyEmailPage").then((m) => ({
+    default: m.VerifyEmailPage,
+  })),
+);
+const ForgotPasswordPage = lazy(() =>
+  import("../features/auth/pages/ForgotPasswordPage").then((m) => ({
+    default: m.ForgotPasswordPage,
+  })),
+);
+const ResetPasswordPage = lazy(() =>
+  import("../features/auth/pages/ResetPasswordPage").then((m) => ({
+    default: m.ResetPasswordPage,
+  })),
+);
 const DashboardPage = lazy(() =>
   import("../features/dashboard/pages/DashboardPage").then((m) => ({
     default: m.DashboardPage,
@@ -59,6 +74,9 @@ export function AppRoutes() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>

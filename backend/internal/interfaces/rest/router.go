@@ -66,6 +66,10 @@ func NewRouter(cfg config.Config, users userport.Repository, hasher portauth.Pas
 
 	mux.Handle("POST /api/v1/auth/register", authChain(authHandler.Register))
 	mux.Handle("POST /api/v1/auth/login", authChain(authHandler.Login))
+	mux.Handle("POST /api/v1/auth/forgot-password", authChain(authHandler.ForgotPassword))
+	mux.Handle("POST /api/v1/auth/reset-password", authChain(authHandler.ResetPassword))
+	mux.Handle("POST /api/v1/auth/verify-email", authChain(authHandler.VerifyEmail))
+	mux.Handle("POST /api/v1/auth/resend-verification", authChain(authHandler.ResendVerification))
 	mux.Handle("POST /api/v1/auth/refresh", middleware.Chain(http.HandlerFunc(authHandler.Refresh), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
 	mux.Handle("GET /api/v1/auth/me", middleware.Chain(http.HandlerFunc(authHandler.Me), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
 	mux.Handle("POST /api/v1/auth/logout", middleware.Chain(http.HandlerFunc(authHandler.Logout), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel)))
