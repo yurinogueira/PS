@@ -185,14 +185,14 @@ export const PeoplePage = () => {
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
           <TextField
-            label="E-mail"
+            label="E-mail (Opcional)"
             fullWidth
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
           <TextField
-            label="E-mail Alternativo"
+            label="E-mail Alternativo (Opcional)"
             fullWidth
             type="email"
             value={form.alternative_email}
@@ -201,7 +201,7 @@ export const PeoplePage = () => {
             }
           />
           <TextField
-            label="Telefone"
+            label="Telefone (Opcional)"
             fullWidth
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}

@@ -108,5 +108,13 @@ export const appTheme = createTheme({
         },
       },
     },
+    MuiFormLabel: {
+      styleOverrides: {
+        asterisk: {
+          color: "#d32f2f",
+          fontWeight: 700,
+        },
+      },
+    },
   },
 });

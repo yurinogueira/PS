@@ -240,20 +240,37 @@ export const ClientDetailsPage = () => {
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 2,
+                mb: 3,
+                alignItems: "center",
+              }}
+            >
               <TextField
-                label="Raça"
+                label="Raça (Opcional)"
                 value={dog.breed}
                 onChange={(e) => updateDog(dIdx, "breed", e.target.value)}
+                sx={{
+                  flex: { xs: "1 1 100%", sm: "1 1 200px" },
+                  minWidth: "160px",
+                }}
               />
               <TextField
-                label="Juiz"
+                label="Juiz (Opcional)"
                 value={dog.judge}
                 onChange={(e) => updateDog(dIdx, "judge", e.target.value)}
+                sx={{
+                  flex: { xs: "1 1 100%", sm: "1 1 200px" },
+                  minWidth: "160px",
+                }}
               />
               <TextField
                 type="number"
                 label="Competições Ganhas"
+                required
                 value={dog.competitions_won}
                 onChange={(e) =>
                   updateDog(
@@ -262,6 +279,10 @@ export const ClientDetailsPage = () => {
                     parseInt(e.target.value) || 0,
                   )
                 }
+                sx={{
+                  flex: { xs: "1 1 100%", sm: "1 1 180px" },
+                  minWidth: "160px",
+                }}
               />
               <FormControlLabel
                 control={
@@ -272,17 +293,30 @@ export const ClientDetailsPage = () => {
                     }
                   />
                 }
-                label="Dono?"
+                label="Dono do Cachorro (Opcional)"
+                sx={{ minWidth: "200px" }}
               />
-              <IconButton color="error" onClick={() => removeDog(dIdx)}>
+              <IconButton
+                color="error"
+                onClick={() => removeDog(dIdx)}
+                title="Excluir Cachorro"
+                sx={{ ml: "auto" }}
+              >
                 <DeleteIcon />
               </IconButton>
             </Box>
 
             <Box
-              sx={{ mb: 2, display: "flex", justifyContent: "space-between" }}
+              sx={{
+                mb: 2,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
             >
-              <Typography variant="subtitle2">Fotos</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                Fotos
+              </Typography>
               <Button
                 size="small"
                 startIcon={<AddIcon />}
@@ -297,27 +331,41 @@ export const ClientDetailsPage = () => {
                 key={pIdx}
                 sx={{
                   display: "flex",
+                  flexWrap: "wrap",
                   gap: 2,
                   alignItems: "center",
                   mb: 2,
                   p: 2,
                   bgcolor: "#f9f9f9",
-                  borderRadius: 1,
+                  borderRadius: 2,
+                  border: "1px solid #E2E8F0",
                 }}
               >
                 <TextField
                   size="small"
                   label="Número do Arquivo"
+                  required
                   value={photo.file_number}
                   onChange={(e) =>
                     updatePhoto(dIdx, pIdx, "file_number", e.target.value)
                   }
+                  sx={{
+                    flex: { xs: "1 1 100%", sm: "1 1 180px" },
+                    minWidth: "160px",
+                  }}
                 />
-                <FormControl size="small" sx={{ minWidth: 200 }}>
-                  <InputLabel>Fotógrafo</InputLabel>
+                <FormControl
+                  size="small"
+                  required
+                  sx={{
+                    flex: { xs: "1 1 100%", sm: "1 1 200px" },
+                    minWidth: "180px",
+                  }}
+                >
+                  <InputLabel required>Fotógrafo</InputLabel>
                   <Select
                     value={photo.photographer_id || ""}
-                    label="Fotógrafo"
+                    label="Fotógrafo *"
                     onChange={(e) =>
                       updatePhoto(dIdx, pIdx, "photographer_id", e.target.value)
                     }
@@ -329,11 +377,18 @@ export const ClientDetailsPage = () => {
                     ))}
                   </Select>
                 </FormControl>
-                <FormControl size="small" sx={{ minWidth: 150 }}>
-                  <InputLabel>Pagamento</InputLabel>
+                <FormControl
+                  size="small"
+                  required
+                  sx={{
+                    flex: { xs: "1 1 100%", sm: "1 1 180px" },
+                    minWidth: "160px",
+                  }}
+                >
+                  <InputLabel required>Forma de Pagamento</InputLabel>
                   <Select
                     value={photo.payment_method || "Pix"}
-                    label="Pagamento"
+                    label="Forma de Pagamento *"
                     onChange={(e) =>
                       updatePhoto(dIdx, pIdx, "payment_method", e.target.value)
                     }
@@ -348,21 +403,34 @@ export const ClientDetailsPage = () => {
                 <TextField
                   size="small"
                   type="number"
-                  label="Valor Pago"
-                  value={photo.amount_paid || 0}
+                  label="Valor Pago (Opcional)"
+                  value={
+                    photo.amount_paid === undefined ||
+                    photo.amount_paid === null
+                      ? ""
+                      : photo.amount_paid
+                  }
                   onChange={(e) =>
                     updatePhoto(
                       dIdx,
                       pIdx,
                       "amount_paid",
-                      parseFloat(e.target.value) || 0,
+                      e.target.value === ""
+                        ? 0
+                        : parseFloat(e.target.value) || 0,
                     )
                   }
+                  sx={{
+                    flex: { xs: "1 1 100%", sm: "1 1 150px" },
+                    minWidth: "140px",
+                  }}
                 />
                 <IconButton
                   color="error"
                   size="small"
                   onClick={() => removePhoto(dIdx, pIdx)}
+                  title="Excluir Foto"
+                  sx={{ ml: { xs: "auto", sm: 0 } }}
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
