@@ -523,7 +523,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "PS API",
-	Description:      "API REST para gestão inteligente de veículos, revisões e manutenções do PS (Photo Storage).",
+	Description:      "API REST para gestão inteligente de fotografias e eventos caninos do PS (Photo Storage).",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

@@ -15,7 +15,7 @@ import (
 
 // @title           PS API
 // @version         1.0
-// @description     API REST para gestão inteligente de veículos, revisões e manutenções do PS (Photo Storage).
+// @description     API REST para gestão inteligente de fotografias e eventos caninos do PS (Photo Storage).
 // @termsOfService  http://swagger.io/terms/
 
 // @contact.name   Suporte PS

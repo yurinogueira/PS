@@ -82,7 +82,7 @@ func (s *Service) SendVerificationEmail(ctx context.Context, toEmail, toName, to
 	}
 
 	plainBody := fmt.Sprintf(
-		"Olá, %s!\n\nObrigado por se cadastrar no PS (Photo Storage).\n\nPara validar seu e-mail e liberar o cadastro de veículos, acesse o link abaixo:\n%s\n\nEste link é válido por 24 horas.\n\nSe você não criou uma conta no PS, ignore este e-mail.",
+		"Olá, %s!\n\nObrigado por se cadastrar no PS (Photo Storage).\n\nPara validar seu e-mail e liberar o cadastro das suas fotos e eventos, acesse o link abaixo:\n%s\n\nEste link é válido por 24 horas.\n\nSe você não criou uma conta no PS, ignore este e-mail.",
 		cleanName,
 		verifyURL,
 	)
