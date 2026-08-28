@@ -14,7 +14,7 @@ import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
 import CameraAltRoundedIcon from "@mui/icons-material/CameraAltRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
-import CollectionsIcon from '@mui/icons-material/Collections';
+import CollectionsIcon from "@mui/icons-material/Collections";
 
 interface SidebarProps {
   mobileOpen: boolean;
@@ -25,12 +25,20 @@ interface SidebarProps {
 const menuItems = [
   { text: "Visão Geral", icon: <DashboardRoundedIcon />, path: "/dashboard" },
   { text: "Temporadas", icon: <EventNoteRoundedIcon />, path: "/seasons" },
-  { text: "Fotógrafos", icon: <CameraAltRoundedIcon />, path: "/photographers" },
+  {
+    text: "Fotógrafos",
+    icon: <CameraAltRoundedIcon />,
+    path: "/photographers",
+  },
   { text: "Pessoas", icon: <PeopleAltRoundedIcon />, path: "/people" },
   { text: "Clientes e Fotos", icon: <CollectionsIcon />, path: "/clients" },
 ];
 
-export function Sidebar({ mobileOpen, onDrawerToggle, drawerWidth }: SidebarProps) {
+export function Sidebar({
+  mobileOpen,
+  onDrawerToggle,
+  drawerWidth,
+}: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -101,7 +109,12 @@ export function Sidebar({ mobileOpen, onDrawerToggle, drawerWidth }: SidebarProp
                 </ListItemIcon>
                 <ListItemText
                   primary={
-                    <Typography sx={{ fontWeight: isActive ? 600 : 500, fontSize: "0.95rem" }}>
+                    <Typography
+                      sx={{
+                        fontWeight: isActive ? 600 : 500,
+                        fontSize: "0.95rem",
+                      }}
+                    >
                       {item.text}
                     </Typography>
                   }

@@ -102,7 +102,14 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           {/* We would fetch seasons here, but for now we just show a placeholder if none selected */}
-          <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' }, color: 'text.secondary', fontWeight: 600 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              display: { xs: "none", sm: "block" },
+              color: "text.secondary",
+              fontWeight: 600,
+            }}
+          >
             Temporada Atual: {activeSeason?.name || "Nenhuma"}
           </Typography>
 

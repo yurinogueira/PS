@@ -126,7 +126,9 @@ export function AuthHeroBanner() {
                 backdropFilter: "blur(4px)",
               }}
             >
-              <BuildCircleIcon sx={{ fontSize: 20, color: brandColors.secondary }} />
+              <BuildCircleIcon
+                sx={{ fontSize: 20, color: brandColors.secondary }}
+              />
             </Box>
             <Typography
               variant="body2"
@@ -146,7 +148,9 @@ export function AuthHeroBanner() {
                 backdropFilter: "blur(4px)",
               }}
             >
-              <TrendingUpIcon sx={{ fontSize: 20, color: brandColors.tertiary }} />
+              <TrendingUpIcon
+                sx={{ fontSize: 20, color: brandColors.tertiary }}
+              />
             </Box>
             <Typography
               variant="body2"

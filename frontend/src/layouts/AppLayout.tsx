@@ -21,7 +21,11 @@ export function AppLayout() {
       }}
     >
       {/* Navigation Sidebar */}
-      <Sidebar mobileOpen={mobileOpen} onDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
+      <Sidebar
+        mobileOpen={mobileOpen}
+        onDrawerToggle={handleDrawerToggle}
+        drawerWidth={drawerWidth}
+      />
 
       {/* Main Content Area */}
       <Box

@@ -23,16 +23,24 @@ const ProfilePage = lazy(() =>
 
 // New pages for Photo Storage
 const SeasonsPage = lazy(() =>
-  import("../features/seasons/pages/SeasonsPage").then((m) => ({ default: m.SeasonsPage }))
+  import("../features/seasons/pages/SeasonsPage").then((m) => ({
+    default: m.SeasonsPage,
+  })),
 );
 const PhotographersPage = lazy(() =>
-  import("../features/photographers/pages/PhotographersPage").then((m) => ({ default: m.PhotographersPage }))
+  import("../features/photographers/pages/PhotographersPage").then((m) => ({
+    default: m.PhotographersPage,
+  })),
 );
 const PeoplePage = lazy(() =>
-  import("../features/people/pages/PeoplePage").then((m) => ({ default: m.PeoplePage }))
+  import("../features/people/pages/PeoplePage").then((m) => ({
+    default: m.PeoplePage,
+  })),
 );
 const ClientsPage = lazy(() =>
-  import("../features/clients/pages/ClientsPage").then((m) => ({ default: m.ClientsPage }))
+  import("../features/clients/pages/ClientsPage").then((m) => ({
+    default: m.ClientsPage,
+  })),
 );
 
 export function AppRoutes() {
