@@ -86,6 +86,6 @@ JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
 "
 
 echo "==> 3. Enviando /etc/ps/backend.env para o servidor OCI..."
-ssh "${SSH_OPTS[@]}" "$USER@$HOST" "sudo mkdir -p /etc/ps && sudo tee /etc/ps/backend.env > /dev/null && sudo chmod 600 /etc/ps/backend.env && sudo chown root:ps /etc/ps/backend.env" <<< "$ENV_CONTENT"
+ssh "${SSH_OPTS[@]}" "$USER@$HOST" "sudo mkdir -p /etc/ps && sudo tee /etc/ps/backend.env > /dev/null && sudo chmod 600 /etc/ps/backend.env && sudo chown root:ubuntu /etc/ps/backend.env" <<< "$ENV_CONTENT"
 
 echo "==> backend.env configurado com sucesso no servidor!"

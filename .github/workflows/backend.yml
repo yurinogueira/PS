@@ -180,8 +180,11 @@ jobs:
           ssh "$USER@$HOST" "SMTP_HOST=\"$SMTP_HOST\" SMTP_PORT=\"$SMTP_PORT\" SMTP_USER=\"$SMTP_USER\" SMTP_PASS=\"$SMTP_PASS\" EMAIL_FROM=\"$EMAIL_FROM\" APP_BASE_URL=\"$APP_BASE_URL\" bash -s" << 'EOF'
             set -euo pipefail
 
+            # Criar diretórios se não existirem
+            sudo mkdir -p /opt/ps /etc/ps
+
             # Instalar binário
-            sudo install -m 755 -o ps -g ps \
+            sudo install -m 755 -o ubuntu -g ubuntu \
               /tmp/ps-deploy/dist/ps-api /opt/ps/ps-api
 
             # Atualizar Caddyfile se modificado
@@ -200,7 +203,7 @@ jobs:
 
             # Garantir existência e permissões seguras do arquivo de variáveis
             sudo touch /etc/ps/backend.env
-            sudo chown root:ps /etc/ps/backend.env
+            sudo chown root:ubuntu /etc/ps/backend.env
             sudo chmod 640 /etc/ps/backend.env
 
             # Injetar ou atualizar FIPE e configurações de e-mail / SMTP

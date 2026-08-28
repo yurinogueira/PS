@@ -51,11 +51,10 @@ else
     echo "Caddy já instalado: $(caddy version)"
 fi
 
-echo "==> 3. Configurando usuário e diretórios PS..."
-id -u ps &>/dev/null || sudo useradd -r -s /bin/false -d /opt/ps ps
+echo "==> 3. Configurando diretórios PS..."
 sudo mkdir -p /opt/ps/data/uploads /etc/ps /var/log/caddy
-sudo chown -R ps:ps /opt/ps
-sudo chown -R root:ps /etc/ps
+sudo chown -R ubuntu:ubuntu /opt/ps
+sudo chown -R root:ubuntu /etc/ps
 sudo chmod 750 /etc/ps
 sudo chown -R caddy:caddy /var/log/caddy
 
