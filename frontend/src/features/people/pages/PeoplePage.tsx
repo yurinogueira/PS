@@ -22,6 +22,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { personService, Person } from "../../../services/api/person.service";
+import { maskPhone, formatPhone } from "../../../utils/phone";
 
 export const PeoplePage = () => {
   const [people, setPeople] = useState<Person[]>([]);
@@ -62,7 +63,7 @@ export const PeoplePage = () => {
       name: person.name || "",
       email: person.email || "",
       alternative_email: person.alternative_email || "",
-      phone: person.phone || "",
+      phone: maskPhone(person.phone) || "",
     });
     setOpen(true);
   };
@@ -137,7 +138,7 @@ export const PeoplePage = () => {
                   <TableCell>{p.name}</TableCell>
                   <TableCell>{p.email}</TableCell>
                   <TableCell>{p.alternative_email || "-"}</TableCell>
-                  <TableCell>{p.phone || "-"}</TableCell>
+                  <TableCell>{formatPhone(p.phone) || "-"}</TableCell>
                   <TableCell align="right">
                     <Tooltip title="Editar">
                       <IconButton
@@ -203,8 +204,14 @@ export const PeoplePage = () => {
           <TextField
             label="Telefone"
             fullWidth
+            placeholder="(21) 99999-9999"
             value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, phone: maskPhone(e.target.value) })
+            }
+            slotProps={{
+              htmlInput: { maxLength: 15 },
+            }}
           />
         </DialogContent>
         <DialogActions>
