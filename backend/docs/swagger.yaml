@@ -51,6 +51,18 @@ definitions:
       updated_at:
         type: string
     type: object
+  handlers.AssignTenantRequest:
+    properties:
+      tenantId:
+        example: acme-corp
+        type: string
+    type: object
+  handlers.CreateTenantRequest:
+    properties:
+      name:
+        example: acme-corp
+        type: string
+    type: object
   handlers.ForgotPasswordRequest:
     properties:
       email:
@@ -170,6 +182,138 @@ info:
   title: PS API
   version: "1.0"
 paths:
+  /api/v1/admin/tenants:
+    get:
+      description: Retorna a lista de todas as organizações (tenants) cadastradas
+        no sistema
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.SuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Listar todos os tenants
+      tags:
+      - Admin
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova organização (tenant) imutável no sistema
+      parameters:
+      - description: Dados do tenant
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateTenantRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/httpx.SuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Criar novo tenant
+      tags:
+      - Admin
+  /api/v1/admin/users:
+    get:
+      description: Retorna a lista de todos os usuários cadastrados e seus respectivos
+        tenants e status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.SuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Listar usuários para administração
+      tags:
+      - Admin
+  /api/v1/admin/users/{id}/tenant:
+    put:
+      consumes:
+      - application/json
+      description: Vincula ou desvincula um usuário de uma organização (tenant)
+      parameters:
+      - description: ID do Usuário
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados de atribuição de tenant
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AssignTenantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.SuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Atribuir tenant a um usuário
+      tags:
+      - Admin
   /api/v1/auth/forgot-password:
     post:
       consumes:

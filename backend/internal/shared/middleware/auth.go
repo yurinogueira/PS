@@ -12,8 +12,9 @@ import (
 type contextKey string
 
 const (
-	UserIDKey   contextKey = "user_id"
-	TenantIDKey contextKey = "tenant_id"
+	UserIDKey     contextKey = "user_id"
+	TenantIDKey   contextKey = "tenant_id"
+	SuperAdminKey contextKey = "super_admin"
 )
 
 func GetTenantID(ctx context.Context) string {
@@ -21,6 +22,13 @@ func GetTenantID(ctx context.Context) string {
 		return val
 	}
 	return ""
+}
+
+func IsSuperAdmin(ctx context.Context) bool {
+	if val, ok := ctx.Value(SuperAdminKey).(bool); ok {
+		return val
+	}
+	return false
 }
 
 func Auth(tokenService portauth.TokenService) func(http.Handler) http.Handler {
@@ -46,6 +54,7 @@ func Auth(tokenService portauth.TokenService) func(http.Handler) http.Handler {
 
 			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
 			ctx = context.WithValue(ctx, TenantIDKey, claims.TenantID)
+			ctx = context.WithValue(ctx, SuperAdminKey, claims.SuperAdmin)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -57,6 +66,18 @@ func RequireTenant() func(http.Handler) http.Handler {
 			tenantID, ok := r.Context().Value(TenantIDKey).(string)
 			if !ok || strings.TrimSpace(tenantID) == "" {
 				httpx.Error(w, http.StatusForbidden, "Tenant is required. Pending administrator approval.", nil)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func RequireSuperAdmin() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !IsSuperAdmin(r.Context()) {
+				httpx.Error(w, http.StatusForbidden, "Forbidden: superadmin access required", nil)
 				return
 			}
 			next.ServeHTTP(w, r)

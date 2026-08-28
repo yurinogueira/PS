@@ -8,9 +8,10 @@ type TokenPair struct {
 }
 
 type TokenClaims struct {
-	UserID   string
-	Email    string
-	TenantID string
+	UserID     string
+	Email      string
+	TenantID   string
+	SuperAdmin bool
 }
 
 type TokenService interface {
