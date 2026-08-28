@@ -11,7 +11,7 @@ export interface Person {
 export const personService = {
   list: async () => {
     const { data } = await apiClient.get<Person[]>("/people");
-    return data;
+    return data || [];
   },
   getById: async (id: string) => {
     const { data } = await apiClient.get<Person>(`/people/${id}`);

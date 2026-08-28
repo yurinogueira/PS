@@ -8,7 +8,7 @@ export interface Photographer {
 export const photographerService = {
   list: async () => {
     const { data } = await apiClient.get<Photographer[]>("/photographers");
-    return data;
+    return data || [];
   },
   create: async (photographer: Omit<Photographer, "id">) => {
     const { data } = await apiClient.post<Photographer>(

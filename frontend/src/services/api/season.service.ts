@@ -9,7 +9,7 @@ export interface Season {
 export const seasonService = {
   list: async () => {
     const { data } = await apiClient.get<Season[]>("/seasons");
-    return data;
+    return data || [];
   },
   create: async (season: Omit<Season, "id">) => {
     const { data } = await apiClient.post<Season>("/seasons", season);

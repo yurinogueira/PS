@@ -35,12 +35,18 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
   const { activeSeason, setActiveSeason } = useSeasonStore();
 
   useEffect(() => {
-    seasonService.list().then((data) => {
-      setSeasons(data);
-      if (data.length > 0 && !activeSeason) {
-        setActiveSeason({ id: data[0].id, name: data[0].name });
-      }
-    });
+    seasonService
+      .list()
+      .then((data) => {
+        const seasonList = data || [];
+        setSeasons(seasonList);
+        if (seasonList.length > 0 && !activeSeason) {
+          setActiveSeason({ id: seasonList[0].id, name: seasonList[0].name });
+        }
+      })
+      .catch(() => {
+        setSeasons([]);
+      });
   }, [activeSeason, setActiveSeason]);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -103,7 +109,7 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
               label="Temporada Ativa"
               onChange={(e) => handleChangeSeason(e.target.value)}
             >
-              {seasons.map((s) => (
+              {(seasons || []).map((s) => (
                 <MenuItem key={s.id} value={s.id}>
                   {s.name}
                 </MenuItem>
