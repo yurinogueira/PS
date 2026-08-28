@@ -26,6 +26,7 @@ type userDoc struct {
 	PasswordResetTokenHash     string     `bson:"passwordResetTokenHash,omitempty"`
 	PasswordResetExpiresAt     *time.Time `bson:"passwordResetExpiresAt,omitempty"`
 	TenantID                   string     `bson:"tenantId"`
+	SuperAdmin                 bool       `bson:"superAdmin,omitempty"`
 	CreatedAt                  time.Time  `bson:"createdAt"`
 	UpdatedAt                  time.Time  `bson:"updatedAt,omitempty"`
 }
@@ -43,6 +44,7 @@ func (d userDoc) toDomain() domainuser.User {
 		PasswordResetTokenHash:     d.PasswordResetTokenHash,
 		PasswordResetExpiresAt:     d.PasswordResetExpiresAt,
 		TenantID:                   d.TenantID,
+		SuperAdmin:                 d.SuperAdmin,
 		CreatedAt:                  d.CreatedAt,
 		UpdatedAt:                  d.UpdatedAt,
 	}
@@ -109,6 +111,7 @@ func (r *Repository) Create(ctx context.Context, user domainuser.User) (domainus
 		PasswordResetTokenHash:     user.PasswordResetTokenHash,
 		PasswordResetExpiresAt:     user.PasswordResetExpiresAt,
 		TenantID:                   user.TenantID,
+		SuperAdmin:                 user.SuperAdmin,
 		CreatedAt:                  user.CreatedAt,
 		UpdatedAt:                  user.UpdatedAt,
 	}
@@ -142,6 +145,7 @@ func (r *Repository) Update(ctx context.Context, user domainuser.User) (domainus
 			"passwordResetTokenHash":     user.PasswordResetTokenHash,
 			"passwordResetExpiresAt":     user.PasswordResetExpiresAt,
 			"tenantId":                   user.TenantID,
+			"superAdmin":                 user.SuperAdmin,
 			"updatedAt":                  user.UpdatedAt,
 		},
 	}
@@ -226,4 +230,23 @@ func (r *Repository) FindByPasswordResetTokenHash(ctx context.Context, hash stri
 		return domainuser.User{}, err
 	}
 	return doc.toDomain(), nil
+}
+
+func (r *Repository) List(ctx context.Context) ([]domainuser.User, error) {
+	cursor, err := r.coll.Find(ctx, bson.D{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var docs []userDoc
+	if err := cursor.All(ctx, &docs); err != nil {
+		return nil, err
+	}
+
+	users := make([]domainuser.User, 0, len(docs))
+	for _, d := range docs {
+		users = append(users, d.toDomain())
+	}
+	return users, nil
 }

@@ -174,7 +174,9 @@ export const PersonDetailsPage = () => {
     try {
       const [pData, clientsData, phData] = await Promise.all([
         personService.getById(id),
-        clientService.list(),
+        clientService.list(
+          activeSeason ? { season_id: activeSeason.id } : undefined,
+        ),
         photographerService.list(),
       ]);
 
@@ -182,8 +184,12 @@ export const PersonDetailsPage = () => {
       setPhotographers(phData || []);
 
       if (activeSeason) {
-        const currentClient = (clientsData || []).find(
-          (c) => c.person_id === id && c.season_id === activeSeason.id,
+        const clientList = Array.isArray(clientsData)
+          ? clientsData
+          : clientsData?.data || [];
+        const currentClient = clientList.find(
+          (c: SeasonClient) =>
+            c.person_id === id && c.season_id === activeSeason.id,
         );
         setClient(currentClient || null);
       } else {

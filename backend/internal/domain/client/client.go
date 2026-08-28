@@ -30,3 +30,17 @@ type Photo struct {
 	PaymentMethod  string   `json:"payment_method" bson:"payment_method"` // Pix, Credit Card, Debit Card, Cash, Não pago
 	AmountPaid     *float64 `json:"amount_paid" bson:"amount_paid"`
 }
+
+type ListFilter struct {
+	SeasonID string `json:"season_id"`
+	Search   string `json:"search"`
+	Page     int    `json:"page"`
+	Limit    int    `json:"limit"`
+}
+
+type PaginatedClients struct {
+	Data  []*SeasonClient `json:"data"`
+	Total int64           `json:"total"`
+	Page  int             `json:"page"`
+	Limit int             `json:"limit"`
+}

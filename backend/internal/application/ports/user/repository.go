@@ -16,4 +16,5 @@ type Repository interface {
 	Update(ctx context.Context, user domainuser.User) (domainuser.User, error)
 	FindByEmailVerificationTokenHash(ctx context.Context, hash string) (domainuser.User, error)
 	FindByPasswordResetTokenHash(ctx context.Context, hash string) (domainuser.User, error)
+	List(ctx context.Context) ([]domainuser.User, error)
 }

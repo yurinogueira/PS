@@ -24,6 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import PetsIcon from "@mui/icons-material/Pets";
 import { personService, Person } from "../../../services/api/person.service";
+import { maskPhone, formatPhone } from "../../../utils/phone";
 
 export const PeoplePage = () => {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ export const PeoplePage = () => {
       name: person.name || "",
       email: person.email || "",
       alternative_email: person.alternative_email || "",
-      phone: person.phone || "",
+      phone: maskPhone(person.phone) || "",
     });
     setOpen(true);
   };
@@ -140,7 +141,7 @@ export const PeoplePage = () => {
                   <TableCell>{p.name}</TableCell>
                   <TableCell>{p.email}</TableCell>
                   <TableCell>{p.alternative_email || "-"}</TableCell>
-                  <TableCell>{p.phone || "-"}</TableCell>
+                  <TableCell>{formatPhone(p.phone) || "-"}</TableCell>
                   <TableCell align="right">
                     <Tooltip title="Cachorros & Fotos">
                       <IconButton
@@ -198,14 +199,14 @@ export const PeoplePage = () => {
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
           <TextField
-            label="E-mail"
+            label="E-mail (Opcional)"
             fullWidth
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
           <TextField
-            label="E-mail Alternativo"
+            label="E-mail Alternativo (Opcional)"
             fullWidth
             type="email"
             value={form.alternative_email}
@@ -214,10 +215,16 @@ export const PeoplePage = () => {
             }
           />
           <TextField
-            label="Telefone"
+            label="Telefone (Opcional)"
             fullWidth
+            placeholder="(21) 99999-9999"
             value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, phone: maskPhone(e.target.value) })
+            }
+            slotProps={{
+              htmlInput: { maxLength: 15 },
+            }}
           />
         </DialogContent>
         <DialogActions>

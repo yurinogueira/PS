@@ -11,7 +11,7 @@ export function ProtectedRoute() {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user && !user.tenantId) {
+  if (user && !user.tenantId && !user.superAdmin) {
     return <PendingApprovalPage />;
   }
 

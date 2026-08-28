@@ -36,7 +36,12 @@ describe("PersonDetailsPage", () => {
       alternative_email: "",
       phone: "11988887777",
     });
-    vi.mocked(clientService.list).mockResolvedValue([]);
+    vi.mocked(clientService.list).mockResolvedValue({
+      data: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+    });
     vi.mocked(photographerService.list).mockResolvedValue([
       { id: "ph1", name: "Fotógrafo João" },
     ]);

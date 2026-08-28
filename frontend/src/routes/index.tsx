@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { AppLayout } from "../layouts/AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { AdminRoute } from "./AdminRoute";
 import { PageLoadingFallback } from "../features/shared";
 
 // Lazy-loaded route components for optimal bundle splitting and initial load performance
@@ -73,6 +74,18 @@ const ClientDetailsPage = lazy(() =>
   })),
 );
 
+// Admin pages
+const AdminTenantsPage = lazy(() =>
+  import("../features/admin/pages/AdminTenantsPage").then((m) => ({
+    default: m.AdminTenantsPage,
+  })),
+);
+const AdminUsersPage = lazy(() =>
+  import("../features/admin/pages/AdminUsersPage").then((m) => ({
+    default: m.AdminUsersPage,
+  })),
+);
+
 export function AppRoutes() {
   return (
     <Suspense fallback={<PageLoadingFallback />}>
@@ -94,6 +107,16 @@ export function AppRoutes() {
             <Route path="/clients" element={<ClientsPage />} />
             <Route path="/clients/:id" element={<ClientDetailsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+
+            {/* SuperAdmin routes */}
+            <Route element={<AdminRoute />}>
+              <Route
+                path="/admin"
+                element={<Navigate to="/admin/tenants" replace />}
+              />
+              <Route path="/admin/tenants" element={<AdminTenantsPage />} />
+              <Route path="/admin/users" element={<AdminUsersPage />} />
+            </Route>
           </Route>
         </Route>
 

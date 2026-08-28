@@ -125,6 +125,18 @@ func (r *Repository) FindByPasswordResetTokenHash(ctx context.Context, hash stri
 	return domainuser.User{}, ErrNotFound
 }
 
+func (r *Repository) List(ctx context.Context) ([]domainuser.User, error) {
+	_ = ctx
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	users := make([]domainuser.User, 0, len(r.byID))
+	for _, u := range r.byID {
+		users = append(users, u)
+	}
+	return users, nil
+}
+
 func (r *Repository) makeID() string {
 	return fmt.Sprintf("user-%d", r.nextID)
 }

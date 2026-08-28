@@ -213,7 +213,7 @@ export const SeasonsPage = () => {
             onChange={(e) => setName(e.target.value)}
           />
           <FormControl fullWidth>
-            <InputLabel>Fotógrafos Participantes</InputLabel>
+            <InputLabel>Fotógrafos Participantes (Opcional)</InputLabel>
             <Select
               multiple
               value={selectedPhotographers}
@@ -224,7 +224,9 @@ export const SeasonsPage = () => {
                     : e.target.value,
                 )
               }
-              input={<OutlinedInput label="Fotógrafos Participantes" />}
+              input={
+                <OutlinedInput label="Fotógrafos Participantes (Opcional)" />
+              }
               renderValue={(selected) => (
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                   {selected.map((value) => (
