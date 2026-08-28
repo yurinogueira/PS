@@ -41,6 +41,10 @@ func (h *PersonHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if list == nil {
+		list = make([]*domain.Person, 0)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(list)
 }

@@ -38,7 +38,7 @@ func (r *repository) List(ctx context.Context, tenantID string) ([]*domain.Photo
 	}
 	defer cursor.Close(ctx)
 
-	var list []*domain.Photographer
+	list := make([]*domain.Photographer, 0)
 	if err = cursor.All(ctx, &list); err != nil {
 		return nil, err
 	}

@@ -41,6 +41,10 @@ func (h *PhotographerHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if list == nil {
+		list = make([]*domain.Photographer, 0)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(list)
 }

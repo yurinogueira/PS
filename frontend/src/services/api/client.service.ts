@@ -27,7 +27,7 @@ export interface SeasonClient {
 export const clientService = {
   list: async () => {
     const { data } = await apiClient.get<SeasonClient[]>("/clients");
-    return data;
+    return data || [];
   },
   getById: async (id: string) => {
     const { data } = await apiClient.get<SeasonClient>(`/clients/${id}`);
