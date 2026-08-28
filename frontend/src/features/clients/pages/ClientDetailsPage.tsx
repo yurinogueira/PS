@@ -38,6 +38,7 @@ import {
   photographerService,
   Photographer,
 } from "../../../services/api/photographer.service";
+import { formatPhone } from "../../../utils/phone";
 import { useSeasonStore } from "../../../store/seasonStore";
 
 const PAYMENT_METHODS = [
@@ -215,7 +216,7 @@ export const ClientDetailsPage = () => {
         <Typography variant="h6">Dados da Pessoa</Typography>
         <Typography>Nome: {person?.name}</Typography>
         <Typography>E-mail: {person?.email}</Typography>
-        <Typography>Telefone: {person?.phone}</Typography>
+        <Typography>Telefone: {formatPhone(person?.phone) || "-"}</Typography>
       </Paper>
 
       <Box
