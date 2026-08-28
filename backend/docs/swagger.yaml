@@ -18,6 +18,19 @@ definitions:
           $ref: '#/definitions/client.Photo'
         type: array
     type: object
+  client.PaginatedClients:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/client.SeasonClient'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
   client.Photo:
     properties:
       amount_paid:
@@ -537,16 +550,32 @@ paths:
       - Auth
   /api/v1/clients:
     get:
-      description: Retorna a lista de clientes da temporada do tenant autenticado
+      description: Retorna a lista paginada de clientes da temporada do tenant autenticado
+        com suporte a busca e filtros
+      parameters:
+      - description: ID da Temporada
+        in: query
+        name: season_id
+        type: string
+      - description: Termo de busca textual (pessoa, cão ou foto)
+        in: query
+        name: search
+        type: string
+      - description: Número da página (padrão 1)
+        in: query
+        name: page
+        type: integer
+      - description: Itens por página (padrão 10, máximo 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/client.SeasonClient'
-            type: array
+            $ref: '#/definitions/client.PaginatedClients'
         "401":
           description: Não autenticado
           schema:

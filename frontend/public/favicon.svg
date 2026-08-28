@@ -1,18 +1,209 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38BDF8" />
-      <stop offset="100%" stop-color="#0284C7" />
-    </linearGradient>
+    <!-- Background Gradient -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0F172A" />
-      <stop offset="100%" stop-color="#1E293B" />
+      <stop offset="0%" stop-color="#1E1035" />
+      <stop offset="50%" stop-color="#140A26" />
+      <stop offset="100%" stop-color="#0B0517" />
     </linearGradient>
+
+    <!-- Border Glow -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#6366F1" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#EC4899" stop-opacity="0.5" />
+    </linearGradient>
+
+    <!-- Camera Body Gradient -->
+    <linearGradient id="cameraBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5B21B6" />
+      <stop offset="45%" stop-color="#3B1C7E" />
+      <stop offset="100%" stop-color="#24104E" />
+    </linearGradient>
+
+    <!-- Camera Top & Highlight Gradient -->
+    <linearGradient id="bodyHighlightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#C084FC" stop-opacity="0.8" />
+      <stop offset="20%" stop-color="#A855F7" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#581C87" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Shutter Button Gradient -->
+    <linearGradient id="shutterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#EC4899" />
+      <stop offset="100%" stop-color="#BE185D" />
+    </linearGradient>
+
+    <!-- Flash / Sensor Glow -->
+    <radialGradient id="sensorGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="60%" stop-color="#0284C7" />
+      <stop offset="100%" stop-color="#0369A1" stop-opacity="0.2" />
+    </radialGradient>
+
+    <!-- Lens Outer Barrel -->
+    <linearGradient id="lensOuterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7E22CE" />
+      <stop offset="50%" stop-color="#4C1D95" />
+      <stop offset="100%" stop-color="#1E1B4B" />
+    </linearGradient>
+
+    <!-- Lens Metallic Bezel -->
+    <linearGradient id="lensBezelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C084FC" />
+      <stop offset="40%" stop-color="#6B21A8" />
+      <stop offset="70%" stop-color="#3B0764" />
+      <stop offset="100%" stop-color="#9333EA" />
+    </linearGradient>
+
+    <!-- Optical Glass Coating -->
+    <radialGradient id="lensGlassGrad" cx="38%" cy="36%" r="65%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.9" />
+      <stop offset="25%" stop-color="#6366F1" stop-opacity="0.85" />
+      <stop offset="55%" stop-color="#3B1C7E" />
+      <stop offset="85%" stop-color="#180A33" />
+      <stop offset="100%" stop-color="#0A0416" />
+    </radialGradient>
+
+    <!-- Lens Deep Core -->
+    <radialGradient id="lensCoreGrad" cx="42%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#2DD4BF" stop-opacity="0.8" />
+      <stop offset="35%" stop-color="#3B82F6" stop-opacity="0.6" />
+      <stop offset="70%" stop-color="#1E103A" />
+      <stop offset="100%" stop-color="#06020E" />
+    </radialGradient>
+
+    <!-- Viewfinder Glass -->
+    <linearGradient id="vfGlassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#1E1B4B" stop-opacity="0.9" />
+    </linearGradient>
+
+    <!-- Drop Shadow Filter -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
   </defs>
+
+  <!-- Canvas Background -->
   <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
-  <path d="M140 330 C140 230, 220 160, 320 160 C370 160, 410 185, 430 220" stroke="url(#grad1)" stroke-width="32" stroke-linecap="round" fill="none" />
-  <circle cx="256" cy="330" r="28" fill="#38BDF8" />
-  <line x1="256" y1="330" x2="340" y2="230" stroke="#38BDF8" stroke-width="24" stroke-linecap="round" />
-  <path d="M120 370 L392 370" stroke="#334155" stroke-width="16" stroke-linecap="round" />
-  <path d="M160 370 L180 340 L332 340 L352 370 Z" fill="url(#grad1)" opacity="0.9" />
+  <rect x="6" y="6" width="500" height="500" rx="122" stroke="url(#borderGrad)" stroke-width="4" fill="none" opacity="0.4" />
+
+  <!-- Camera Unit Group with Shadow -->
+  <g filter="url(#shadow)">
+    <!-- Shutter Button (Left) -->
+    <rect x="124" y="132" width="52" height="20" rx="8" fill="url(#shutterGrad)" />
+
+    <!-- Mode Dial (Right) -->
+    <rect x="336" y="136" width="48" height="16" rx="6" fill="#7E22CE" stroke="#A855F7" stroke-width="2" />
+
+    <!-- Camera Main Body -->
+    <path
+      d="M 130 160
+         C 102 160, 80 182, 80 210
+         L 80 370
+         C 80 398, 102 420, 130 420
+         L 382 420
+         C 410 420, 432 398, 432 370
+         L 432 210
+         C 432 182, 410 160, 382 160
+         L 326 160
+         C 316 160, 306 153, 300 143
+         L 286 122
+         C 280 113, 269 108, 256 108
+         C 243 108, 232 113, 226 122
+         L 212 143
+         C 206 153, 196 160, 186 160
+         Z"
+      fill="url(#cameraBodyGrad)"
+      stroke="#7E22CE"
+      stroke-width="3"
+    />
+
+    <!-- Camera Body Top Edge Highlight -->
+    <path
+      d="M 130 160
+         C 102 160, 80 182, 80 210
+         L 80 230
+         C 84 206, 104 188, 130 188
+         L 186 188
+         L 212 149
+         C 226 128, 243 124, 256 124
+         C 269 124, 286 128, 300 149
+         L 326 188
+         L 382 188
+         C 408 188, 428 206, 432 230
+         L 432 210
+         C 432 182, 410 160, 382 160
+         L 326 160
+         C 316 160, 306 153, 300 143
+         L 286 122
+         C 280 113, 269 108, 256 108
+         C 243 108, 232 113, 226 122
+         L 212 143
+         C 206 153, 196 160, 186 160
+         Z"
+      fill="url(#bodyHighlightGrad)"
+    />
+
+    <!-- Ergonomic Grip Texture (Left) -->
+    <path
+      d="M 106 220
+         C 106 204, 114 196, 128 196
+         L 142 196
+         C 148 196, 152 200, 152 206
+         L 152 374
+         C 152 380, 148 384, 142 384
+         L 128 384
+         C 114 384, 106 376, 106 360
+         Z"
+      fill="#1A0D36"
+      opacity="0.5"
+    />
+    <line x1="122" y1="230" x2="122" y2="350" stroke="#7E22CE" stroke-width="3" stroke-linecap="round" opacity="0.5" />
+    <line x1="136" y1="230" x2="136" y2="350" stroke="#7E22CE" stroke-width="3" stroke-linecap="round" opacity="0.5" />
+
+    <!-- Viewfinder Window (Center Peak) -->
+    <rect x="236" y="136" width="40" height="24" rx="6" fill="#0A0518" stroke="#A855F7" stroke-width="2" />
+    <rect x="240" y="140" width="32" height="16" rx="4" fill="url(#vfGlassGrad)" />
+
+    <!-- Flash / AF Assist Lamp (Right) -->
+    <circle cx="376" cy="214" r="16" fill="url(#sensorGlow)" />
+    <circle cx="376" cy="214" r="10" fill="#E0F2FE" />
+    <circle cx="378" cy="212" r="3" fill="#FFFFFF" />
+
+    <!-- Camera Lens Base Rim -->
+    <circle cx="256" cy="294" r="104" fill="url(#lensOuterGrad)" stroke="#A855F7" stroke-width="3" />
+    <circle cx="256" cy="294" r="96" fill="#0D061F" />
+
+    <!-- Knurled Aperture Ring Texture -->
+    <circle cx="256" cy="294" r="88" stroke="#9333EA" stroke-width="5" stroke-dasharray="6 6" fill="none" opacity="0.7" />
+
+    <!-- Metallic Lens Bezel -->
+    <circle cx="256" cy="294" r="80" fill="url(#lensBezelGrad)" />
+    <circle cx="256" cy="294" r="74" fill="#0F0824" />
+
+    <!-- Multi-Coated Optical Glass -->
+    <circle cx="256" cy="294" r="68" fill="url(#lensGlassGrad)" />
+
+    <!-- Internal Aperture Chamber -->
+    <circle cx="256" cy="294" r="42" fill="url(#lensCoreGrad)" />
+    <circle cx="256" cy="294" r="22" fill="#070210" />
+
+    <!-- Optical Glints & Curved Highlights -->
+    <!-- Primary Upper-Left Glint -->
+    <path
+      d="M 210 262
+         A 58 58 0 0 1 292 246
+         A 48 48 0 0 0 220 274
+         Z"
+      fill="#FFFFFF"
+      opacity="0.65"
+    />
+    <ellipse cx="230" cy="268" rx="14" ry="7" transform="rotate(-35 230 268)" fill="#FFFFFF" opacity="0.85" />
+
+    <!-- Secondary Lower-Right Glint -->
+    <ellipse cx="286" cy="324" rx="12" ry="6" transform="rotate(-35 286 324)" fill="#38BDF8" opacity="0.75" />
+    <circle cx="294" cy="330" r="3.5" fill="#FFFFFF" opacity="0.9" />
+  </g>
 </svg>

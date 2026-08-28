@@ -568,7 +568,7 @@ const docTemplate = `{
         },
         "/api/v1/clients": {
             "get": {
-                "description": "Retorna a lista de clientes da temporada do tenant autenticado",
+                "description": "Retorna a lista paginada de clientes da temporada do tenant autenticado com suporte a busca e filtros",
                 "produces": [
                     "application/json"
                 ],
@@ -576,14 +576,37 @@ const docTemplate = `{
                     "Clients"
                 ],
                 "summary": "Listar clientes da temporada",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID da Temporada",
+                        "name": "season_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Termo de busca textual (pessoa, cão ou foto)",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Número da página (padrão 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Itens por página (padrão 10, máximo 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/client.SeasonClient"
-                            }
+                            "$ref": "#/definitions/client.PaginatedClients"
                         }
                     },
                     "401": {
@@ -1600,6 +1623,26 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/client.Photo"
                     }
+                }
+            }
+        },
+        "client.PaginatedClients": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/client.SeasonClient"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
