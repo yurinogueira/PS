@@ -24,13 +24,7 @@ function spaPrerenderPlugin(): Plugin {
         // Gera pastas com index.html para cada rota da aplicação
         // Garantindo que hosts estáticos como GitHub Pages retornem HTTP 200 OK
         // e possuam a tag rel=canonical correspondente para crawlers/Lighthouse
-        const routes = [
-          "login",
-          "register",
-          "dashboard",
-          "vehicles",
-          "maintenance",
-        ];
+        const routes = ["login", "register", "dashboard", "clients", "seasons"];
         for (const route of routes) {
           const routeDir = path.join(distDir, route);
           fs.mkdirSync(routeDir, { recursive: true });

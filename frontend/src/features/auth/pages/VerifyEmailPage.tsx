@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import { AuthHeroBanner } from "../components/AuthHeroBanner";
 import { authService } from "../services/auth.service";
 import { useAuthStore } from "../state/auth.store";
@@ -131,9 +130,7 @@ export function VerifyEmailPage() {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
-              >
-                <DirectionsCarIcon sx={{ fontSize: 24, color: "#FFFFFF" }} />
-              </Box>
+              ></Box>
               <Typography
                 variant="h6"
                 sx={{ fontWeight: 800, color: "primary.main" }}

@@ -34,9 +34,6 @@ func (r *Repository) Create(ctx context.Context, user domainuser.User) (domainus
 	if user.CreatedAt.IsZero() {
 		user.CreatedAt = time.Now().UTC()
 	}
-	if user.MaxVehicles <= 0 {
-		user.MaxVehicles = 3
-	}
 	r.byID[user.ID] = user
 	r.byMail[user.Email] = user.ID
 	return user, nil
@@ -53,9 +50,6 @@ func (r *Repository) Update(ctx context.Context, user domainuser.User) (domainus
 	}
 
 	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
-	if user.MaxVehicles <= 0 {
-		user.MaxVehicles = 3
-	}
 	if user.UpdatedAt.IsZero() {
 		user.UpdatedAt = time.Now().UTC()
 	}
@@ -81,9 +75,6 @@ func (r *Repository) FindByEmail(ctx context.Context, email string) (domainuser.
 	if !ok {
 		return domainuser.User{}, ErrNotFound
 	}
-	if user.MaxVehicles <= 0 {
-		user.MaxVehicles = 3
-	}
 	return user, nil
 }
 
@@ -94,9 +85,6 @@ func (r *Repository) FindByID(ctx context.Context, id string) (domainuser.User, 
 	user, ok := r.byID[id]
 	if !ok {
 		return domainuser.User{}, ErrNotFound
-	}
-	if user.MaxVehicles <= 0 {
-		user.MaxVehicles = 3
 	}
 	return user, nil
 }
@@ -113,9 +101,6 @@ func (r *Repository) FindByEmailVerificationTokenHash(ctx context.Context, hash 
 
 	for _, u := range r.byID {
 		if u.EmailVerificationTokenHash == cleanHash {
-			if u.MaxVehicles <= 0 {
-				u.MaxVehicles = 3
-			}
 			return u, nil
 		}
 	}
@@ -134,9 +119,6 @@ func (r *Repository) FindByPasswordResetTokenHash(ctx context.Context, hash stri
 
 	for _, u := range r.byID {
 		if u.PasswordResetTokenHash == cleanHash {
-			if u.MaxVehicles <= 0 {
-				u.MaxVehicles = 3
-			}
 			return u, nil
 		}
 	}

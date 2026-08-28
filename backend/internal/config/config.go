@@ -23,8 +23,6 @@ type Config struct {
 	TrustedProxies      []string
 	CookieDomain        string
 	CookieSecure        bool
-	FIPEToken           string
-	FIPEBaseURL         string
 	AppBaseURL          string
 	SMTPHost            string
 	SMTPPort            string
@@ -51,8 +49,6 @@ func Load() Config {
 		TrustedProxies:      parseCommaSeparated(getenv("TRUSTED_PROXIES", "127.0.0.1,::1")),
 		CookieDomain:        getenv("COOKIE_DOMAIN", ""),
 		CookieSecure:        getenv("COOKIE_SECURE", "true") == "true",
-		FIPEToken:           getenv("FIPE_API_TOKEN", ""),
-		FIPEBaseURL:         getenv("FIPE_BASE_URL", "https://fipe.parallelum.com.br/api/v2"),
 		AppBaseURL:          getenv("APP_BASE_URL", "http://localhost:5173"),
 		SMTPHost:            getenv("SMTP_HOST", ""),
 		SMTPPort:            getenv("SMTP_PORT", "587"),

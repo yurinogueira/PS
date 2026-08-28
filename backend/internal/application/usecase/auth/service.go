@@ -158,7 +158,6 @@ func (s *Service) Register(ctx context.Context, input RegisterInput) (AuthOutput
 		EmailVerified:              false,
 		EmailVerificationTokenHash: verificationTokenHash,
 		EmailVerificationExpiresAt: &verificationExpiry,
-		MaxVehicles:                3,
 		CreatedAt:                  s.now().UTC(),
 	})
 	if err != nil {

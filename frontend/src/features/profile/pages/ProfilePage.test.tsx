@@ -17,18 +17,15 @@ describe("ProfilePage", () => {
     vi.clearAllMocks();
   });
 
-  it("renders profile details, email status, and vehicle quota", async () => {
+  it("renders profile details and email status", async () => {
     vi.mocked(profileService.getProfile).mockResolvedValueOnce({
       user: {
         id: "user-1",
         name: "Yuri Nogueira",
         email: "yuri@ps.com",
         emailVerified: true,
-        maxVehicles: 3,
         createdAt: "2026-08-25T00:00:00Z",
       },
-      vehiclesCount: 1,
-      maxVehicles: 3,
     });
 
     render(
@@ -44,7 +41,6 @@ describe("ProfilePage", () => {
     });
 
     expect(screen.getByText("E-mail Verificado")).toBeInTheDocument();
-    expect(screen.getByText("1 de 3 veículos")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Yuri Nogueira")).toBeInTheDocument();
     expect(screen.getByDisplayValue("yuri@ps.com")).toBeInTheDocument();
     expect(
@@ -59,11 +55,8 @@ describe("ProfilePage", () => {
         name: "Novo Usuário",
         email: "novo@ps.com",
         emailVerified: false,
-        maxVehicles: 3,
         createdAt: "2026-08-25T00:00:00Z",
       },
-      vehiclesCount: 0,
-      maxVehicles: 3,
     });
 
     render(

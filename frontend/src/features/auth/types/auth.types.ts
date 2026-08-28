@@ -5,7 +5,6 @@ export interface User {
   tenantId?: string;
   emailVerified?: boolean;
   emailVerifiedAt?: string;
-  maxVehicles?: number;
   createdAt?: string;
   updatedAt?: string;
 }

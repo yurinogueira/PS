@@ -81,7 +81,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 			"name":          output.User.Name,
 			"email":         output.User.Email,
 			"emailVerified": output.User.EmailVerified,
-			"maxVehicles":   output.User.MaxVehicles,
 			"createdAt":     output.User.CreatedAt,
 		},
 	})
@@ -117,7 +116,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			"email":           output.User.Email,
 			"emailVerified":   output.User.EmailVerified,
 			"emailVerifiedAt": output.User.EmailVerifiedAt,
-			"maxVehicles":     output.User.MaxVehicles,
 			"createdAt":       output.User.CreatedAt,
 		},
 	})
@@ -150,7 +148,6 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 			"email":           output.User.Email,
 			"emailVerified":   output.User.EmailVerified,
 			"emailVerifiedAt": output.User.EmailVerifiedAt,
-			"maxVehicles":     output.User.MaxVehicles,
 			"createdAt":       output.User.CreatedAt,
 		},
 	})
@@ -182,7 +179,6 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		"email":           user.Email,
 		"emailVerified":   user.EmailVerified,
 		"emailVerifiedAt": user.EmailVerifiedAt,
-		"maxVehicles":     user.MaxVehicles,
 		"createdAt":       user.CreatedAt,
 	})
 }

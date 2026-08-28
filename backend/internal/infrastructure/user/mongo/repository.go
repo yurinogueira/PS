@@ -26,16 +26,11 @@ type userDoc struct {
 	PasswordResetTokenHash     string     `bson:"passwordResetTokenHash,omitempty"`
 	PasswordResetExpiresAt     *time.Time `bson:"passwordResetExpiresAt,omitempty"`
 	TenantID                   string     `bson:"tenantId"`
-	MaxVehicles                int        `bson:"maxVehicles"`
 	CreatedAt                  time.Time  `bson:"createdAt"`
 	UpdatedAt                  time.Time  `bson:"updatedAt,omitempty"`
 }
 
 func (d userDoc) toDomain() domainuser.User {
-	maxVehicles := d.MaxVehicles
-	if maxVehicles <= 0 {
-		maxVehicles = 3
-	}
 	return domainuser.User{
 		ID:                         d.ID,
 		Name:                       d.Name,
@@ -48,7 +43,6 @@ func (d userDoc) toDomain() domainuser.User {
 		PasswordResetTokenHash:     d.PasswordResetTokenHash,
 		PasswordResetExpiresAt:     d.PasswordResetExpiresAt,
 		TenantID:                   d.TenantID,
-		MaxVehicles:                maxVehicles,
 		CreatedAt:                  d.CreatedAt,
 		UpdatedAt:                  d.UpdatedAt,
 	}
@@ -102,9 +96,6 @@ func (r *Repository) Create(ctx context.Context, user domainuser.User) (domainus
 	if user.CreatedAt.IsZero() {
 		user.CreatedAt = time.Now().UTC()
 	}
-	if user.MaxVehicles <= 0 {
-		user.MaxVehicles = 3
-	}
 
 	doc := userDoc{
 		ID:                         user.ID,
@@ -118,7 +109,6 @@ func (r *Repository) Create(ctx context.Context, user domainuser.User) (domainus
 		PasswordResetTokenHash:     user.PasswordResetTokenHash,
 		PasswordResetExpiresAt:     user.PasswordResetExpiresAt,
 		TenantID:                   user.TenantID,
-		MaxVehicles:                user.MaxVehicles,
 		CreatedAt:                  user.CreatedAt,
 		UpdatedAt:                  user.UpdatedAt,
 	}
@@ -136,10 +126,6 @@ func (r *Repository) Update(ctx context.Context, user domainuser.User) (domainus
 		return domainuser.User{}, userport.ErrNotFound
 	}
 	user.ID = cleanID
-
-	if user.MaxVehicles <= 0 {
-		user.MaxVehicles = 3
-	}
 	if user.UpdatedAt.IsZero() {
 		user.UpdatedAt = time.Now().UTC()
 	}
@@ -156,7 +142,6 @@ func (r *Repository) Update(ctx context.Context, user domainuser.User) (domainus
 			"passwordResetTokenHash":     user.PasswordResetTokenHash,
 			"passwordResetExpiresAt":     user.PasswordResetExpiresAt,
 			"tenantId":                   user.TenantID,
-			"maxVehicles":                user.MaxVehicles,
 			"updatedAt":                  user.UpdatedAt,
 		},
 	}

@@ -19,7 +19,6 @@ import {
 import VerifiedUserRoundedIcon from "@mui/icons-material/VerifiedUserRounded";
 import GppMaybeRoundedIcon from "@mui/icons-material/GppMaybeRounded";
 import MarkEmailReadRoundedIcon from "@mui/icons-material/MarkEmailReadRounded";
-import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import LockResetRoundedIcon from "@mui/icons-material/LockResetRounded";
 import Visibility from "@mui/icons-material/Visibility";
@@ -207,12 +206,6 @@ export function ProfilePage() {
   }
 
   const isEmailVerified = Boolean(profileData?.user?.emailVerified);
-  const vehiclesCount = profileData?.vehiclesCount || 0;
-  const maxVehicles = profileData?.maxVehicles || 3;
-  const quotaPercent = Math.min(
-    Math.round((vehiclesCount / maxVehicles) * 100),
-    100,
-  );
 
   return (
     <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, maxWidth: 1000, mx: "auto" }}>

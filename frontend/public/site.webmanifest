@@ -1,7 +1,7 @@
 {
   "name": "PS - Photo Storage",
   "short_name": "PS",
-  "description": "Sistema inteligente de gestão de veículos, manutenções preventivas e histórico automotivo.",
+  "description": "Sistema inteligente para gestão de fotografias caninas.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0F172A",
