@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"ps/internal/application/ports/person"
 	domain "ps/internal/domain/person"
+	mongoinfra "ps/internal/infrastructure/database/mongo"
 )
 
 type repository struct {
@@ -19,19 +20,42 @@ func NewRepository(db *mongo.Database) person.Repository {
 }
 
 func (r *repository) Create(ctx context.Context, person *domain.Person) error {
-	person.ID = bson.NewObjectID().Hex()
+	cleanTenantID, err := mongoinfra.SanitizeID(person.TenantID)
+	if err != nil {
+		return err
+	}
+	person.TenantID = cleanTenantID
+	if person.ID == "" {
+		person.ID = bson.NewObjectID().Hex()
+	}
+	cleanID, err := mongoinfra.SanitizeID(person.ID)
+	if err != nil {
+		return err
+	}
+	person.ID = cleanID
+
 	now := time.Now().UTC()
 	if person.CreatedAt.IsZero() {
 		person.CreatedAt = now
 	}
 	person.UpdatedAt = now
-	_, err := r.collection.InsertOne(ctx, person)
+	_, err = r.collection.InsertOne(ctx, person)
 	return err
 }
 
 func (r *repository) GetByID(ctx context.Context, id, tenantID string) (*domain.Person, error) {
+	cleanID, err := mongoinfra.SanitizeID(id)
+	if err != nil {
+		return nil, err
+	}
+	cleanTenantID, err := mongoinfra.SanitizeID(tenantID)
+	if err != nil {
+		return nil, err
+	}
+
 	var person domain.Person
-	err := r.collection.FindOne(ctx, bson.M{"_id": id, "tenant_id": tenantID}).Decode(&person)
+	filter := bson.D{{Key: "_id", Value: cleanID}, {Key: "tenant_id", Value: cleanTenantID}}
+	err = r.collection.FindOne(ctx, filter).Decode(&person)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +63,13 @@ func (r *repository) GetByID(ctx context.Context, id, tenantID string) (*domain.
 }
 
 func (r *repository) List(ctx context.Context, tenantID string) ([]*domain.Person, error) {
-	cursor, err := r.collection.Find(ctx, bson.M{"tenant_id": tenantID})
+	cleanTenantID, err := mongoinfra.SanitizeID(tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.D{{Key: "tenant_id", Value: cleanTenantID}}
+	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -53,12 +83,43 @@ func (r *repository) List(ctx context.Context, tenantID string) ([]*domain.Perso
 }
 
 func (r *repository) Update(ctx context.Context, person *domain.Person) error {
+	cleanID, err := mongoinfra.SanitizeID(person.ID)
+	if err != nil {
+		return err
+	}
+	cleanTenantID, err := mongoinfra.SanitizeID(person.TenantID)
+	if err != nil {
+		return err
+	}
+	person.ID = cleanID
+	person.TenantID = cleanTenantID
 	person.UpdatedAt = time.Now().UTC()
-	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": person.ID, "tenant_id": person.TenantID}, bson.M{"$set": person})
+
+	filter := bson.D{{Key: "_id", Value: cleanID}, {Key: "tenant_id", Value: cleanTenantID}}
+	updateDoc := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "name", Value: person.Name},
+			{Key: "email", Value: person.Email},
+			{Key: "alternative_email", Value: person.AlternativeEmail},
+			{Key: "phone", Value: person.Phone},
+			{Key: "updated_at", Value: person.UpdatedAt},
+		}},
+	}
+	_, err = r.collection.UpdateOne(ctx, filter, updateDoc)
 	return err
 }
 
 func (r *repository) Delete(ctx context.Context, id, tenantID string) error {
-	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id, "tenant_id": tenantID})
+	cleanID, err := mongoinfra.SanitizeID(id)
+	if err != nil {
+		return err
+	}
+	cleanTenantID, err := mongoinfra.SanitizeID(tenantID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.D{{Key: "_id", Value: cleanID}, {Key: "tenant_id", Value: cleanTenantID}}
+	_, err = r.collection.DeleteOne(ctx, filter)
 	return err
 }
