@@ -2,6 +2,8 @@ package mongo
 
 import (
 	"context"
+	"time"
+
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"ps/internal/application/ports/person"
@@ -18,6 +20,11 @@ func NewRepository(db *mongo.Database) person.Repository {
 
 func (r *repository) Create(ctx context.Context, person *domain.Person) error {
 	person.ID = bson.NewObjectID().Hex()
+	now := time.Now().UTC()
+	if person.CreatedAt.IsZero() {
+		person.CreatedAt = now
+	}
+	person.UpdatedAt = now
 	_, err := r.collection.InsertOne(ctx, person)
 	return err
 }
@@ -46,6 +53,7 @@ func (r *repository) List(ctx context.Context, tenantID string) ([]*domain.Perso
 }
 
 func (r *repository) Update(ctx context.Context, person *domain.Person) error {
+	person.UpdatedAt = time.Now().UTC()
 	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": person.ID, "tenant_id": person.TenantID}, bson.M{"$set": person})
 	return err
 }

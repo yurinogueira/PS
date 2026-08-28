@@ -21,7 +21,12 @@ import {
   FormControl,
   Chip,
   OutlinedInput,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
 import { seasonService, Season } from "../../../services/api/season.service";
 import {
   photographerService,
@@ -32,40 +37,95 @@ export const SeasonsPage = () => {
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [selectedPhotographers, setSelectedPhotographers] = useState<string[]>(
     [],
   );
 
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deletingSeason, setDeletingSeason] = useState<Season | null>(null);
+
   const load = async () => {
-    const [sData, pData] = await Promise.all([
-      seasonService.list(),
-      photographerService.list(),
-    ]);
-    setSeasons(sData || []);
-    setPhotographers(pData || []);
+    try {
+      const [sData, pData] = await Promise.all([
+        seasonService.list(),
+        photographerService.list(),
+      ]);
+      setSeasons(sData || []);
+      setPhotographers(pData || []);
+    } catch (err) {
+      console.error("Erro ao carregar temporadas:", err);
+    }
   };
 
   useEffect(() => {
     load();
   }, []);
 
-  const handleSave = async () => {
-    await seasonService.create({
-      name,
-      photographer_ids: selectedPhotographers,
-    });
-    setOpen(false);
+  const handleOpenCreate = () => {
+    setEditingId(null);
     setName("");
     setSelectedPhotographers([]);
-    load();
+    setOpen(true);
+  };
+
+  const handleOpenEdit = (s: Season) => {
+    setEditingId(s.id);
+    setName(s.name);
+    setSelectedPhotographers(s.photographer_ids || []);
+    setOpen(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      if (editingId) {
+        await seasonService.update(editingId, {
+          name,
+          photographer_ids: selectedPhotographers,
+        });
+      } else {
+        await seasonService.create({
+          name,
+          photographer_ids: selectedPhotographers,
+        });
+      }
+      setOpen(false);
+      setEditingId(null);
+      setName("");
+      setSelectedPhotographers([]);
+      await load();
+    } catch (err) {
+      console.error("Erro ao salvar temporada:", err);
+    }
+  };
+
+  const handleOpenDelete = (s: Season) => {
+    setDeletingSeason(s);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingSeason) return;
+    try {
+      await seasonService.delete(deletingSeason.id);
+      setDeleteConfirmOpen(false);
+      setDeletingSeason(null);
+      await load();
+    } catch (err) {
+      console.error("Erro ao excluir temporada:", err);
+    }
   };
 
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
         <Typography variant="h4">Temporadas</Typography>
-        <Button variant="contained" onClick={() => setOpen(true)}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleOpenCreate}
+        >
           Nova Temporada
         </Button>
       </Box>
@@ -77,36 +137,78 @@ export const SeasonsPage = () => {
               <TableCell>ID</TableCell>
               <TableCell>Nome</TableCell>
               <TableCell>Fotógrafos</TableCell>
+              <TableCell align="right">Ações</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {seasons.map((s) => (
-              <TableRow key={s.id}>
-                <TableCell>{s.id}</TableCell>
-                <TableCell>{s.name}</TableCell>
-                <TableCell>
-                  {s.photographer_ids?.length || 0} associados
+            {seasons.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} align="center">
+                  Nenhuma temporada cadastrada.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              seasons.map((s) => {
+                const associatedCount = s.photographer_ids?.length || 0;
+                return (
+                  <TableRow key={s.id} hover>
+                    <TableCell>{s.id}</TableCell>
+                    <TableCell>{s.name}</TableCell>
+                    <TableCell>
+                      {associatedCount}{" "}
+                      {associatedCount === 1 ? "associado" : "associados"}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Editar">
+                        <IconButton
+                          color="primary"
+                          size="small"
+                          onClick={() => handleOpenEdit(s)}
+                          sx={{ mr: 1 }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Excluir">
+                        <IconButton
+                          color="error"
+                          size="small"
+                          onClick={() => handleOpenDelete(s)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Nova Temporada</DialogTitle>
+      {/* Modal Criar / Editar */}
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {editingId ? "Editar Temporada" : "Nova Temporada"}
+        </DialogTitle>
         <DialogContent
           sx={{
             display: "flex",
             flexDirection: "column",
             gap: 2,
             pt: 2,
-            minWidth: 400,
           }}
         >
           <TextField
             label="Nome"
             fullWidth
+            required
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -146,8 +248,36 @@ export const SeasonsPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button onClick={handleSave} variant="contained" disabled={!name}>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            disabled={!name.trim()}
+          >
             Salvar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal Confirmação de Exclusão */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+      >
+        <DialogTitle>Confirmar Exclusão</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Tem certeza que deseja excluir a temporada{" "}
+            <strong>{deletingSeason?.name}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>Cancelar</Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+          >
+            Excluir
           </Button>
         </DialogActions>
       </Dialog>

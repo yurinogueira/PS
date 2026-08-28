@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -46,6 +47,7 @@ const PAYMENT_METHODS = [
 ];
 
 export const ClientsPage = () => {
+  const navigate = useNavigate();
   const { activeSeason } = useSeasonStore();
   const [clients, setClients] = useState<SeasonClient[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
@@ -174,9 +176,7 @@ export const ClientsPage = () => {
                       <Button
                         variant="outlined"
                         size="small"
-                        onClick={() =>
-                          (window.location.href = `/clients/${c.id}`)
-                        }
+                        onClick={() => navigate(`/clients/${c.id}`)}
                       >
                         Detalhes
                       </Button>
