@@ -4,8 +4,8 @@
   "description": "Sistema inteligente para gestão de fotografias caninas.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0F172A",
-  "theme_color": "#0284C7",
+  "background_color": "#140A26",
+  "theme_color": "#392782",
   "orientation": "portrait-primary",
   "icons": [
     {
