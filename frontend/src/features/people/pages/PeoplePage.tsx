@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -21,10 +22,12 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import PetsIcon from "@mui/icons-material/Pets";
 import { personService, Person } from "../../../services/api/person.service";
 import { maskPhone, formatPhone } from "../../../utils/phone";
 
 export const PeoplePage = () => {
+  const navigate = useNavigate();
   const [people, setPeople] = useState<Person[]>([]);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -140,6 +143,16 @@ export const PeoplePage = () => {
                   <TableCell>{p.alternative_email || "-"}</TableCell>
                   <TableCell>{formatPhone(p.phone) || "-"}</TableCell>
                   <TableCell align="right">
+                    <Tooltip title="Cachorros & Fotos">
+                      <IconButton
+                        color="secondary"
+                        size="small"
+                        onClick={() => navigate(`/people/${p.id}`)}
+                        sx={{ mr: 1 }}
+                      >
+                        <PetsIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="Editar">
                       <IconButton
                         color="primary"

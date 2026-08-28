@@ -58,6 +58,11 @@ const PeoplePage = lazy(() =>
     default: m.PeoplePage,
   })),
 );
+const PersonDetailsPage = lazy(() =>
+  import("../features/people/pages/PersonDetailsPage").then((m) => ({
+    default: m.PersonDetailsPage,
+  })),
+);
 const ClientsPage = lazy(() =>
   import("../features/clients/pages/ClientsPage").then((m) => ({
     default: m.ClientsPage,
@@ -98,6 +103,7 @@ export function AppRoutes() {
             <Route path="/seasons" element={<SeasonsPage />} />
             <Route path="/photographers" element={<PhotographersPage />} />
             <Route path="/people" element={<PeoplePage />} />
+            <Route path="/people/:id" element={<PersonDetailsPage />} />
             <Route path="/clients" element={<ClientsPage />} />
             <Route path="/clients/:id" element={<ClientDetailsPage />} />
             <Route path="/profile" element={<ProfilePage />} />

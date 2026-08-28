@@ -11,6 +11,14 @@ describe("DashboardPage", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     useSeasonStore.setState({ activeSeason: null });
+    vi.spyOn(personService, "list").mockResolvedValue([]);
+    vi.spyOn(clientService, "list").mockResolvedValue({
+      data: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+    });
+    vi.spyOn(photographerService, "list").mockResolvedValue([]);
   });
 
   it("renders alert when no active season is selected", () => {
@@ -34,13 +42,13 @@ describe("DashboardPage", () => {
       activeSeason: { id: "season-1", name: "Temporada Oficial 2026" },
     });
 
-    vi.spyOn(clientService, "list").mockResolvedValueOnce({
+    vi.spyOn(clientService, "list").mockResolvedValue({
       data: [],
       total: 0,
       page: 1,
       limit: 10,
     });
-    vi.spyOn(personService, "list").mockResolvedValueOnce([]);
+    vi.spyOn(personService, "list").mockResolvedValue([]);
 
     render(
       <BrowserRouter>
@@ -62,7 +70,7 @@ describe("DashboardPage", () => {
       activeSeason: { id: "season-1", name: "Temporada 2026" },
     });
 
-    vi.spyOn(clientService, "list").mockResolvedValueOnce({
+    vi.spyOn(clientService, "list").mockResolvedValue({
       data: [
         {
           id: "client-1",
@@ -80,12 +88,14 @@ describe("DashboardPage", () => {
                   file_number: "DSC_001",
                   photographer_id: "photog-1",
                   payment_method: "Pix",
+                  amount_paid: 50,
                 },
                 {
                   id: "photo-2",
                   file_number: "DSC_002",
                   photographer_id: "photog-1",
                   payment_method: "Pix",
+                  amount_paid: 50,
                 },
               ],
             },
@@ -97,7 +107,7 @@ describe("DashboardPage", () => {
       limit: 10,
     });
 
-    vi.spyOn(personService, "list").mockResolvedValueOnce([
+    vi.spyOn(personService, "list").mockResolvedValue([
       {
         id: "person-1",
         name: "Carlos Ferreira",
@@ -117,8 +127,10 @@ describe("DashboardPage", () => {
       expect(screen.getByText("Carlos Ferreira")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("1")).toBeInTheDocument(); // Cachorros
-    expect(screen.getByText("2")).toBeInTheDocument(); // Total de fotos
+    expect(screen.getByText("Total de Pessoas")).toBeInTheDocument();
+    expect(screen.getByText("Cachorros no Evento")).toBeInTheDocument();
+    expect(screen.getByText("Fotos Registradas")).toBeInTheDocument();
+    expect(screen.getByText("Cachorros & Fotos")).toBeInTheDocument();
     expect(screen.getByText("Detalhes")).toBeInTheDocument();
   });
 
@@ -190,10 +202,10 @@ describe("DashboardPage", () => {
       </BrowserRouter>,
     );
 
-    const vincularBtn = screen.getByRole("button", {
+    const vincularBtns = screen.getAllByRole("button", {
       name: /Vincular Cliente/i,
     });
-    fireEvent.click(vincularBtn);
+    fireEvent.click(vincularBtns[0]);
 
     await waitFor(() => {
       expect(

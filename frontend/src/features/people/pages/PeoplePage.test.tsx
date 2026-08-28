@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
 import { PeoplePage } from "./PeoplePage";
 import { personService } from "../../../services/api/person.service";
 
@@ -28,7 +29,11 @@ describe("PeoplePage", () => {
       },
     ]);
 
-    render(<PeoplePage />);
+    render(
+      <BrowserRouter>
+        <PeoplePage />
+      </BrowserRouter>,
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Adrian Handler")).toBeInTheDocument();
@@ -47,7 +52,11 @@ describe("PeoplePage", () => {
       phone: "(21) 99999-9999",
     });
 
-    render(<PeoplePage />);
+    render(
+      <BrowserRouter>
+        <PeoplePage />
+      </BrowserRouter>,
+    );
 
     await waitFor(() => {
       expect(
@@ -75,7 +84,11 @@ describe("PeoplePage", () => {
       },
     ]);
 
-    render(<PeoplePage />);
+    render(
+      <BrowserRouter>
+        <PeoplePage />
+      </BrowserRouter>,
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Carlos Teste")).toBeInTheDocument();
