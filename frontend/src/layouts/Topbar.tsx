@@ -1,66 +1,67 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import {
   AppBar,
+  Box,
+  IconButton,
   Toolbar,
   Typography,
-  IconButton,
-  Box,
-  Avatar,
   Menu,
   MenuItem,
-  ListItemIcon,
-  ListItemText,
+  Avatar,
   Divider,
+  ListItemIcon,
   Select,
   FormControl,
+  InputLabel,
 } from "@mui/material";
-import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
-import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+import MenuIcon from "@mui/icons-material/Menu";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LogoutIcon from "@mui/icons-material/Logout";
+import SettingsIcon from "@mui/icons-material/Settings";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../features/auth/state/auth.store";
-import { authService } from "../features/auth/services/auth.service";
 import { useSeasonStore } from "../store/seasonStore";
+import { seasonService, Season } from "../services/api/season.service";
 
 interface TopbarProps {
   onDrawerToggle: () => void;
 }
 
-const routeTitles: Record<string, string> = {
-  "/dashboard": "Visão Geral",
-  "/seasons": "Temporadas",
-  "/photographers": "Fotógrafos",
-  "/people": "Pessoas",
-  "/clients": "Clientes e Fotos",
-  "/profile": "Meu Perfil",
-};
-
 export function Topbar({ onDrawerToggle }: TopbarProps) {
-  const location = useLocation();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [seasons, setSeasons] = useState<Season[]>([]);
   const navigate = useNavigate();
   const { user, clear } = useAuthStore();
   const { activeSeason, setActiveSeason } = useSeasonStore();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  const currentTitle = routeTitles[location.pathname] || "Photo Storage";
+  useEffect(() => {
+    seasonService.list().then((data) => {
+      setSeasons(data);
+      if (data.length > 0 && !activeSeason) {
+        setActiveSeason({ id: data[0].id, name: data[0].name });
+      }
+    });
+  }, [activeSeason, setActiveSeason]);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleMenuClose = () => {
+  const handleClose = () => {
     setAnchorEl(null);
   };
 
-  const handleLogout = async () => {
-    handleMenuClose();
-    try {
-      await authService.logout();
-    } catch {
-      // Ignore network error during logout
-    }
+  const handleLogout = () => {
+    handleClose();
     clear();
-    navigate("/login", { replace: true });
+    navigate("/login");
+  };
+
+  const handleChangeSeason = (id: string) => {
+    const s = seasons.find((x) => x.id === id);
+    if (s) {
+      setActiveSeason({ id: s.id, name: s.name });
+    }
   };
 
   return (
@@ -68,70 +69,65 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
       position="sticky"
       elevation={0}
       sx={{
-        width: "100%",
         bgcolor: "background.paper",
-        color: "text.primary",
         borderBottom: "1px solid #E2E8F0",
+        color: "text.primary",
       }}
     >
-      <Toolbar
-        sx={{
-          justifyContent: "space-between",
-          height: 64,
-          minHeight: "64px !important",
-          px: { xs: 2, sm: 3 },
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <IconButton
-            color="inherit"
-            aria-label="abrir menu lateral"
-            edge="start"
-            onClick={onDrawerToggle}
-            sx={{ display: { md: "none" } }}
-          >
-            <MenuRoundedIcon />
-          </IconButton>
+      <Toolbar>
+        <IconButton
+          color="inherit"
+          edge="start"
+          onClick={onDrawerToggle}
+          sx={{ mr: 2, display: { md: "none" } }}
+        >
+          <MenuIcon />
+        </IconButton>
+
+        <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
           <Typography
             variant="h6"
-            sx={{ fontWeight: 700, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}
+            noWrap
+            component="div"
+            sx={{ display: { xs: "none", sm: "block" } }}
           >
-            {currentTitle}
+            Painel Administrativo
           </Typography>
         </Box>
 
+        <Box sx={{ minWidth: 200, mr: 3 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Temporada Ativa</InputLabel>
+            <Select
+              value={activeSeason?.id || ""}
+              label="Temporada Ativa"
+              onChange={(e) => handleChangeSeason(e.target.value)}
+            >
+              {seasons.map((s) => (
+                <MenuItem key={s.id} value={s.id}>
+                  {s.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {/* We would fetch seasons here, but for now we just show a placeholder if none selected */}
           <Typography
             variant="body2"
-            sx={{
-              display: { xs: "none", sm: "block" },
-              color: "text.secondary",
-              fontWeight: 600,
-            }}
+            sx={{ display: { xs: "none", sm: "block" }, fontWeight: 500 }}
           >
-            Temporada Atual: {activeSeason?.name || "Nenhuma"}
+            {user?.name || "Usuário"}
           </Typography>
-
-          <IconButton onClick={handleMenuOpen} size="small" sx={{ p: 0.5 }}>
-            <Avatar
-              sx={{
-                width: 38,
-                height: 38,
-                bgcolor: "primary.main",
-                fontSize: "0.9rem",
-                fontWeight: 600,
-                border: "2px solid #E2E8F0",
-              }}
-            >
-              {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+          <IconButton onClick={handleMenu} size="small" sx={{ ml: 1 }}>
+            <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.main" }}>
+              {user?.name?.charAt(0).toUpperCase() || <AccountCircleIcon />}
             </Avatar>
           </IconButton>
-
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
+            onClose={handleClose}
             transformOrigin={{ horizontal: "right", vertical: "top" }}
             anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
             slotProps={{
@@ -139,52 +135,37 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
                 elevation: 0,
                 sx: {
                   overflow: "visible",
-                  filter: "drop-shadow(0px 8px 16px rgba(15, 23, 42, 0.08))",
+                  filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.1))",
                   mt: 1.5,
                   minWidth: 200,
                   borderRadius: 2,
-                  border: "1px solid #E2E8F0",
                 },
               },
             }}
           >
             <Box sx={{ px: 2, py: 1.5 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                {user?.name || "Usuário"}
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{ color: "text.secondary", display: "block" }}
-              >
-                {user?.email || "usuario@ps.com"}
+              <Typography variant="subtitle2">{user?.name}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {user?.email}
               </Typography>
             </Box>
-
             <Divider />
-
             <MenuItem
               onClick={() => {
-                handleMenuClose();
+                handleClose();
                 navigate("/profile");
               }}
-              sx={{ py: 1 }}
             >
               <ListItemIcon>
-                <PersonRoundedIcon fontSize="small" />
+                <SettingsIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText primary="Meu Perfil" />
+              Meu Perfil
             </MenuItem>
-
-            <Divider />
-
-            <MenuItem
-              onClick={handleLogout}
-              sx={{ py: 1, color: "error.main" }}
-            >
-              <ListItemIcon sx={{ color: "error.main" }}>
-                <LogoutRoundedIcon fontSize="small" />
+            <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
+              <ListItemIcon>
+                <LogoutIcon fontSize="small" sx={{ color: "error.main" }} />
               </ListItemIcon>
-              <ListItemText primary="Sair do Sistema" />
+              Sair
             </MenuItem>
           </Menu>
         </Box>

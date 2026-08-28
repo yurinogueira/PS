@@ -12,6 +12,8 @@ describe("DashboardPage", () => {
     );
 
     expect(screen.getByText("Visão Geral")).toBeInTheDocument();
-    expect(screen.getByText(/Bem-vindo ao Photo Storage \(PS\)/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Bem-vindo ao Photo Storage \(PS\)/i),
+    ).toBeInTheDocument();
   });
 });
