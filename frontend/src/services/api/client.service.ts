@@ -24,10 +24,35 @@ export interface SeasonClient {
   dogs: Dog[];
 }
 
+export interface ClientListParams {
+  season_id?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedClientsResponse {
+  data: SeasonClient[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export const clientService = {
-  list: async () => {
-    const { data } = await apiClient.get<SeasonClient[]>("/clients");
-    return data || [];
+  list: async (
+    params?: ClientListParams,
+  ): Promise<PaginatedClientsResponse> => {
+    const { data } = await apiClient.get<PaginatedClientsResponse>("/clients", {
+      params,
+    });
+    return (
+      data || {
+        data: [],
+        total: 0,
+        page: params?.page || 1,
+        limit: params?.limit || 10,
+      }
+    );
   },
   getById: async (id: string) => {
     const { data } = await apiClient.get<SeasonClient>(`/clients/${id}`);

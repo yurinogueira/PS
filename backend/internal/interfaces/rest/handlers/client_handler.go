@@ -3,6 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+
 	"ps/internal/application/usecase/client"
 	domain "ps/internal/domain/client"
 	"ps/internal/shared/middleware"
@@ -48,27 +50,49 @@ func (h *SeasonClientHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // List godoc
 // @Summary      Listar clientes da temporada
-// @Description  Retorna a lista de clientes da temporada do tenant autenticado
+// @Description  Retorna a lista paginada de clientes da temporada do tenant autenticado com suporte a busca e filtros
 // @Tags         Clients
 // @Produce      json
-// @Success      200  {array}   client.SeasonClient
-// @Failure      401  {string}  string "Não autenticado"
-// @Failure      500  {string}  string "Erro interno"
+// @Param        season_id  query     string  false  "ID da Temporada"
+// @Param        search     query     string  false  "Termo de busca textual (pessoa, cão ou foto)"
+// @Param        page       query     int     false  "Número da página (padrão 1)"
+// @Param        limit      query     int     false  "Itens por página (padrão 10, máximo 100)"
+// @Success      200        {object}  client.PaginatedClients
+// @Failure      401        {string}  string "Não autenticado"
+// @Failure      500        {string}  string "Erro interno"
 // @Router       /api/v1/clients [get]
 func (h *SeasonClientHandler) List(w http.ResponseWriter, r *http.Request) {
 	tenantID := middleware.GetTenantID(r.Context())
-	list, err := h.service.List(r.Context(), tenantID)
+
+	seasonID := r.URL.Query().Get("season_id")
+	search := r.URL.Query().Get("search")
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+
+	filter := domain.ListFilter{
+		SeasonID: seasonID,
+		Search:   search,
+		Page:     page,
+		Limit:    limit,
+	}
+
+	result, err := h.service.List(r.Context(), tenantID, filter)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if list == nil {
-		list = make([]*domain.SeasonClient, 0)
+	if result == nil {
+		result = &domain.PaginatedClients{
+			Data:  make([]*domain.SeasonClient, 0),
+			Total: 0,
+			Page:  filter.Page,
+			Limit: filter.Limit,
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(list)
+	json.NewEncoder(w).Encode(result)
 }
 
 // GetByID godoc
