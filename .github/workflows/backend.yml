@@ -1,0 +1,242 @@
+name: Backend
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'deploy/**'
+      - '.github/workflows/backend.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'deploy/**'
+      - '.github/workflows/backend.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: '1.25'
+          cache-dependency-path: backend/go.sum
+
+      - name: Run Go vet & tests
+        working-directory: ./backend
+        run: |
+          go vet ./...
+          go test ./...
+
+      - name: Build Go binary (linux/amd64 stripped)
+        working-directory: ./backend
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+            go build -ldflags="-s -w" -trimpath \
+            -o ../dist/ps-api ./cmd/api
+
+      - name: Upload backend binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: dist/ps-api
+          retention-days: 1
+
+  deploy-oci:
+    name: Deploy to Oracle OCI
+    needs: [build-and-test]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    env:
+      OCI_CLI_TENANCY: ${{ secrets.OCI_TENANCY_OCID }}
+      OCI_CLI_USER: ${{ secrets.OCI_USER_OCID }}
+      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_PRIVATE_KEY }}
+      OCI_CLI_REGION: ${{ secrets.OCI_REGION || 'sa-saopaulo-1' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Download backend binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-dist
+          path: dist
+
+      - name: Ensure binary executable
+        run: chmod +x dist/ps-api
+
+      - name: Install OCI CLI
+        run: |
+          pip install oci-cli --quiet
+          oci --version
+
+      - name: Get runner public IP
+        id: runner-ip
+        run: |
+          RUNNER_IP=$(curl -s https://checkip.amazonaws.com)
+          echo "ip=${RUNNER_IP}" >> "$GITHUB_OUTPUT"
+          echo "Runner IP: ${RUNNER_IP}"
+
+      - name: Open SSH on NSG (temporary)
+        id: open-ssh
+        env:
+          NSG_ID: ${{ secrets.OCI_SSH_NSG_ID }}
+        run: |
+          RESULT=$(oci network nsg rules add \
+            --nsg-id "$NSG_ID" \
+            --security-rules "[{
+              \"direction\": \"INGRESS\",
+              \"protocol\": \"6\",
+              \"source\": \"${{ steps.runner-ip.outputs.ip }}/32\",
+              \"sourceType\": \"CIDR_BLOCK\",
+              \"isStateless\": false,
+              \"tcpOptions\": {
+                \"destinationPortRange\": {
+                  \"min\": 22,
+                  \"max\": 22
+                }
+              },
+              \"description\": \"Temporary SSH for GitHub Actions deploy\"
+            }]" 2>&1)
+          echo "$RESULT"
+          RULE_ID=$(echo "$RESULT" | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          rules = data.get('data', {}).get('security-rules', [])
+          for r in rules:
+              if 'Temporary SSH' in r.get('description', ''):
+                  print(r['id'])
+                  break
+          ")
+          echo "rule_id=${RULE_ID}" >> "$GITHUB_OUTPUT"
+          echo "SSH rule added: ${RULE_ID}"
+          sleep 10
+
+      - name: Setup SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.OCI_HOST }}
+          USER: ${{ secrets.OCI_USERNAME }}
+        run: |
+          if [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "::error::Secret OCI_SSH_PRIVATE_KEY not configured!"
+            exit 1
+          fi
+          if [ -z "$HOST" ]; then
+            echo "::error::Secret OCI_HOST not configured!"
+            exit 1
+          fi
+          if [ -z "$USER" ]; then
+            echo "::error::Secret OCI_USERNAME not configured!"
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+
+      - name: Transfer files to OCI
+        env:
+          HOST: ${{ secrets.OCI_HOST }}
+          USER: ${{ secrets.OCI_USERNAME }}
+        run: |
+          ssh "$USER@$HOST" "mkdir -p /tmp/ps-deploy/dist \
+            /tmp/ps-deploy/deploy/caddy /tmp/ps-deploy/deploy/systemd"
+          scp dist/ps-api "$USER@$HOST:/tmp/ps-deploy/dist/"
+          scp deploy/systemd/ps-backend.service \
+            "$USER@$HOST:/tmp/ps-deploy/deploy/systemd/"
+          scp deploy/caddy/Caddyfile \
+            "$USER@$HOST:/tmp/ps-deploy/deploy/caddy/"
+
+      - name: Apply updates and restart services on OCI
+        env:
+          HOST: ${{ secrets.OCI_HOST }}
+          USER: ${{ secrets.OCI_USERNAME }}
+          FIPE_API_TOKEN: ${{ secrets.FIPE_API_TOKEN }}
+          FIPE_BASE_URL: ${{ secrets.FIPE_BASE_URL || 'https://fipe.parallelum.com.br/api/v2' }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL || 'https://ps.yurinogueira.dev.br' }}
+        run: |
+          ssh "$USER@$HOST" "FIPE_API_TOKEN=\"$FIPE_API_TOKEN\" FIPE_BASE_URL=\"$FIPE_BASE_URL\" SMTP_HOST=\"$SMTP_HOST\" SMTP_PORT=\"$SMTP_PORT\" SMTP_USER=\"$SMTP_USER\" SMTP_PASS=\"$SMTP_PASS\" EMAIL_FROM=\"$EMAIL_FROM\" APP_BASE_URL=\"$APP_BASE_URL\" bash -s" << 'EOF'
+            set -euo pipefail
+
+            # Instalar binário
+            sudo install -m 755 -o ps -g ps \
+              /tmp/ps-deploy/dist/ps-api /opt/ps/ps-api
+
+            # Atualizar Caddyfile se modificado
+            if [ -f /tmp/ps-deploy/deploy/caddy/Caddyfile ]; then
+              sudo cp /tmp/ps-deploy/deploy/caddy/Caddyfile \
+                /etc/caddy/Caddyfile
+              sudo systemctl reload caddy || sudo systemctl restart caddy
+            fi
+
+            # Atualizar serviço Systemd se modificado
+            if [ -f /tmp/ps-deploy/deploy/systemd/ps-backend.service ]; then
+              sudo cp /tmp/ps-deploy/deploy/systemd/ps-backend.service \
+                /etc/systemd/system/ps-backend.service
+              sudo systemctl daemon-reload
+            fi
+
+            # Garantir existência e permissões seguras do arquivo de variáveis
+            sudo touch /etc/ps/backend.env
+            sudo chown root:ps /etc/ps/backend.env
+            sudo chmod 640 /etc/ps/backend.env
+
+            # Injetar ou atualizar FIPE e configurações de e-mail / SMTP
+            for VAR in FIPE_API_TOKEN FIPE_BASE_URL SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS EMAIL_FROM APP_BASE_URL; do
+              VAL="${!VAR:-}"
+              if [ -n "$VAL" ]; then
+                if sudo grep -q "^${VAR}=" /etc/ps/backend.env; then
+                  sudo sed -i "s|^${VAR}=.*|${VAR}=${VAL}|" /etc/ps/backend.env
+                else
+                  echo "${VAR}=${VAL}" | sudo tee -a /etc/ps/backend.env > /dev/null
+                fi
+              fi
+            done
+
+            # Reiniciar aplicação Go
+            sudo systemctl restart ps-backend
+            sudo systemctl is-active --quiet ps-backend \
+              && echo "ps-backend is running successfully!"
+
+            # Limpar arquivos temporários
+            rm -rf /tmp/ps-deploy
+          EOF
+
+      - name: Close SSH on NSG (cleanup)
+        if: always()
+        env:
+          NSG_ID: ${{ secrets.OCI_SSH_NSG_ID }}
+        run: |
+          RULE_ID="${{ steps.open-ssh.outputs.rule_id }}"
+          if [ -n "$RULE_ID" ]; then
+            oci network nsg rules remove \
+              --nsg-id "$NSG_ID" \
+              --security-rule-ids "[\"${RULE_ID}\"]"
+            echo "SSH rule removed: ${RULE_ID}"
+          else
+            echo "No SSH rule to remove (rule_id was empty)"
+          fi

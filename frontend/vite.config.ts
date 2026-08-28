@@ -1,0 +1,95 @@
+import { defineConfig, type Plugin } from "vite";
+import react from "@vitejs/plugin-react";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function spaPrerenderPlugin(): Plugin {
+  return {
+    name: "spa-prerender-plugin",
+    closeBundle() {
+      const distDir = path.resolve(__dirname, "dist");
+      const indexPath = path.join(distDir, "index.html");
+      const notFoundPath = path.join(distDir, "404.html");
+
+      if (fs.existsSync(indexPath)) {
+        const indexHtml = fs.readFileSync(indexPath, "utf8");
+
+        // Fallback para rotas desconhecidas
+        fs.copyFileSync(indexPath, notFoundPath);
+
+        // Gera pastas com index.html para cada rota da aplicação
+        // Garantindo que hosts estáticos como GitHub Pages retornem HTTP 200 OK
+        // e possuam a tag rel=canonical correspondente para crawlers/Lighthouse
+        const routes = [
+          "login",
+          "register",
+          "dashboard",
+          "vehicles",
+          "maintenance",
+        ];
+        for (const route of routes) {
+          const routeDir = path.join(distDir, route);
+          fs.mkdirSync(routeDir, { recursive: true });
+          const routeHtml = indexHtml.replace(
+            /<link\s+rel=["']canonical["']\s+href=["'][^"']*["']\s*\/?>/i,
+            `<link rel="canonical" href="https://ps.yurinogueira.dev.br/${route}/" />`,
+          );
+          fs.writeFileSync(
+            path.join(routeDir, "index.html"),
+            routeHtml,
+            "utf8",
+          );
+        }
+      }
+    },
+  };
+}
+
+export default defineConfig({
+  base: process.env.VITE_BASE_PATH || "/",
+  plugins: [react(), spaPrerenderPlugin()],
+  server: {
+    port: 5173,
+    host: "0.0.0.0",
+    proxy: {
+      "/api": {
+        target: process.env.VITE_API_PROXY_TARGET || "http://localhost:8080",
+        changeOrigin: true,
+      },
+    },
+  },
+  build: {
+    target: "esnext",
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("@mui/icons-material")) {
+              return "vendor-icons";
+            }
+            if (
+              id.includes("@mui/material") ||
+              id.includes("@emotion/react") ||
+              id.includes("@emotion/styled")
+            ) {
+              return "vendor-mui";
+            }
+            if (
+              id.includes("react") ||
+              id.includes("react-dom") ||
+              id.includes("react-router-dom")
+            ) {
+              return "vendor-react";
+            }
+          }
+        },
+      },
+    },
+  },
+});

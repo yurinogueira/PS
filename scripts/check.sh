@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+# Root directory of PS project
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+check_backend() {
+  local backend_dir="$PROJECT_ROOT/backend"
+  local output=""
+  local status=0
+
+  # 1. Vet
+  if ! output=$(cd "$backend_dir" && go vet ./... 2>&1); then
+    echo "❌ [Backend] go vet failed:"
+    echo "$output"
+    return 1
+  fi
+
+  # 2. Test (suppress '? ps/... [no test files]' noise)
+  output=$(cd "$backend_dir" && go test ./... 2>&1) || status=$?
+  if [ $status -ne 0 ]; then
+    echo "❌ [Backend] go test failed:"
+    echo "$output" | grep -v "^? "
+    return 1
+  fi
+
+  # Count tested packages
+  local passed_count
+  passed_count=$(echo "$output" | grep -c "^ok " || true)
+  echo "✓ [Backend] OK (vet passed, ${passed_count} test packages passed)"
+  return 0
+}
+
+check_frontend() {
+  local frontend_dir="$PROJECT_ROOT/frontend"
+  local output=""
+
+  if [ ! -d "$frontend_dir/node_modules" ]; then
+    echo "⚠️ [Frontend] node_modules not found. Installing dependencies..."
+    (cd "$frontend_dir" && npm ci)
+  fi
+
+  local bin_dir="$frontend_dir/node_modules/.bin"
+  export CI=true
+  export NODE_NO_WARNINGS=1
+
+  # 1. TypeCheck
+  if ! output=$(cd "$frontend_dir" && "$bin_dir/tsc" -b 2>&1); then
+    echo "❌ [Frontend] Typecheck (tsc) failed:"
+    echo "$output"
+    return 1
+  fi
+
+  # 2. Lint
+  if ! output=$(cd "$frontend_dir" && "$bin_dir/eslint" . 2>&1); then
+    echo "❌ [Frontend] ESLint failed:"
+    echo "$output"
+    return 1
+  fi
+
+  # 3. Format
+  if ! output=$(cd "$frontend_dir" && "$bin_dir/prettier" --check . 2>&1); then
+    echo "❌ [Frontend] Prettier format check failed (run scripts/fix.sh to auto-fix):"
+    echo "$output"
+    return 1
+  fi
+
+  # 4. Vitest (run in CI mode, fast reporter, suppress experimental warnings)
+  if ! output=$(cd "$frontend_dir" && "$bin_dir/vitest" run --reporter=dot 2>&1); then
+    echo "❌ [Frontend] Vitest failed:"
+    echo "$output" | grep -v "ExperimentalWarning" || true
+    return 1
+  fi
+
+  echo "✓ [Frontend] OK (typecheck, lint, format & tests passed)"
+  return 0
+}
+
+check_terraform() {
+  local tf_dir="$PROJECT_ROOT/terraform"
+  local output=""
+
+  if ! command -v terraform &> /dev/null; then
+    return 0
+  fi
+
+  if ! output=$(cd "$PROJECT_ROOT" && terraform fmt -check -recursive terraform 2>&1); then
+    echo "❌ [Terraform] terraform fmt check failed (run scripts/fix.sh or terraform fmt -recursive to auto-fix):"
+    echo "$output"
+    return 1
+  fi
+
+  echo "✓ [Terraform] OK (fmt check passed)"
+  return 0
+}
+
+TARGET="${1:-all}"
+FAILED=0
+
+case "$TARGET" in
+  backend)
+    check_backend || FAILED=1
+    ;;
+  frontend)
+    check_frontend || FAILED=1
+    ;;
+  terraform)
+    check_terraform || FAILED=1
+    ;;
+  all)
+    check_backend || FAILED=1
+    check_frontend || FAILED=1
+    check_terraform || FAILED=1
+    if [ $FAILED -eq 0 ]; then
+      echo "🚀 [PS] All checks passed successfully!"
+    fi
+    ;;
+  *)
+    echo "Usage: $0 [backend|frontend|terraform|all]"
+    exit 1
+    ;;
+esac
+
+exit $FAILED
