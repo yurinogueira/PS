@@ -176,8 +176,9 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           APP_BASE_URL: ${{ secrets.APP_BASE_URL || 'https://ps.yurinogueira.dev.br' }}
+          ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS || 'https://ps.yurinogueira.dev.br,http://ps.yurinogueira.dev.br' }}
         run: |
-          ssh "$USER@$HOST" "SMTP_HOST=\"$SMTP_HOST\" SMTP_PORT=\"$SMTP_PORT\" SMTP_USER=\"$SMTP_USER\" SMTP_PASS=\"$SMTP_PASS\" EMAIL_FROM=\"$EMAIL_FROM\" APP_BASE_URL=\"$APP_BASE_URL\" bash -s" << 'EOF'
+          ssh "$USER@$HOST" "SMTP_HOST=\"$SMTP_HOST\" SMTP_PORT=\"$SMTP_PORT\" SMTP_USER=\"$SMTP_USER\" SMTP_PASS=\"$SMTP_PASS\" EMAIL_FROM=\"$EMAIL_FROM\" APP_BASE_URL=\"$APP_BASE_URL\" ALLOWED_ORIGINS=\"$ALLOWED_ORIGINS\" bash -s" << 'EOF'
             set -euo pipefail
 
             # Criar diretórios se não existirem
@@ -207,7 +208,7 @@ jobs:
             sudo chmod 640 /etc/ps/backend.env
 
             # Injetar ou atualizar FIPE e configurações de e-mail / SMTP
-            for VAR in SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS EMAIL_FROM APP_BASE_URL; do
+            for VAR in SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS EMAIL_FROM APP_BASE_URL ALLOWED_ORIGINS; do
               VAL="${!VAR:-}"
               if [ -n "$VAL" ]; then
                 if sudo grep -q "^${VAR}=" /etc/ps/backend.env; then
