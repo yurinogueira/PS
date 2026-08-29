@@ -60,10 +60,10 @@ export function Sidebar({
   const user = useAuthStore((state) => state.user);
 
   const handleNavigation = (path: string) => {
-    navigate(path);
     if (mobileOpen) {
       onDrawerToggle();
     }
+    navigate(path);
   };
 
   const drawerContent = (
@@ -222,7 +222,10 @@ export function Sidebar({
         variant="temporary"
         open={mobileOpen}
         onClose={onDrawerToggle}
-        ModalProps={{ keepMounted: true }}
+        ModalProps={{
+          keepMounted: true,
+          disableRestoreFocus: true,
+        }}
         sx={{
           display: { xs: "block", md: "none" },
           "& .MuiDrawer-paper": {
