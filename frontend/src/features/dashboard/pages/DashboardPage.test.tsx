@@ -6,6 +6,7 @@ import { useSeasonStore } from "../../../store/seasonStore";
 import { clientService } from "../../../services/api/client.service";
 import { personService } from "../../../services/api/person.service";
 import { photographerService } from "../../../services/api/photographer.service";
+import { reportService } from "../../../services/api/report.service";
 
 describe("DashboardPage", () => {
   beforeEach(() => {
@@ -208,6 +209,62 @@ describe("DashboardPage", () => {
     await waitFor(() => {
       expect(
         screen.getByText("Vincular Cliente na Temporada"),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("triggers export of clients csv report from report menu", async () => {
+    useSeasonStore.setState({
+      activeSeason: { id: "season-1", name: "Temporada 2026" },
+    });
+
+    const exportSpy = vi
+      .spyOn(reportService, "exportClientsCsv")
+      .mockResolvedValue({ message: "Exportação iniciada!" });
+
+    render(
+      <BrowserRouter>
+        <DashboardPage />
+      </BrowserRouter>,
+    );
+
+    const reportBtn = screen.getByRole("button", { name: /Relatórios/i });
+    fireEvent.click(reportBtn);
+
+    const exportOption = await screen.findByText("Exportar Clientes (.csv)");
+    fireEvent.click(exportOption);
+
+    await waitFor(() => {
+      expect(exportSpy).toHaveBeenCalled();
+      expect(screen.getByText("Exportação iniciada!")).toBeInTheDocument();
+    });
+  });
+
+  it("triggers export of unpaid clients csv report from report menu", async () => {
+    useSeasonStore.setState({
+      activeSeason: { id: "season-1", name: "Temporada 2026" },
+    });
+
+    const exportSpy = vi
+      .spyOn(reportService, "exportUnpaidClientsCsv")
+      .mockResolvedValue({ message: "Exportação de não pagos iniciada!" });
+
+    render(
+      <BrowserRouter>
+        <DashboardPage />
+      </BrowserRouter>,
+    );
+
+    const reportBtn = screen.getByRole("button", { name: /Relatórios/i });
+    fireEvent.click(reportBtn);
+
+    const exportOption = await screen.findByText("Exportar Não Pagos (.csv)");
+    fireEvent.click(exportOption);
+
+    await waitFor(() => {
+      expect(exportSpy).toHaveBeenCalled();
+      expect(
+        screen.getByText("Exportação de não pagos iniciada!"),
       ).toBeInTheDocument();
     });
   });

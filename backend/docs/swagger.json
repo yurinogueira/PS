@@ -1397,6 +1397,44 @@
                 }
             }
         },
+        "/api/v1/reports/unpaid-clients-csv": {
+            "post": {
+                "description": "Inicia a extração assíncrona do relatório de clientes e fotos com pagamentos não quitados ou pendentes do tenant autenticado e envia o link para o e-mail cadastrado",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Exportar relatório CSV de clientes com pagamentos não pagos",
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.SuccessEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant não associado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/seasons": {
             "get": {
                 "description": "Retorna a lista de temporadas do tenant autenticado",

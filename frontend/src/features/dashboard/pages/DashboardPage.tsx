@@ -123,6 +123,31 @@ export const DashboardPage = () => {
     }
   };
 
+  const handleExportUnpaidClientsCsv = async () => {
+    setReportMenuAnchor(null);
+    setExportingReport(true);
+    try {
+      const resp = await reportService.exportUnpaidClientsCsv();
+      setSnackbar({
+        open: true,
+        message:
+          resp?.message ||
+          "Processamento do relatório iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
+        severity: "success",
+      });
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message:
+          err?.response?.data?.message ||
+          "Erro ao solicitar exportação do relatório.",
+        severity: "error",
+      });
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -395,6 +420,12 @@ export const DashboardPage = () => {
                   <FileDownloadIcon fontSize="small" />
                 </ListItemIcon>
                 Exportar Clientes (.csv)
+              </MenuItem>
+              <MenuItem onClick={handleExportUnpaidClientsCsv}>
+                <ListItemIcon>
+                  <FileDownloadIcon fontSize="small" />
+                </ListItemIcon>
+                Exportar Não Pagos (.csv)
               </MenuItem>
             </Menu>
 
