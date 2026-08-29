@@ -1,10 +1,29 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"os"
 	"strings"
 )
+
+const MinSecretLength = 32
+
+var (
+	ErrJWTSecretEmpty           = errors.New("JWT_SECRET must not be empty")
+	ErrJWTRefreshSecretEmpty    = errors.New("JWT_REFRESH_SECRET must not be empty")
+	ErrJWTSecretInsecure        = errors.New("JWT_SECRET cannot be a known insecure default value")
+	ErrJWTRefreshSecretInsecure = errors.New("JWT_REFRESH_SECRET cannot be a known insecure default value")
+	ErrJWTSecretTooShort        = fmt.Errorf("JWT_SECRET must be at least %d characters long", MinSecretLength)
+	ErrJWTRefreshSecretTooShort = fmt.Errorf("JWT_REFRESH_SECRET must be at least %d characters long", MinSecretLength)
+	ErrJWTSecretsIdentical      = errors.New("JWT_SECRET and JWT_REFRESH_SECRET must be different")
+)
+
+var insecureDefaultSecrets = map[string]struct{}{
+	"change-me":     {},
+	"change-me-too": {},
+}
 
 type Config struct {
 	Port                string
@@ -31,11 +50,39 @@ type Config struct {
 	EmailFrom           string
 }
 
+func (c Config) Validate() error {
+	if c.JWTSecret == "" {
+		return ErrJWTSecretEmpty
+	}
+	if _, ok := insecureDefaultSecrets[c.JWTSecret]; ok {
+		return ErrJWTSecretInsecure
+	}
+	if len(c.JWTSecret) < MinSecretLength {
+		return ErrJWTSecretTooShort
+	}
+
+	if c.JWTRefreshSecret == "" {
+		return ErrJWTRefreshSecretEmpty
+	}
+	if _, ok := insecureDefaultSecrets[c.JWTRefreshSecret]; ok {
+		return ErrJWTRefreshSecretInsecure
+	}
+	if len(c.JWTRefreshSecret) < MinSecretLength {
+		return ErrJWTRefreshSecretTooShort
+	}
+
+	if c.JWTSecret == c.JWTRefreshSecret {
+		return ErrJWTSecretsIdentical
+	}
+
+	return nil
+}
+
 func Load() Config {
 	cfg := Config{
 		Port:                getenv("PORT", "8080"),
-		JWTSecret:           getenv("JWT_SECRET", "change-me"),
-		JWTRefreshSecret:    getenv("JWT_REFRESH_SECRET", "change-me-too"),
+		JWTSecret:           getenv("JWT_SECRET", ""),
+		JWTRefreshSecret:    getenv("JWT_REFRESH_SECRET", ""),
 		MongoURI:            getenv("MONGO_URI", "mongodb://localhost:27017"),
 		MongoDatabase:       getenv("MONGO_DATABASE", "ps"),
 		UploadPath:          getenv("UPLOAD_PATH", "./data/uploads"),
@@ -57,11 +104,8 @@ func Load() Config {
 		EmailFrom:           getenv("EMAIL_FROM", "no-reply@ps.com.br"),
 	}
 
-	// Prevent deploying with insecure JWT secrets in production.
-	if cfg.LogLevel != "debug" {
-		if cfg.JWTSecret == "change-me" || cfg.JWTRefreshSecret == "change-me-too" {
-			log.Fatal("FATAL: JWT_SECRET and JWT_REFRESH_SECRET must be set to secure values in production (LOG_LEVEL != debug)")
-		}
+	if err := cfg.Validate(); err != nil {
+		log.Fatalf("FATAL: invalid configuration: %v", err)
 	}
 
 	return cfg
