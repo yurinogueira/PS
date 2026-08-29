@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"unicode"
 
 	clientport "ps/internal/application/ports/client"
 	emailport "ps/internal/application/ports/email"
@@ -53,6 +54,49 @@ func NewService(
 		storageProvider:  storageProvider,
 		emailSender:      emailSender,
 		appBaseURL:       strings.TrimRight(appBaseURL, "/"),
+	}
+}
+
+// FormatPhone standardizes Brazilian phone numbers into (XX) XXXXX-XXXX or (XX) XXXX-XXXX
+func FormatPhone(phone string) string {
+	var digits strings.Builder
+	for _, r := range phone {
+		if unicode.IsDigit(r) {
+			digits.WriteRune(r)
+		}
+	}
+	d := digits.String()
+	switch len(d) {
+	case 11:
+		return fmt.Sprintf("(%s) %s-%s", d[0:2], d[2:7], d[7:11])
+	case 10:
+		return fmt.Sprintf("(%s) %s-%s", d[0:2], d[2:6], d[6:10])
+	case 9:
+		return fmt.Sprintf("%s-%s", d[0:5], d[5:9])
+	case 8:
+		return fmt.Sprintf("%s-%s", d[0:4], d[4:8])
+	default:
+		return strings.TrimSpace(phone)
+	}
+}
+
+// NormalizePaymentMethod translates any English or legacy payment method into Portuguese
+func NormalizePaymentMethod(method string) string {
+	trimmed := strings.TrimSpace(method)
+	lower := strings.ToLower(trimmed)
+	switch lower {
+	case "credit card", "credit_card", "cartao de credito", "cartão de crédito", "crédito", "credito":
+		return "Cartão de Crédito"
+	case "debit card", "debit_card", "cartao de debito", "cartão de débito", "débito", "debito":
+		return "Cartão de Débito"
+	case "cash", "dinheiro", "especie", "espécie":
+		return "Dinheiro"
+	case "pix":
+		return "Pix"
+	case "não pago", "nao pago", "nao_pago", "not paid", "not_paid", "pendente":
+		return "Não pago"
+	default:
+		return trimmed
 	}
 }
 
@@ -137,12 +181,14 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, u
 			p = personObj
 		}
 
+		formattedPhone := FormatPhone(p.Phone)
+
 		if len(c.Dogs) == 0 {
 			row := []string{
 				p.Name,
 				p.Email,
 				p.AlternativeEmail,
-				p.Phone,
+				formattedPhone,
 				"",
 				"",
 				"",
@@ -168,7 +214,7 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, u
 					p.Name,
 					p.Email,
 					p.AlternativeEmail,
-					p.Phone,
+					formattedPhone,
 					"",
 					"",
 					"",
@@ -198,7 +244,7 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, u
 					} else {
 						photographerName = photo.PhotographerID
 					}
-					paymentMethod = photo.PaymentMethod
+					paymentMethod = NormalizePaymentMethod(photo.PaymentMethod)
 					if photo.AmountPaid != nil {
 						amountPaid = fmt.Sprintf("%.2f", *photo.AmountPaid)
 					}
@@ -219,7 +265,7 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, u
 					p.Name,
 					p.Email,
 					p.AlternativeEmail,
-					p.Phone,
+					formattedPhone,
 					fileNumber,
 					photographerName,
 					competitionWon,

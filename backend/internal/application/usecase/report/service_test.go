@@ -285,21 +285,21 @@ func TestGenerateClientsCSV_FullExpansionAndRules(t *testing.T) {
 
 	// Check dog-1 rows (2 rows)
 	row1 := records[1]
-	if row1[0] != "Maria Souza" || row1[4] != "IMG_001" || row1[5] != "Fotógrafo Alpha" || row1[6] != "Melhor da Raça" || row1[10] != "100.50" {
+	if row1[0] != "Maria Souza" || row1[3] != "(11) 99999-8888" || row1[4] != "IMG_001" || row1[5] != "Fotógrafo Alpha" || row1[6] != "Melhor da Raça" || row1[8] != "Pix" || row1[10] != "100.50" {
 		t.Fatalf("row 1 mismatch: %v", row1)
 	}
 	row2 := records[2]
-	if row2[4] != "IMG_002" || row2[5] != "Fotógrafo Beta" || row2[6] != "Campeão Adulto" || row2[10] != "200.00" {
+	if row2[3] != "(11) 99999-8888" || row2[4] != "IMG_002" || row2[5] != "Fotógrafo Beta" || row2[6] != "Campeão Adulto" || row2[8] != "Cartão de Crédito" || row2[10] != "200.00" {
 		t.Fatalf("row 2 mismatch: %v", row2)
 	}
 
 	// Check dog-2 rows (3 rows, CSV injection sanitized with single quote, photo repeated on 3rd row)
 	row3 := records[3]
-	if row3[4] != "'=MALICIOUS_CMD" || row3[6] != "Sim" {
-		t.Fatalf("expected sanitized CSV injection field, got: %s", row3[4])
+	if row3[4] != "'=MALICIOUS_CMD" || row3[6] != "Sim" || row3[8] != "Dinheiro" {
+		t.Fatalf("expected sanitized CSV injection and Dinheiro payment, got: %v", row3)
 	}
 	row4 := records[4]
-	if row4[4] != "'+SUM(A1:A2)" || row4[6] != "Sim" {
+	if row4[4] != "'+SUM(A1:A2)" || row4[6] != "Sim" || row4[8] != "Pix" {
 		t.Fatalf("expected sanitized CSV injection field, got: %s", row4[4])
 	}
 	row5 := records[5]
@@ -346,6 +346,54 @@ func TestSanitizeCSVField(t *testing.T) {
 		got := SanitizeCSVField(tc.input)
 		if got != tc.expected {
 			t.Errorf("SanitizeCSVField(%q) = %q, expected %q", tc.input, got, tc.expected)
+		}
+	}
+}
+
+func TestFormatPhone(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected string
+	}{
+		{"92991803034", "(92) 99180-3034"},
+		{"62996578137", "(62) 99657-8137"},
+		{"(21) 97297-8784", "(21) 97297-8784"},
+		{"1133334444", "(11) 3333-4444"},
+		{"999998888", "99999-8888"},
+		{"33334444", "3333-4444"},
+		{"", ""},
+	}
+
+	for _, tc := range cases {
+		got := FormatPhone(tc.input)
+		if got != tc.expected {
+			t.Errorf("FormatPhone(%q) = %q, expected %q", tc.input, got, tc.expected)
+		}
+	}
+}
+
+func TestNormalizePaymentMethod(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected string
+	}{
+		{"Credit Card", "Cartão de Crédito"},
+		{"credit_card", "Cartão de Crédito"},
+		{"Debit Card", "Cartão de Débito"},
+		{"debit_card", "Cartão de Débito"},
+		{"Cash", "Dinheiro"},
+		{"dinheiro", "Dinheiro"},
+		{"Pix", "Pix"},
+		{"Não pago", "Não pago"},
+		{"nao_pago", "Não pago"},
+		{"Not Paid", "Não pago"},
+		{"Outro", "Outro"},
+	}
+
+	for _, tc := range cases {
+		got := NormalizePaymentMethod(tc.input)
+		if got != tc.expected {
+			t.Errorf("NormalizePaymentMethod(%q) = %q, expected %q", tc.input, got, tc.expected)
 		}
 	}
 }

@@ -60,9 +60,9 @@ import { formatPhone } from "../../../utils/phone";
 
 const PAYMENT_METHODS = [
   "Pix",
-  "Credit Card",
-  "Debit Card",
-  "Cash",
+  "Cartão de Crédito",
+  "Cartão de Débito",
+  "Dinheiro",
   "Não pago",
 ];
 
@@ -72,9 +72,12 @@ const getPaymentColor = (
   switch (method) {
     case "Pix":
       return "success";
+    case "Cartão de Crédito":
+    case "Cartão de Débito":
     case "Credit Card":
     case "Debit Card":
       return "primary";
+    case "Dinheiro":
     case "Cash":
       return "warning";
     case "Não pago":
