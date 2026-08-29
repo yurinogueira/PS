@@ -228,18 +228,44 @@ export const ClientsPage = () => {
     }
   };
 
-  if (!activeSeason)
+  if (!activeSeason) {
     return (
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
         <Typography>Selecione uma Temporada no topo.</Typography>
       </Box>
     );
+  }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h4">Clientes da Temporada Atual</Typography>
-        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "stretch", sm: "center" },
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        <Typography
+          variant="h4"
+          sx={{
+            fontSize: { xs: "1.5rem", sm: "2rem" },
+            fontWeight: 700,
+          }}
+        >
+          Clientes da Temporada Atual
+        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 1.5,
+            alignItems: "center",
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
           <Button
             variant="outlined"
             startIcon={
@@ -252,6 +278,7 @@ export const ClientsPage = () => {
             endIcon={<ExpandMoreIcon />}
             onClick={(e) => setReportMenuAnchor(e.currentTarget)}
             disabled={exportingReport}
+            sx={{ flex: { xs: 1, sm: "initial" }, whiteSpace: "nowrap" }}
           >
             {exportingReport ? "Gerando..." : "Relatórios"}
           </Button>
@@ -268,21 +295,35 @@ export const ClientsPage = () => {
             </MenuItem>
           </Menu>
 
-          <Button variant="contained" onClick={() => setOpen(true)}>
+          <Button
+            variant="contained"
+            onClick={() => setOpen(true)}
+            sx={{ flex: { xs: 1, sm: "initial" }, whiteSpace: "nowrap" }}
+          >
             Vincular Cliente
           </Button>
         </Box>
       </Box>
 
-      <Paper sx={{ width: "100%", overflow: "hidden" }}>
-        <TableContainer>
-          <Table>
-            <TableHead>
+      <Paper
+        sx={{
+          width: "100%",
+          overflow: "hidden",
+          border: "1px solid #E2E8F0",
+          borderRadius: 2,
+        }}
+        elevation={0}
+      >
+        <TableContainer sx={{ width: "100%", overflowX: "auto" }}>
+          <Table sx={{ minWidth: 600 }}>
+            <TableHead sx={{ bgcolor: "grey.50" }}>
               <TableRow>
-                <TableCell>Pessoa</TableCell>
-                <TableCell>Cachorros</TableCell>
-                <TableCell>Total de Fotos</TableCell>
-                <TableCell align="right">Ações</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Pessoa</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Cachorros</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Total de Fotos</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600 }}>
+                  Ações
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

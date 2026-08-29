@@ -152,7 +152,13 @@ export const AdminUsersPage = () => {
         }}
       >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              fontSize: { xs: "1.5rem", sm: "2rem" },
+            }}
+          >
             Gestão de Usuários
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -296,9 +302,14 @@ export const AdminUsersPage = () => {
       <TableContainer
         component={Paper}
         elevation={0}
-        sx={{ border: "1px solid #E2E8F0", borderRadius: 2 }}
+        sx={{
+          border: "1px solid #E2E8F0",
+          borderRadius: 2,
+          width: "100%",
+          overflowX: "auto",
+        }}
       >
-        <Table>
+        <Table sx={{ minWidth: 680 }}>
           <TableHead sx={{ bgcolor: "grey.50" }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>Usuário</TableCell>

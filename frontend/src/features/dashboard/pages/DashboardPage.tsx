@@ -287,20 +287,36 @@ export const DashboardPage = () => {
               variant="h4"
               sx={{
                 fontWeight: 800,
+                fontSize: { xs: "1.5rem", sm: "2.125rem" },
                 letterSpacing: "-0.5px",
                 color: "#ffffff",
               }}
             >
               Visão Geral
             </Typography>
-            <Typography variant="body1" sx={{ color: "grey.300", mt: 0.5 }}>
+            <Typography
+              variant="body1"
+              sx={{
+                color: "grey.300",
+                mt: 0.5,
+                fontSize: { xs: "0.85rem", sm: "1rem" },
+              }}
+            >
               {activeSeason
                 ? `Clientes, cães e fotos vinculados à temporada "${activeSeason.name}".`
                 : "Selecione uma temporada no cabeçalho para gerenciar os clientes e fotos."}
             </Typography>
           </Box>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 1.5,
+              width: { xs: "100%", md: "auto" },
+            }}
+          >
             {activeSeason ? (
               <>
                 <Chip
@@ -739,8 +755,8 @@ export const DashboardPage = () => {
             </Box>
           ) : (
             <>
-              <TableContainer>
-                <Table>
+              <TableContainer sx={{ width: "100%", overflowX: "auto" }}>
+                <Table sx={{ minWidth: 650 }}>
                   <TableHead sx={{ bgcolor: "grey.50" }}>
                     <TableRow>
                       <TableCell sx={{ fontWeight: 700 }}>

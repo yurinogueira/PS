@@ -119,7 +119,13 @@ export const AdminTenantsPage = () => {
         }}
       >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              fontSize: { xs: "1.5rem", sm: "2rem" },
+            }}
+          >
             Organizações
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -131,7 +137,7 @@ export const AdminTenantsPage = () => {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleOpenCreate}
-          sx={{ fontWeight: 600 }}
+          sx={{ fontWeight: 600, width: { xs: "100%", sm: "auto" } }}
         >
           Nova Organização
         </Button>
@@ -210,9 +216,14 @@ export const AdminTenantsPage = () => {
       <TableContainer
         component={Paper}
         elevation={0}
-        sx={{ border: "1px solid #E2E8F0", borderRadius: 2 }}
+        sx={{
+          border: "1px solid #E2E8F0",
+          borderRadius: 2,
+          width: "100%",
+          overflowX: "auto",
+        }}
       >
-        <Table>
+        <Table sx={{ minWidth: 500 }}>
           <TableHead sx={{ bgcolor: "grey.50" }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>

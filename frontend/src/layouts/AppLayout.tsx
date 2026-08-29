@@ -33,14 +33,24 @@ export function AppLayout() {
         sx={{
           flexGrow: 1,
           width: { md: `calc(100% - ${drawerWidth}px)` },
+          minWidth: 0,
+          maxWidth: "100%",
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
+          overflowX: "hidden",
         }}
       >
         <Topbar onDrawerToggle={handleDrawerToggle} />
 
-        <Box sx={{ flex: 1, p: { xs: 2, sm: 3, md: 4 } }}>
+        <Box
+          sx={{
+            flex: 1,
+            p: { xs: 1.5, sm: 2.5, md: 3 },
+            minWidth: 0,
+            maxWidth: "100%",
+          }}
+        >
           <Outlet />
         </Box>
       </Box>

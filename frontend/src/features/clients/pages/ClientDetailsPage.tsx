@@ -227,23 +227,48 @@ export const ClientDetailsPage = () => {
   if (!client) return <Typography>Carregando...</Typography>;
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 2 }}>
-        <IconButton onClick={() => navigate("/clients")}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h4">Detalhes do Cliente</Typography>
-        <Box sx={{ flexGrow: 1 }} />
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={() => setDeleteDialogOpen(true)}
-        >
-          Excluir Cliente
-        </Button>
-        <Button variant="contained" onClick={handleSave}>
-          Salvar Alterações
-        </Button>
+    <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          alignItems: { xs: "stretch", sm: "center" },
+          mb: 3,
+          gap: 2,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <IconButton onClick={() => navigate("/clients")}>
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography
+            variant="h4"
+            sx={{
+              fontSize: { xs: "1.4rem", sm: "2rem" },
+              fontWeight: 700,
+            }}
+          >
+            Detalhes do Cliente
+          </Typography>
+        </Box>
+        <Box sx={{ flexGrow: { sm: 1 } }} />
+        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={() => setDeleteDialogOpen(true)}
+            sx={{ flex: { xs: 1, sm: "initial" }, whiteSpace: "nowrap" }}
+          >
+            Excluir Cliente
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            sx={{ flex: { xs: 1, sm: "initial" }, whiteSpace: "nowrap" }}
+          >
+            Salvar Alterações
+          </Button>
+        </Box>
       </Box>
 
       <Paper sx={{ p: 3, mb: 3 }}>
