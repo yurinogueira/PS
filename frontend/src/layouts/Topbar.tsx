@@ -83,8 +83,12 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
       <Toolbar>
         <IconButton
           color="inherit"
+          aria-label="abrir menu"
           edge="start"
-          onClick={onDrawerToggle}
+          onClick={(e) => {
+            (e.currentTarget as HTMLElement)?.blur();
+            onDrawerToggle();
+          }}
           sx={{ mr: 2, display: { md: "none" } }}
         >
           <MenuIcon />
