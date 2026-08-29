@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Obrigado por contribuir com novas ideias para o **PS**! Por favor, detalhe a proposta abaixo para facilitar a análise arquitetural e a execução técnica.
+        Obrigado por contribuir com novas ideias para o **PS (Photo Storage)**! Por favor, detalhe a proposta abaixo para facilitar a análise arquitetural e a execução técnica.
 
   - type: textarea
     id: user-story
@@ -14,9 +14,9 @@ body:
       label: Visão Geral e Contexto de Negócio
       description: Explique a motivação da funcionalidade e o valor entregue ao usuário (ex: formato de User Story).
       placeholder: |
-        **Como** proprietário de veículo cadastrado no PS,
-        **Quero** receber alertas automáticos quando uma revisão preventiva estiver próxima do vencimento,
-        **Para que** eu não perca os prazos de manutenção recomendados.
+        **Como** fotógrafo parceiro ou administrador cadastrado no PS,
+        **Quero** exportar relatórios customizados de ensaios e clientes por temporada,
+        **Para que** eu possa acompanhar as vendas e o volume de coberturas fotográficas realizadas.
     validations:
       required: true
 
@@ -26,9 +26,9 @@ body:
       label: Requisitos Funcionais e Critérios de Aceite
       description: Detalhe as regras de negócio esperadas e os critérios necessários para considerar a feature concluída.
       placeholder: |
-        - [ ] O sistema deve permitir configurar intervalo de alerta (dias ou km).
-        - [ ] Na listagem de manutenções (`/maintenances`), destacar itens com status "Próximo".
-        - [ ] A API deve retornar o campo `isUpcoming: boolean` no DTO de resposta.
+        - [ ] O sistema deve permitir filtrar fotos e ensaios por temporada, fotógrafo e cliente.
+        - [ ] Na listagem de temporadas (`/seasons`), exibir o total de ensaios vinculados.
+        - [ ] A API deve retornar métricas agregadas no DTO de resposta.
     validations:
       required: true
 
@@ -54,9 +54,9 @@ body:
       label: Detalhes Técnicos e Arquitetura Proposta
       description: Liste novos endpoints REST, DTOs, novos componentes React ou alterações de modelo.
       placeholder: |
-        - **Novos Endpoints**: `GET /api/v1/maintenances/alerts`
-        - **Novos Componentes**: `MaintenanceAlertBanner.tsx` em `frontend/src/features/maintenance/`
-        - **Estado**: Adicionar action `fetchAlerts` em store Zustand.
+        - **Novos Endpoints**: `GET /api/v1/seasons/metrics`
+        - **Novos Componentes**: `SeasonMetricsCard.tsx` em `frontend/src/features/seasons/`
+        - **Estado**: Adicionar action `fetchMetrics` em store Zustand.
     validations:
       required: false
 
@@ -64,9 +64,9 @@ body:
     id: security-performance
     attributes:
       label: Considerações de Segurança e Performance
-      description: Especifique aspectos de segurança (ex: validação de ownership, cookies HttpOnly, rate limit, sanitização) e impacto em performance.
+      description: Especifique aspectos de segurança (ex: validação de ownership/tenant, cookies HttpOnly, rate limit, sanitização) e impacto em performance.
       placeholder: |
-        - Validar que o usuário só pode acessar alertas dos seus próprios veículos (`userID` extraído do contexto de autenticação).
+        - Validar que o usuário só pode acessar dados do seu próprio tenant (`tenantID` extraído do contexto de autenticação).
         - Sanitizar inputs para evitar XSS e injeção NoSQL no MongoDB.
     validations:
       required: false

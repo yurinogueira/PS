@@ -1,4 +1,4 @@
-# 🚗 PS - Photo Storage
+# 📸 PS - Photo Storage
 
 <div align="center">
 
@@ -10,7 +10,7 @@
 ![CI Frontend](https://img.shields.io/github/actions/workflow/status/yurinogueira/PS/frontend.yml?branch=main&label=CI%20Frontend&style=for-the-badge)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 
-**Plataforma moderna para gestão, controle de custos e histórico de manutenção veicular.**
+**Plataforma moderna para armazenamento, gestão inteligente de fotografias, eventos, temporadas, fotógrafos e clientes.**
 
 [Acessar Web App](https://ps.yurinogueira.dev.br)
 
@@ -23,17 +23,18 @@
 | Serviço | URL | Descrição |
 | :--- | :--- | :--- |
 | **🌐 Web App** | [ps.yurinogueira.dev.br](https://ps.yurinogueira.dev.br) | Aplicação SPA em produção (GitHub Pages + Cloudflare) |
+| **⚡ API REST** | [api-ps.yurinogueira.dev.br](https://api-ps.yurinogueira.dev.br) | Backend em Go com Clean Architecture hospedado na OCI |
 
 ---
 
 ## 🌟 Funcionalidades
 
-- 🔐 **Autenticação Segura & RBAC**: Sessões gerenciadas via cookies `HttpOnly` com suporte a refresh token, sem expor tokens no frontend e com controle de acesso baseado em papéis (Admin/User).
-- 🚘 **Gestão Completa de Veículos**: Cadastro, listagem, busca e edição de automóveis com placa, marca, modelo, ano de fabricação/modelo, quilometragem atual e tipo de combustível.
-- 🛠️ **Histórico de Manutenções**: Registro minucioso de revisões preventivas e corretivas, datas, oficinas, custos de peças e mão de obra, além de alertas por quilometragem.
-- 📎 **Upload de Comprovantes**: Anexação de notas fiscais, relatórios e recibos de serviços com validação de tipos MIME e isolamento de storage.
-- 📊 **Dashboard Analítico**: Indicadores de saúde veicular, métricas de custos consolidados, próximos alertas de revisão e atalhos rápidos.
-- 🛡️ **Segurança em Camadas**: CORS estrito, rate limiting por IP, validação de payloads, cabeçalhos de segurança HTTP (HSTS, CSP, X-Frame-Options) e sanitização contra Path Traversal.
+- 🔐 **Autenticação Segura & Multi-tenant (RBAC)**: Sessões gerenciadas via cookies `HttpOnly` com suporte a refresh token automático, recuperação e verificação de e-mail e controle de acesso baseado em papéis (SuperAdmin, Admin, Fotógrafo/Usuário).
+- 📸 **Gestão de Fotógrafos & Clientes**: Cadastro, listagem, filtros e gestão de fotógrafos parceiros e clientes atendidos com controle de cobrança e histórico.
+- 🏆 **Temporadas e Eventos**: Organização de coberturas fotográficas por temporadas de eventos e competições com agrupamento temático e temporal.
+- 👥 **Gestão de Pessoas & Participantes**: Registro e identificação de pessoas associadas aos eventos, ensaios e fotografias.
+- 📊 **Relatórios & Exportação Assíncrona**: Geração e download sob demanda de relatórios completos em formato CSV com streaming eficiente e baixo consumo de memória.
+- 🛡️ **Segurança em Camadas**: CORS estrito, rate limiting defensivo por IP, proteção contra Path Traversal, cabeçalhos de segurança HTTP (HSTS, CSP, X-Frame-Options) e sanitização rigorosa de payloads.
 
 ---
 
@@ -42,9 +43,9 @@
 ### Backend (Go)
 - **Linguagem**: Go 1.25
 - **Arquitetura**: Clean Architecture + Domain-Driven Design (DDD)
-  - `internal/domain/`: Entidades de negócio puras e regras de domínio.
-  - `internal/application/ports/`: Contratos e interfaces de repositórios/serviços.
-  - `internal/application/usecase/`: Casos de uso e orquestração de lógica de negócio.
+  - `internal/domain/`: Entidades de negócio puras (auth, client, person, photographer, season, tenant, user).
+  - `internal/application/ports/`: Contratos e interfaces de repositórios e serviços.
+  - `internal/application/usecase/`: Casos de uso e orquestração de regras de negócio.
   - `internal/infrastructure/`: Implementações de banco de dados (MongoDB), JWT, bcrypt e storage.
   - `internal/interfaces/rest/`: Handlers HTTP REST, roteamento e documentação Swagger com Swaggo.
 - **Banco de Dados**: MongoDB 8 (Local) e MongoDB Atlas (Produção).
@@ -52,7 +53,7 @@
 ### Frontend (React)
 - **Framework & Ferramentas**: React 19, TypeScript, Vite, React Router v7.
 - **UI & Estilização**: Material UI (MUI v6) com `@mui/icons-material` e paleta de cores personalizada.
-- **Gerenciamento de Estado**: Zustand (gerenciamento desacoplado de estado da UI e perfil).
+- **Gerenciamento de Estado**: Zustand (gerenciamento desacoplado de estado da UI e autenticação).
 - **Comunicação HTTP**: Axios configurado com `withCredentials: true` para transporte automático de cookies `HttpOnly`.
 
 ### Infraestrutura & DevOps
@@ -75,10 +76,11 @@ PS/
 │   └── Dockerfile            # Container de produção Go
 ├── frontend/                 # Aplicação SPA em React 19 + Vite
 │   ├── src/
-│   │   ├── features/         # Módulos: auth, cars, dashboard, maintenance
+│   │   ├── features/         # Módulos: admin, auth, clients, dashboard, people, photographers, profile, reports, seasons
 │   │   ├── layouts/          # Shell da aplicação (Sidebar, Topbar, AppLayout)
 │   │   ├── routes/           # Rotas públicas e rotas protegidas
 │   │   └── services/         # Clientes de API e storage seguro
+│   └── Dockerfile            # Container de build/produção Frontend
 ├── deploy/                   # Configurações de Caddy, systemd e exemplos de env
 ├── scripts/                  # Scripts otimizados de checagem, build e dev
 ├── terraform/                # Definições IaC (OCI, Cloudflare, Mongo Atlas)

@@ -1,6 +1,6 @@
 # Política de Segurança (Security Policy) — PS
 
-A equipe do **PS (Como Vai Meu Carro)** leva a segurança de seus sistemas, dados e usuários muito a sério. Como a plataforma opera no modelo **SaaS com Entrega Contínua (Continuous Delivery)**, correções e atualizações são integradas e disponibilizadas diretamente em produção.
+A equipe do **PS (Photo Storage)** leva a segurança de seus sistemas, dados e usuários muito a sério. Como a plataforma opera no modelo **SaaS com Entrega Contínua (Continuous Delivery)**, correções e atualizações são integradas e disponibilizadas diretamente em produção.
 
 ---
 
@@ -15,7 +15,7 @@ Por se tratar de um serviço web SaaS, não existem versões legadas ou pacotes 
 
 ### 🎯 Vulnerabilidades Prioritárias em Escopo
 - Quebra de autenticação ou vazamento de credenciais/sessões (tokens JWT via cookies `HttpOnly`).
-- Falhas de autorização e controle de acesso a dados (BOLA / IDOR em veículos, manutenções ou perfis).
+- Falhas de autorização e controle de acesso a dados (BOLA / IDOR em clientes, fotógrafos, temporadas ou perfis).
 - Injeções (NoSQL Injection, Command Injection, etc.).
 - Vulnerabilidades de manipulação de arquivos ou *Path Traversal* em rotas de upload.
 - Cross-Site Scripting (XSS) com impacto demonstrável.
