@@ -26,7 +26,7 @@ type Dog struct {
 type Photo struct {
 	FileNumber     string   `json:"file_number" bson:"file_number"`
 	PhotographerID string   `json:"photographer_id" bson:"photographer_id"`
-	PaymentMethod  string   `json:"payment_method" bson:"payment_method"` // Pix, Credit Card, Debit Card, Cash, Não pago
+	PaymentMethod  string   `json:"payment_method" bson:"payment_method"` // Pix, Cartão de Crédito, Cartão de Débito, Dinheiro, Não pago
 	AmountPaid     *float64 `json:"amount_paid" bson:"amount_paid"`
 }
 

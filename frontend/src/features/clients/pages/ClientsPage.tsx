@@ -52,9 +52,9 @@ import { useSeasonStore } from "../../../store/seasonStore";
 
 const PAYMENT_METHODS = [
   "Pix",
-  "Credit Card",
-  "Debit Card",
-  "Cash",
+  "Cartão de Crédito",
+  "Cartão de Débito",
+  "Dinheiro",
   "Não pago",
 ];
 

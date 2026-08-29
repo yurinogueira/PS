@@ -1755,7 +1755,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payment_method": {
-                    "description": "Pix, Credit Card, Debit Card, Cash, Não pago",
+                    "description": "Pix, Cartão de Crédito, Cartão de Débito, Dinheiro, Não pago",
                     "type": "string"
                 },
                 "photographer_id": {
