@@ -43,6 +43,7 @@ import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   clientService,
@@ -115,7 +116,38 @@ export const DashboardPage = () => {
         open: true,
         message:
           err?.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório.",
+          "Erro ao solicitar exportação do relatório CSV.",
+        severity: "error",
+      });
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
+  const handleExportClientsPdf = async () => {
+    setReportMenuAnchor(null);
+    setExportingReport(true);
+    try {
+      const blob = await reportService.downloadClientsPdfDirect();
+      const fileName = `clientes_${Math.floor(Date.now() / 1000)}.pdf`;
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+
+      setSnackbar({
+        open: true,
+        message: "Relatório PDF gerado e baixado com sucesso!",
+        severity: "success",
+      });
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message: err?.response?.data?.message || "Erro ao gerar relatório PDF.",
         severity: "error",
       });
     } finally {
@@ -328,8 +360,8 @@ export const DashboardPage = () => {
               }}
             >
               {activeSeason
-                ? `Clientes, cães e fotos vinculados à temporada "${activeSeason.name}".`
-                : "Selecione uma temporada no cabeçalho para gerenciar os clientes e fotos."}
+                ? `Clientes, cães e fotos vinculados ao evento "${activeSeason.name}".`
+                : "Selecione um evento no cabeçalho para gerenciar os clientes e fotos."}
             </Typography>
           </Box>
 
@@ -346,7 +378,7 @@ export const DashboardPage = () => {
               <>
                 <Chip
                   icon={<EventNoteRoundedIcon style={{ color: "#38bdf8" }} />}
-                  label={`Temporada: ${activeSeason.name}`}
+                  label={`Evento: ${activeSeason.name}`}
                   sx={{
                     bgcolor: "rgba(56, 189, 248, 0.15)",
                     color: "#38bdf8",
@@ -376,7 +408,7 @@ export const DashboardPage = () => {
               </>
             ) : (
               <Chip
-                label="Selecione uma temporada no menu superior"
+                label="Selecione um evento no menu superior"
                 sx={{
                   bgcolor: "warning.main",
                   color: "warning.contrastText",
@@ -415,6 +447,12 @@ export const DashboardPage = () => {
               open={Boolean(reportMenuAnchor)}
               onClose={() => setReportMenuAnchor(null)}
             >
+              <MenuItem onClick={handleExportClientsPdf}>
+                <ListItemIcon>
+                  <PictureAsPdfIcon fontSize="small" color="error" />
+                </ListItemIcon>
+                Exportar Relatório (.pdf)
+              </MenuItem>
               <MenuItem onClick={handleExportClientsCsv}>
                 <ListItemIcon>
                   <FileDownloadIcon fontSize="small" />
@@ -486,7 +524,7 @@ export const DashboardPage = () => {
                     {metrics.totalPeople}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {metrics.activeSeasonClients} nesta temporada
+                    {metrics.activeSeasonClients} neste evento
                   </Typography>
                 </Box>
                 <Avatar
@@ -537,7 +575,7 @@ export const DashboardPage = () => {
                     {metrics.totalDogs}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Cadastrados na temporada ativa
+                    Cadastrados no evento ativo
                   </Typography>
                 </Box>
                 <Avatar
@@ -588,7 +626,7 @@ export const DashboardPage = () => {
                     {metrics.totalPhotos}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Total nesta temporada
+                    Total neste evento
                   </Typography>
                 </Box>
                 <Avatar
@@ -658,7 +696,7 @@ export const DashboardPage = () => {
         </Grid>
       </Grid>
 
-      {/* Season Warning if None Active */}
+      {/* Event Warning if None Active */}
       {!activeSeason ? (
         <Alert
           severity="info"
@@ -671,11 +709,11 @@ export const DashboardPage = () => {
           }}
         >
           <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
-            Nenhuma temporada selecionada
+            Nenhum evento selecionado
           </Typography>
           <Typography variant="body2">
-            Por favor, selecione uma temporada no menu superior para visualizar
-            a listagem de clientes, cachorros e fotografias.
+            Por favor, selecione um evento no menu superior para visualizar a
+            listagem de clientes, cachorros e fotografias.
           </Typography>
         </Alert>
       ) : (
@@ -763,14 +801,14 @@ export const DashboardPage = () => {
               ) : (
                 <>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    Nenhum cliente vinculado nesta temporada
+                    Nenhum cliente vinculado neste evento
                   </Typography>
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{ maxWidth: 420 }}
                   >
-                    Esta temporada ainda não possui clientes cadastrados. Comece
+                    Este evento ainda não possui clientes cadastrados. Comece
                     vinculando uma pessoa e seus cães.
                   </Typography>
                   <Button
@@ -795,7 +833,7 @@ export const DashboardPage = () => {
                       </TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>Contato</TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>
-                        Cachorros na Temporada
+                        Cachorros no Evento
                       </TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>
                         Total de Fotos

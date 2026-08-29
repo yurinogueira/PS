@@ -40,14 +40,22 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
       .then((data) => {
         const seasonList = data || [];
         setSeasons(seasonList);
-        if (seasonList.length > 0 && !activeSeason) {
-          setActiveSeason({ id: seasonList[0].id, name: seasonList[0].name });
+        if (seasonList.length > 0) {
+          if (!activeSeason) {
+            setActiveSeason(seasonList[0]);
+          } else {
+            // Keep active season updated with latest judges
+            const found = seasonList.find((x) => x.id === activeSeason.id);
+            if (found) {
+              setActiveSeason(found);
+            }
+          }
         }
       })
       .catch(() => {
         setSeasons([]);
       });
-  }, [activeSeason, setActiveSeason]);
+  }, [setActiveSeason]);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -66,7 +74,7 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
   const handleChangeSeason = (id: string) => {
     const s = seasons.find((x) => x.id === id);
     if (s) {
-      setActiveSeason({ id: s.id, name: s.name });
+      setActiveSeason(s);
     }
   };
 
@@ -113,10 +121,10 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
           }}
         >
           <FormControl fullWidth size="small">
-            <InputLabel>Temporada Ativa</InputLabel>
+            <InputLabel>Evento Ativo</InputLabel>
             <Select
               value={activeSeason?.id || ""}
-              label="Temporada Ativa"
+              label="Evento Ativo"
               onChange={(e) => handleChangeSeason(e.target.value)}
               sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
             >

@@ -27,6 +27,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
 import { seasonService, Season } from "../../../services/api/season.service";
 import {
   photographerService,
@@ -42,6 +43,8 @@ export const SeasonsPage = () => {
   const [selectedPhotographers, setSelectedPhotographers] = useState<string[]>(
     [],
   );
+  const [judges, setJudges] = useState<string[]>([]);
+  const [judgeInput, setJudgeInput] = useState("");
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingSeason, setDeletingSeason] = useState<Season | null>(null);
@@ -55,7 +58,7 @@ export const SeasonsPage = () => {
       setSeasons(sData || []);
       setPhotographers(pData || []);
     } catch (err) {
-      console.error("Erro ao carregar temporadas:", err);
+      console.error("Erro ao carregar eventos:", err);
     }
   };
 
@@ -67,6 +70,8 @@ export const SeasonsPage = () => {
     setEditingId(null);
     setName("");
     setSelectedPhotographers([]);
+    setJudges([]);
+    setJudgeInput("");
     setOpen(true);
   };
 
@@ -74,7 +79,21 @@ export const SeasonsPage = () => {
     setEditingId(s.id);
     setName(s.name);
     setSelectedPhotographers(s.photographer_ids || []);
+    setJudges(s.judges || []);
+    setJudgeInput("");
     setOpen(true);
+  };
+
+  const handleAddJudge = () => {
+    const trimmed = judgeInput.trim();
+    if (trimmed && !judges.includes(trimmed)) {
+      setJudges([...judges, trimmed]);
+      setJudgeInput("");
+    }
+  };
+
+  const handleRemoveJudge = (judgeToRemove: string) => {
+    setJudges(judges.filter((j) => j !== judgeToRemove));
   };
 
   const handleSave = async () => {
@@ -83,20 +102,24 @@ export const SeasonsPage = () => {
         await seasonService.update(editingId, {
           name,
           photographer_ids: selectedPhotographers,
+          judges,
         });
       } else {
         await seasonService.create({
           name,
           photographer_ids: selectedPhotographers,
+          judges,
         });
       }
       setOpen(false);
       setEditingId(null);
       setName("");
       setSelectedPhotographers([]);
+      setJudges([]);
+      setJudgeInput("");
       await load();
     } catch (err) {
-      console.error("Erro ao salvar temporada:", err);
+      console.error("Erro ao salvar evento:", err);
     }
   };
 
@@ -113,7 +136,7 @@ export const SeasonsPage = () => {
       setDeletingSeason(null);
       await load();
     } catch (err) {
-      console.error("Erro ao excluir temporada:", err);
+      console.error("Erro ao excluir evento:", err);
     }
   };
 
@@ -136,7 +159,7 @@ export const SeasonsPage = () => {
             fontWeight: 700,
           }}
         >
-          Temporadas
+          Eventos
         </Typography>
         <Button
           variant="contained"
@@ -144,7 +167,7 @@ export const SeasonsPage = () => {
           onClick={handleOpenCreate}
           sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
         >
-          Nova Temporada
+          Novo Evento
         </Button>
       </Box>
 
@@ -158,12 +181,13 @@ export const SeasonsPage = () => {
           overflowX: "auto",
         }}
       >
-        <Table sx={{ minWidth: 550 }}>
+        <Table sx={{ minWidth: 600 }}>
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Nome</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Nome do Evento</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Fotógrafos</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Juízes</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>
                 Ações
               </TableCell>
@@ -172,20 +196,49 @@ export const SeasonsPage = () => {
           <TableBody>
             {seasons.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} align="center">
-                  Nenhuma temporada cadastrada.
+                <TableCell colSpan={5} align="center">
+                  Nenhum evento cadastrado.
                 </TableCell>
               </TableRow>
             ) : (
               seasons.map((s) => {
-                const associatedCount = s.photographer_ids?.length || 0;
+                const associatedPhotogs = s.photographer_ids?.length || 0;
+                const associatedJudges = s.judges?.length || 0;
                 return (
                   <TableRow key={s.id} hover>
                     <TableCell>{s.id}</TableCell>
-                    <TableCell>{s.name}</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>{s.name}</TableCell>
                     <TableCell>
-                      {associatedCount}{" "}
-                      {associatedCount === 1 ? "associado" : "associados"}
+                      {associatedPhotogs}{" "}
+                      {associatedPhotogs === 1 ? "associado" : "associados"}
+                    </TableCell>
+                    <TableCell>
+                      {associatedJudges > 0 ? (
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
+                        >
+                          {s.judges?.slice(0, 3).map((j) => (
+                            <Chip
+                              key={j}
+                              label={j}
+                              size="small"
+                              variant="outlined"
+                              icon={<GavelRoundedIcon fontSize="small" />}
+                            />
+                          ))}
+                          {associatedJudges > 3 && (
+                            <Chip
+                              label={`+${associatedJudges - 3}`}
+                              size="small"
+                              variant="outlined"
+                            />
+                          )}
+                        </Box>
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          Nenhum juiz cadastrado
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title="Editar">
@@ -216,31 +269,32 @@ export const SeasonsPage = () => {
         </Table>
       </TableContainer>
 
-      {/* Modal Criar / Editar */}
+      {/* Modal Criar / Editar Evento */}
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>
-          {editingId ? "Editar Temporada" : "Nova Temporada"}
-        </DialogTitle>
+        <DialogTitle>{editingId ? "Editar Evento" : "Novo Evento"}</DialogTitle>
         <DialogContent
           sx={{
             display: "flex",
             flexDirection: "column",
-            gap: 2,
+            gap: 2.5,
             pt: 2,
           }}
         >
           <TextField
-            label="Nome"
+            label="Nome do Evento"
+            placeholder="Ex: 2026 - Dog Nikity"
             fullWidth
             required
+            autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
+
           <FormControl fullWidth>
             <InputLabel>Fotógrafos Participantes (Opcional)</InputLabel>
             <Select
@@ -264,6 +318,7 @@ export const SeasonsPage = () => {
                       label={
                         photographers.find((p) => p.id === value)?.name || value
                       }
+                      size="small"
                     />
                   ))}
                 </Box>
@@ -276,8 +331,77 @@ export const SeasonsPage = () => {
               ))}
             </Select>
           </FormControl>
+
+          {/* Seção de Cadastro de Juízes do Evento */}
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              bgcolor: "grey.50",
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Typography
+              variant="subtitle2"
+              sx={{
+                fontWeight: 600,
+                mb: 1.5,
+                display: "flex",
+                alignItems: "center",
+                gap: 0.75,
+              }}
+            >
+              <GavelRoundedIcon fontSize="small" color="primary" />
+              Lista de Juízes do Evento
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
+              <TextField
+                label="Nome do Juiz"
+                placeholder="Ex: Tamas Jakkel, Dr. Roberto Carlos..."
+                size="small"
+                fullWidth
+                value={judgeInput}
+                onChange={(e) => setJudgeInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddJudge();
+                  }
+                }}
+              />
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleAddJudge}
+                disabled={!judgeInput.trim()}
+                sx={{ whiteSpace: "nowrap", px: 2 }}
+              >
+                Adicionar
+              </Button>
+            </Box>
+            {judges.length > 0 ? (
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                {judges.map((j) => (
+                  <Chip
+                    key={j}
+                    label={j}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                    onDelete={() => handleRemoveJudge(j)}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="caption" color="text.secondary">
+                Nenhum juiz adicionado a este evento ainda. Digite o nome e
+                clique em Adicionar.
+              </Typography>
+            )}
+          </Box>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setOpen(false)}>Cancelar</Button>
           <Button
             onClick={handleSave}
@@ -297,7 +421,7 @@ export const SeasonsPage = () => {
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
           <Typography>
-            Tem certeza que deseja excluir a temporada{" "}
+            Tem certeza que deseja excluir o evento{" "}
             <strong>{deletingSeason?.name}</strong>?
           </Typography>
         </DialogContent>

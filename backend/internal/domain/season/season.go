@@ -7,6 +7,7 @@ type Season struct {
 	TenantID        string    `json:"tenant_id" bson:"tenant_id"`
 	Name            string    `json:"name" bson:"name"`
 	PhotographerIDs []string  `json:"photographer_ids" bson:"photographer_ids"`
+	Judges          []string  `json:"judges" bson:"judges"`
 	CreatedAt       time.Time `json:"created_at" bson:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at" bson:"updated_at"`
 }

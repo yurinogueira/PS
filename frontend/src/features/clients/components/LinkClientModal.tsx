@@ -18,6 +18,7 @@ import {
   IconButton,
   Alert,
   Chip,
+  Autocomplete,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -28,6 +29,7 @@ import {
   photographerService,
   Photographer,
 } from "../../../services/api/photographer.service";
+import { useSeasonStore } from "../../../store/seasonStore";
 
 const PAYMENT_METHODS = [
   "Pix",
@@ -50,6 +52,7 @@ export const LinkClientModal = ({
   seasonId,
   onSuccess,
 }: LinkClientModalProps) => {
+  const { activeSeason } = useSeasonStore();
   const [people, setPeople] = useState<Person[]>([]);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
   const [personId, setPersonId] = useState("");
@@ -191,7 +194,7 @@ export const LinkClientModal = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Vincular Cliente na Temporada</DialogTitle>
+      <DialogTitle>Vincular Cliente no Evento</DialogTitle>
       <DialogContent
         sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}
       >
@@ -276,12 +279,35 @@ export const LinkClientModal = ({
                 onChange={(e) => updateDog(dIdx, "breed", e.target.value)}
                 sx={{ flex: 1, minWidth: 150 }}
               />
-              <TextField
-                label="Juiz"
+              <Autocomplete
+                multiple
+                freeSolo
                 size="small"
-                value={dog.judge}
-                onChange={(e) => updateDog(dIdx, "judge", e.target.value)}
-                sx={{ flex: 1, minWidth: 150 }}
+                options={activeSeason?.judges || []}
+                value={
+                  dog.judges ||
+                  (dog.judge
+                    ? dog.judge
+                        .split(",")
+                        .map((j) => j.trim())
+                        .filter(Boolean)
+                    : [])
+                }
+                onChange={(_, val) => {
+                  const cleaned = val.map((v) => v.trim()).filter(Boolean);
+                  updateDog(dIdx, "judges", cleaned);
+                  updateDog(dIdx, "judge", cleaned.join(", "));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Juiz"
+                    placeholder={
+                      dog.judges?.length ? "" : "Selecione ou digite"
+                    }
+                  />
+                )}
+                sx={{ flex: 1, minWidth: 180 }}
               />
               <TextField
                 type="number"

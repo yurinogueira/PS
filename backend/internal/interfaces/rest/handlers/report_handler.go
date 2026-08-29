@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	userport "ps/internal/application/ports/user"
@@ -111,13 +112,85 @@ func (h *ReportHandler) ExportUnpaidClientsCSV(w http.ResponseWriter, r *http.Re
 	})
 }
 
+// ExportClientsPDF godoc
+// @Summary      Exportar relatório PDF de clientes
+// @Description  Inicia a extração assíncrona do relatório consolidado em PDF de clientes, cães e fotos para o tenant autenticado e envia o link para o e-mail cadastrado
+// @Tags         Reports
+// @Produce      json
+// @Success      202  {object}  httpx.SuccessEnvelope
+// @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
+// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado"
+// @Failure      500  {object}  httpx.ErrorEnvelope "Erro interno"
+// @Router       /api/v1/reports/clients-pdf [post]
+func (h *ReportHandler) ExportClientsPDF(w http.ResponseWriter, r *http.Request) {
+	tenantID := middleware.GetTenantID(r.Context())
+	if tenantID == "" {
+		httpx.Error(w, http.StatusForbidden, "Tenant is required", nil)
+		return
+	}
+
+	userID := middleware.GetUserID(r.Context())
+	var userEmail, userName string
+	if userID != "" && h.userRepo != nil {
+		user, err := h.userRepo.FindByID(r.Context(), userID)
+		if err == nil && user.Email != "" {
+			userEmail = user.Email
+			userName = user.Name
+		}
+	}
+
+	// Launch async extraction job in background goroutine with detached context
+	go func(tID, uEmail, uName string) {
+		jobCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
+
+		if _, err := h.service.GenerateClientsPDF(jobCtx, tID, uEmail, uName); err != nil {
+			log.Printf("[REPORT-JOB-ERROR] Failed to generate clients PDF for tenant %s: %v", tID, err)
+		}
+	}(tenantID, userEmail, userName)
+
+	httpx.Accepted(w, map[string]string{
+		"message": "Geração do relatório em PDF iniciada com sucesso. O arquivo será enviado para o seu e-mail em instantes.",
+	})
+}
+
+// DownloadDirectClientsPDF godoc
+// @Summary      Download direto do relatório PDF de clientes
+// @Description  Gera e faz o download direto instantâneo do relatório consolidado em formato PDF
+// @Tags         Reports
+// @Produce      application/pdf
+// @Success      200  {string}  string "Arquivo PDF"
+// @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
+// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado"
+// @Failure      500  {object}  httpx.ErrorEnvelope "Erro interno"
+// @Router       /api/v1/reports/clients-pdf [get]
+func (h *ReportHandler) DownloadDirectClientsPDF(w http.ResponseWriter, r *http.Request) {
+	tenantID := middleware.GetTenantID(r.Context())
+	if tenantID == "" {
+		httpx.Error(w, http.StatusForbidden, "Tenant is required", nil)
+		return
+	}
+
+	pdfData, err := h.service.GenerateDirectClientsPDF(r.Context(), tenantID)
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "Falha ao gerar relatório PDF", nil)
+		return
+	}
+
+	fileName := fmt.Sprintf("clientes_%d.pdf", time.Now().UTC().Unix())
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", fileName))
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(pdfData)
+}
+
 // DownloadReport godoc
 // @Summary      Baixar arquivo de relatório gerado
 // @Description  Permite o download seguro de um arquivo de relatório previamente gerado, validando isolamento de tenant
 // @Tags         Reports
 // @Param        file query string true "Caminho relativo do arquivo de relatório"
-// @Produce      text/csv
-// @Success      200  {string}  string "Arquivo CSV"
+// @Produce      text/csv,application/pdf
+// @Success      200  {string}  string "Arquivo de relatório"
 // @Failure      400  {object}  httpx.ErrorEnvelope "Parâmetro inválido"
 // @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
 // @Failure      403  {object}  httpx.ErrorEnvelope "Acesso não autorizado ao arquivo"
@@ -148,7 +221,11 @@ func (h *ReportHandler) DownloadReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fileName := filepath.Base(filePath)
-	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	contentType := "text/csv; charset=utf-8"
+	if strings.HasSuffix(strings.ToLower(fileName), ".pdf") {
+		contentType = "application/pdf"
+	}
+	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", fileName))
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(data)

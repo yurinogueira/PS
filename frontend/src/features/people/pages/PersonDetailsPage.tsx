@@ -30,6 +30,7 @@ import {
   Tabs,
   CircularProgress,
   Avatar,
+  Autocomplete,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddIcon from "@mui/icons-material/Add";
@@ -44,6 +45,7 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import EmailIcon from "@mui/icons-material/Email";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import {
   clientService,
   SeasonClient,
@@ -106,12 +108,14 @@ export const PersonDetailsPage = () => {
   const [dogForm, setDogForm] = useState<{
     breed: string;
     judge: string;
+    judges: string[];
     competitions_won: number;
     won_competitions: string[];
     is_owner: boolean;
   }>({
     breed: "",
     judge: "",
+    judges: [],
     competitions_won: 0,
     won_competitions: [],
     is_owner: true,
@@ -121,17 +125,25 @@ export const PersonDetailsPage = () => {
   // Photo Dialog (Add - Batch / Single)
   const [addPhotoDialogOpen, setAddPhotoDialogOpen] = useState(false);
   const [photoTab, setPhotoTab] = useState<"batch" | "single">("batch");
-  const [batchPhotoForm, setBatchPhotoForm] = useState({
+  const [batchPhotoForm, setBatchPhotoForm] = useState<{
+    fileNumbersText: string;
+    photographer_id: string;
+    payment_method: string;
+    amount_paid: number;
+    judges: string[];
+  }>({
     fileNumbersText: "",
     photographer_id: "",
     payment_method: "Pix",
     amount_paid: 0,
+    judges: [],
   });
   const [singlePhotoForm, setSinglePhotoForm] = useState<Omit<Photo, "id">>({
     file_number: "",
     photographer_id: "",
     payment_method: "Pix",
     amount_paid: 0,
+    judges: [],
   });
 
   // Edit Photo Dialog
@@ -144,6 +156,7 @@ export const PersonDetailsPage = () => {
     photographer_id: "",
     payment_method: "Pix",
     amount_paid: 0,
+    judges: [],
   });
 
   // Delete Confirm Dialogs
@@ -233,7 +246,7 @@ export const PersonDetailsPage = () => {
   const saveClientData = async (updatedDogs: Dog[]) => {
     if (!id || !activeSeason) {
       showNotification(
-        "Selecione uma temporada ativa para salvar alterações.",
+        "Selecione um evento ativo para salvar alterações.",
         "warning",
       );
       return;
@@ -268,6 +281,7 @@ export const PersonDetailsPage = () => {
     setDogForm({
       breed: "",
       judge: "",
+      judges: [],
       competitions_won: 0,
       won_competitions: [],
       is_owner: true,
@@ -280,9 +294,19 @@ export const PersonDetailsPage = () => {
     if (!d) return;
     setEditingDogIndex(index);
     setNewCompetitionInput("");
+    const parsedJudges =
+      d.judges && d.judges.length > 0
+        ? d.judges
+        : d.judge
+          ? d.judge
+              .split(",")
+              .map((j) => j.trim())
+              .filter(Boolean)
+          : [];
     setDogForm({
       breed: d.breed || "",
       judge: d.judge || "",
+      judges: parsedJudges,
       competitions_won: d.competitions_won || 0,
       won_competitions: d.won_competitions || [],
       is_owner: d.is_owner ?? true,
@@ -325,12 +349,24 @@ export const PersonDetailsPage = () => {
         ? finalWonCompetitions.map((c) => c.trim()).filter((c) => c.length > 0)
         : [];
 
+    const finalJudges =
+      dogForm.judges && dogForm.judges.length > 0
+        ? dogForm.judges
+        : dogForm.judge
+          ? dogForm.judge
+              .split(",")
+              .map((j) => j.trim())
+              .filter(Boolean)
+          : [];
+    const finalJudge = finalJudges.join(", ");
+
     const newDogs = [...dogsList];
     if (editingDogIndex !== null) {
       newDogs[editingDogIndex] = {
         ...newDogs[editingDogIndex],
         breed: dogForm.breed.trim(),
-        judge: dogForm.judge.trim(),
+        judge: finalJudge,
+        judges: finalJudges,
         competitions_won: wonCount,
         won_competitions: finalWonCompetitions,
         is_owner: dogForm.is_owner,
@@ -338,7 +374,8 @@ export const PersonDetailsPage = () => {
     } else {
       newDogs.unshift({
         breed: dogForm.breed.trim(),
-        judge: dogForm.judge.trim(),
+        judge: finalJudge,
+        judges: finalJudges,
         competitions_won: wonCount,
         won_competitions: finalWonCompetitions,
         is_owner: dogForm.is_owner,
@@ -371,17 +408,29 @@ export const PersonDetailsPage = () => {
       return;
     }
     const defaultPhotog = photographers[0]?.id || "";
+    const defaultJudges =
+      selectedDog.judges && selectedDog.judges.length > 0
+        ? selectedDog.judges
+        : selectedDog.judge
+          ? selectedDog.judge
+              .split(",")
+              .map((j) => j.trim())
+              .filter(Boolean)
+          : [];
+
     setBatchPhotoForm({
       fileNumbersText: "",
       photographer_id: defaultPhotog,
       payment_method: "Pix",
       amount_paid: 0,
+      judges: defaultJudges,
     });
     setSinglePhotoForm({
       file_number: "",
       photographer_id: defaultPhotog,
       payment_method: "Pix",
       amount_paid: 0,
+      judges: defaultJudges,
     });
     setAddPhotoDialogOpen(true);
   };
@@ -392,6 +441,7 @@ export const PersonDetailsPage = () => {
     const newDogs = [...dogsList];
     const currentDog = { ...newDogs[selectedDogIndex] };
     const currentPhotos = [...(currentDog.photos || [])];
+    const nowIso = new Date().toISOString();
 
     if (photoTab === "batch") {
       const numbers = batchPhotoForm.fileNumbersText
@@ -412,6 +462,11 @@ export const PersonDetailsPage = () => {
         photographer_id: batchPhotoForm.photographer_id,
         payment_method: batchPhotoForm.payment_method,
         amount_paid: Number(batchPhotoForm.amount_paid) || 0,
+        judges:
+          batchPhotoForm.judges && batchPhotoForm.judges.length > 0
+            ? batchPhotoForm.judges
+            : undefined,
+        created_at: nowIso,
       }));
       currentPhotos.unshift(...newPhotos);
     } else {
@@ -425,6 +480,11 @@ export const PersonDetailsPage = () => {
         photographer_id: singlePhotoForm.photographer_id,
         payment_method: singlePhotoForm.payment_method,
         amount_paid: Number(singlePhotoForm.amount_paid) || 0,
+        judges:
+          singlePhotoForm.judges && singlePhotoForm.judges.length > 0
+            ? singlePhotoForm.judges
+            : undefined,
+        created_at: nowIso,
       });
     }
 
@@ -444,6 +504,7 @@ export const PersonDetailsPage = () => {
       photographer_id: photo.photographer_id || "",
       payment_method: photo.payment_method || "Pix",
       amount_paid: photo.amount_paid || 0,
+      judges: photo.judges || [],
     });
     setEditPhotoDialogOpen(true);
   };
@@ -458,13 +519,19 @@ export const PersonDetailsPage = () => {
     const newDogs = [...dogsList];
     const currentDog = { ...newDogs[selectedDogIndex] };
     const currentPhotos = [...(currentDog.photos || [])];
+    const existingPhoto = currentPhotos[editingPhotoIndex];
 
     currentPhotos[editingPhotoIndex] = {
-      ...currentPhotos[editingPhotoIndex],
+      ...existingPhoto,
       file_number: editPhotoForm.file_number.trim(),
       photographer_id: editPhotoForm.photographer_id,
       payment_method: editPhotoForm.payment_method,
       amount_paid: Number(editPhotoForm.amount_paid) || 0,
+      judges:
+        editPhotoForm.judges && editPhotoForm.judges.length > 0
+          ? editPhotoForm.judges
+          : undefined,
+      created_at: existingPhoto.created_at || new Date().toISOString(),
     };
 
     currentDog.photos = currentPhotos;
@@ -621,14 +688,14 @@ export const PersonDetailsPage = () => {
             {activeSeason ? (
               <Chip
                 icon={<EventNoteIcon />}
-                label={`Temporada: ${activeSeason.name}`}
+                label={`Evento: ${activeSeason.name}`}
                 color="primary"
                 variant="outlined"
                 sx={{ fontWeight: 600, px: 1, py: 2.2, borderRadius: 2 }}
               />
             ) : (
               <Chip
-                label="Nenhuma temporada selecionada"
+                label="Nenhum evento selecionado"
                 color="warning"
                 variant="filled"
                 sx={{ fontWeight: 600 }}
@@ -638,10 +705,10 @@ export const PersonDetailsPage = () => {
         </Box>
       </Paper>
 
-      {/* Season Warning Banner if not selected */}
+      {/* Event Warning Banner if not selected */}
       {!activeSeason && (
         <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
-          Por favor, selecione uma temporada no topo da página para cadastrar e
+          Por favor, selecione um evento no topo da página para cadastrar e
           gerenciar os cachorros e fotos de competições desta pessoa.
         </Alert>
       )}
@@ -730,8 +797,8 @@ export const PersonDetailsPage = () => {
                   Nenhum cachorro cadastrado
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Adicione o primeiro cachorro para registrar fotos nesta
-                  temporada.
+                  Adicione o primeiro cachorro para registrar fotos neste
+                  evento.
                 </Typography>
                 <Button
                   variant="outlined"
@@ -817,7 +884,8 @@ export const PersonDetailsPage = () => {
                               mb: 1,
                             }}
                           >
-                            {dog.judge ? (
+                            {(dog.judges && dog.judges.length > 0) ||
+                            dog.judge ? (
                               <Box
                                 sx={{
                                   display: "flex",
@@ -826,7 +894,12 @@ export const PersonDetailsPage = () => {
                                 }}
                               >
                                 <GavelIcon fontSize="inherit" />
-                                <span>Juiz: {dog.judge}</span>
+                                <span>
+                                  Juiz:{" "}
+                                  {dog.judges && dog.judges.length > 0
+                                    ? dog.judges.join(", ")
+                                    : dog.judge}
+                                </span>
                               </Box>
                             ) : null}
                           </Box>
@@ -960,7 +1033,9 @@ export const PersonDetailsPage = () => {
                       <GavelIcon fontSize="small" color="action" />
                       <Typography variant="body2">
                         <strong>Juiz:</strong>{" "}
-                        {selectedDog.judge || "Não informado"}
+                        {selectedDog.judges && selectedDog.judges.length > 0
+                          ? selectedDog.judges.join(", ")
+                          : selectedDog.judge || "Não informado"}
                       </Typography>
                     </Box>
                     <Box
@@ -1221,12 +1296,33 @@ export const PersonDetailsPage = () => {
 
                           <Divider sx={{ my: 1 }} />
 
+                          {photo.judges && photo.judges.length > 0 && (
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: 0.5,
+                                mb: 1,
+                              }}
+                            >
+                              {photo.judges.map((j) => (
+                                <Chip
+                                  key={j}
+                                  label={`Juiz: ${j}`}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{ fontSize: "0.7rem", height: 20 }}
+                                />
+                              ))}
+                            </Box>
+                          )}
+
                           <Box
                             sx={{
                               display: "flex",
                               justifyContent: "space-between",
                               alignItems: "center",
-                              mt: 1,
+                              mt: 0.5,
                             }}
                           >
                             <Chip
@@ -1244,6 +1340,31 @@ export const PersonDetailsPage = () => {
                                 : "R$ 0.00"}
                             </Typography>
                           </Box>
+
+                          {photo.created_at && (
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                                mt: 1,
+                                color: "text.secondary",
+                                fontSize: "0.75rem",
+                              }}
+                            >
+                              <AccessTimeIcon sx={{ fontSize: 13 }} />
+                              <span>
+                                Registrada em:{" "}
+                                {new Date(photo.created_at).toLocaleString(
+                                  "pt-BR",
+                                  {
+                                    dateStyle: "short",
+                                    timeStyle: "short",
+                                  },
+                                )}
+                              </span>
+                            </Box>
+                          )}
                         </Paper>
                       </Grid>
                     );
@@ -1332,12 +1453,42 @@ export const PersonDetailsPage = () => {
             value={dogForm.breed}
             onChange={(e) => setDogForm({ ...dogForm, breed: e.target.value })}
           />
-          <TextField
-            label="Nome do Juiz"
-            placeholder="Ex: Dr. Roberto Carlos"
-            fullWidth
-            value={dogForm.judge}
-            onChange={(e) => setDogForm({ ...dogForm, judge: e.target.value })}
+          <Autocomplete
+            multiple
+            freeSolo
+            options={activeSeason?.judges || []}
+            value={
+              dogForm.judges && dogForm.judges.length > 0
+                ? dogForm.judges
+                : dogForm.judge
+                  ? dogForm.judge
+                      .split(",")
+                      .map((j) => j.trim())
+                      .filter(Boolean)
+                  : []
+            }
+            onChange={(_, val) => {
+              const cleaned = val.map((v) => v.trim()).filter(Boolean);
+              setDogForm({
+                ...dogForm,
+                judges: cleaned,
+                judge: cleaned.join(", "),
+              });
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Juízes do Evento"
+                placeholder={
+                  dogForm.judges?.length ? "" : "Selecione ou digite juízes"
+                }
+                helperText={
+                  activeSeason?.judges && activeSeason.judges.length > 0
+                    ? "Selecione da lista de juízes do evento ou digite um novo nome e pressione Enter."
+                    : "Cadastre juízes no evento para selecioná-los aqui ou digite o nome e pressione Enter."
+                }
+              />
+            )}
           />
           <TextField
             label="Competições Ganhas"
@@ -1542,6 +1693,29 @@ export const PersonDetailsPage = () => {
                   ))}
                 </Select>
               </FormControl>
+              <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={activeSeason?.judges || []}
+                value={batchPhotoForm.judges || []}
+                onChange={(_, val) => {
+                  const cleaned = val.map((v) => v.trim()).filter(Boolean);
+                  setBatchPhotoForm({
+                    ...batchPhotoForm,
+                    judges: cleaned,
+                  });
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Juízes da Foto (Opcional - padrão do cão)"
+                    placeholder={
+                      batchPhotoForm.judges?.length ? "" : "Selecione ou digite"
+                    }
+                  />
+                )}
+              />
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <FormControl fullWidth size="small">
@@ -1622,6 +1796,31 @@ export const PersonDetailsPage = () => {
                   ))}
                 </Select>
               </FormControl>
+              <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={activeSeason?.judges || []}
+                value={singlePhotoForm.judges || []}
+                onChange={(_, val) => {
+                  const cleaned = val.map((v) => v.trim()).filter(Boolean);
+                  setSinglePhotoForm({
+                    ...singlePhotoForm,
+                    judges: cleaned,
+                  });
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Juízes da Foto (Opcional - padrão do cão)"
+                    placeholder={
+                      singlePhotoForm.judges?.length
+                        ? ""
+                        : "Selecione ou digite"
+                    }
+                  />
+                )}
+              />
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <FormControl fullWidth size="small">
@@ -1729,6 +1928,29 @@ export const PersonDetailsPage = () => {
               ))}
             </Select>
           </FormControl>
+          <Autocomplete
+            multiple
+            freeSolo
+            size="small"
+            options={activeSeason?.judges || []}
+            value={editPhotoForm.judges || []}
+            onChange={(_, val) => {
+              const cleaned = val.map((v) => v.trim()).filter(Boolean);
+              setEditPhotoForm({
+                ...editPhotoForm,
+                judges: cleaned,
+              });
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Juízes da Foto"
+                placeholder={
+                  editPhotoForm.judges?.length ? "" : "Selecione ou digite"
+                }
+              />
+            )}
+          />
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth size="small">
@@ -1797,7 +2019,7 @@ export const PersonDetailsPage = () => {
         <DialogContent>
           <Typography>
             Tem certeza que deseja excluir este cachorro e todas as suas fotos
-            associadas nesta temporada?
+            associadas neste evento?
           </Typography>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>

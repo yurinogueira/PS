@@ -1344,11 +1344,86 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/reports/clients-pdf": {
+            "get": {
+                "description": "Gera e faz o download direto instantâneo do relatório consolidado em formato PDF",
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Download direto do relatório PDF de clientes",
+                "responses": {
+                    "200": {
+                        "description": "Arquivo PDF",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant não associado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Inicia a extração assíncrona do relatório consolidado em PDF de clientes, cães e fotos para o tenant autenticado e envia o link para o e-mail cadastrado",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Exportar relatório PDF de clientes",
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.SuccessEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant não associado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/reports/download": {
             "get": {
                 "description": "Permite o download seguro de um arquivo de relatório previamente gerado, validando isolamento de tenant",
                 "produces": [
-                    "text/csv"
+                    "text/csv",
+                    "application/pdf"
                 ],
                 "tags": [
                     "Reports"
@@ -1365,7 +1440,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Arquivo CSV",
+                        "description": "Arquivo de relatório",
                         "schema": {
                             "type": "string"
                         }
@@ -1755,6 +1830,12 @@ const docTemplate = `{
                 "judge": {
                     "type": "string"
                 },
+                "judges": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "photos": {
                     "type": "array",
                     "items": {
@@ -1795,8 +1876,17 @@ const docTemplate = `{
                 "amount_paid": {
                     "type": "number"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "file_number": {
                     "type": "string"
+                },
+                "judges": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "payment_method": {
                     "description": "Pix, Cartão de Crédito, Cartão de Débito, Dinheiro, Não pago",
@@ -1993,6 +2083,12 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "judges": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"

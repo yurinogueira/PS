@@ -95,11 +95,19 @@ func (r *repository) Update(ctx context.Context, season *domain.Season) error {
 	season.TenantID = cleanTenantID
 	season.UpdatedAt = time.Now().UTC()
 
+	if season.PhotographerIDs == nil {
+		season.PhotographerIDs = make([]string, 0)
+	}
+	if season.Judges == nil {
+		season.Judges = make([]string, 0)
+	}
+
 	filter := bson.D{{Key: "_id", Value: cleanID}, {Key: "tenant_id", Value: cleanTenantID}}
 	updateDoc := bson.D{
 		{Key: "$set", Value: bson.D{
 			{Key: "name", Value: season.Name},
 			{Key: "photographer_ids", Value: season.PhotographerIDs},
+			{Key: "judges", Value: season.Judges},
 			{Key: "updated_at", Value: season.UpdatedAt},
 		}},
 	}

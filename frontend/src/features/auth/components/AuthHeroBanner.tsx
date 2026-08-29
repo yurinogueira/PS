@@ -171,7 +171,7 @@ export function AuthHeroBanner() {
               variant="body2"
               sx={{ fontWeight: 500, color: "#FFFFFF" }}
             >
-              Filtro global por temporada para organização financeira
+              Filtro global por evento para organização financeira
             </Typography>
           </Stack>
         </Stack>

@@ -5,11 +5,14 @@ export interface Photo {
   photographer_id: string;
   payment_method: string;
   amount_paid?: number;
+  judges?: string[];
+  created_at?: string;
 }
 
 export interface Dog {
   breed: string;
   judge: string;
+  judges?: string[];
   is_owner?: boolean;
   competitions_won: number;
   won_competitions?: string[];

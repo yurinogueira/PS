@@ -182,7 +182,7 @@ export function RegisterPage() {
                 Criar uma conta
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Comece a gerenciar as fotos da sua temporada de forma simples e
+                Comece a gerenciar as fotos do seu evento de forma simples e
                 organizada.
               </Typography>
             </Box>

@@ -30,11 +30,9 @@ describe("DashboardPage", () => {
     );
 
     expect(screen.getByText("Visão Geral")).toBeInTheDocument();
+    expect(screen.getByText("Nenhum evento selecionado")).toBeInTheDocument();
     expect(
-      screen.getByText("Nenhuma temporada selecionada"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Por favor, selecione uma temporada/i),
+      screen.getByText(/Por favor, selecione um evento/i),
     ).toBeInTheDocument();
   });
 
@@ -59,7 +57,7 @@ describe("DashboardPage", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("Nenhum cliente vinculado nesta temporada"),
+        screen.getByText("Nenhum cliente vinculado neste evento"),
       ).toBeInTheDocument();
     });
 
@@ -127,7 +125,9 @@ describe("DashboardPage", () => {
     });
 
     expect(screen.getByText("Total de Pessoas")).toBeInTheDocument();
-    expect(screen.getByText("Cachorros no Evento")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Cachorros no Evento").length,
+    ).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Fotos Registradas")).toBeInTheDocument();
     expect(screen.getByText("Cachorros & Fotos")).toBeInTheDocument();
     expect(screen.getByText("Detalhes")).toBeInTheDocument();
@@ -208,7 +208,7 @@ describe("DashboardPage", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("Vincular Cliente na Temporada"),
+        screen.getByText("Vincular Cliente no Evento"),
       ).toBeInTheDocument();
     });
   });

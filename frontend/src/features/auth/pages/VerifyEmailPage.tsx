@@ -165,7 +165,7 @@ export function VerifyEmailPage() {
                   sx={{ color: "text.secondary", mb: 4 }}
                 >
                   Seu e-mail foi confirmado com sucesso. Agora você já pode
-                  cadastrar e gerenciar as fotos da sua temporada no PS.
+                  cadastrar e gerenciar as fotos do seu evento no PS.
                 </Typography>
                 <Button
                   onClick={() =>

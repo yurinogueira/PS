@@ -4,6 +4,7 @@ export interface Season {
   id: string;
   name: string;
   photographer_ids: string[];
+  judges?: string[];
   created_at?: string;
   updated_at?: string;
 }

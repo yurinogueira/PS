@@ -23,6 +23,7 @@ import {
   Snackbar,
   Alert,
   Chip,
+  Autocomplete,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
@@ -39,6 +40,7 @@ import {
   photographerService,
   Photographer,
 } from "../../../services/api/photographer.service";
+import { useSeasonStore } from "../../../store/seasonStore";
 import { formatPhone } from "../../../utils/phone";
 
 const PAYMENT_METHODS = [
@@ -52,6 +54,7 @@ const PAYMENT_METHODS = [
 export const ClientDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { activeSeason } = useSeasonStore();
 
   const [client, setClient] = useState<SeasonClient | null>(null);
   const [person, setPerson] = useState<Person | null>(null);
@@ -318,13 +321,36 @@ export const ClientDetailsPage = () => {
                   minWidth: "160px",
                 }}
               />
-              <TextField
-                label="Juiz (Opcional)"
-                value={dog.judge}
-                onChange={(e) => updateDog(dIdx, "judge", e.target.value)}
+              <Autocomplete
+                multiple
+                freeSolo
+                options={activeSeason?.judges || []}
+                value={
+                  dog.judges ||
+                  (dog.judge
+                    ? dog.judge
+                        .split(",")
+                        .map((j) => j.trim())
+                        .filter(Boolean)
+                    : [])
+                }
+                onChange={(_, val) => {
+                  const cleaned = val.map((v) => v.trim()).filter(Boolean);
+                  updateDog(dIdx, "judges", cleaned);
+                  updateDog(dIdx, "judge", cleaned.join(", "));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Juiz (Opcional)"
+                    placeholder={
+                      dog.judges?.length ? "" : "Selecione ou digite"
+                    }
+                  />
+                )}
                 sx={{
-                  flex: { xs: "1 1 100%", sm: "1 1 200px" },
-                  minWidth: "160px",
+                  flex: { xs: "1 1 100%", sm: "1 1 240px" },
+                  minWidth: "200px",
                 }}
               />
               <TextField
@@ -595,8 +621,7 @@ export const ClientDetailsPage = () => {
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
           <Typography>
-            Tem certeza que deseja excluir o cadastro deste cliente na
-            temporada?
+            Tem certeza que deseja excluir o cadastro deste cliente no evento?
           </Typography>
         </DialogContent>
         <DialogActions>

@@ -10,6 +10,10 @@ definitions:
         type: boolean
       judge:
         type: string
+      judges:
+        items:
+          type: string
+        type: array
       photos:
         items:
           $ref: '#/definitions/client.Photo'
@@ -36,8 +40,14 @@ definitions:
     properties:
       amount_paid:
         type: number
+      created_at:
+        type: string
       file_number:
         type: string
+      judges:
+        items:
+          type: string
+        type: array
       payment_method:
         description: Pix, Cartão de Crédito, Cartão de Débito, Dinheiro, Não pago
         type: string
@@ -169,6 +179,10 @@ definitions:
         type: string
       id:
         type: string
+      judges:
+        items:
+          type: string
+        type: array
       name:
         type: string
       photographer_ids:
@@ -1066,6 +1080,58 @@ paths:
       summary: Exportar relatório CSV de clientes
       tags:
       - Reports
+  /api/v1/reports/clients-pdf:
+    get:
+      description: Gera e faz o download direto instantâneo do relatório consolidado
+        em formato PDF
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: Arquivo PDF
+          schema:
+            type: string
+        "401":
+          description: Não autenticado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Tenant não associado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      summary: Download direto do relatório PDF de clientes
+      tags:
+      - Reports
+    post:
+      description: Inicia a extração assíncrona do relatório consolidado em PDF de
+        clientes, cães e fotos para o tenant autenticado e envia o link para o e-mail
+        cadastrado
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/httpx.SuccessEnvelope'
+        "401":
+          description: Não autenticado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Tenant não associado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      summary: Exportar relatório PDF de clientes
+      tags:
+      - Reports
   /api/v1/reports/download:
     get:
       description: Permite o download seguro de um arquivo de relatório previamente
@@ -1078,9 +1144,10 @@ paths:
         type: string
       produces:
       - text/csv
+      - application/pdf
       responses:
         "200":
-          description: Arquivo CSV
+          description: Arquivo de relatório
           schema:
             type: string
         "400":

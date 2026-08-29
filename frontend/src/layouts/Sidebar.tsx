@@ -27,7 +27,7 @@ interface SidebarProps {
 
 const menuItems = [
   { text: "Visão Geral", icon: <DashboardRoundedIcon />, path: "/dashboard" },
-  { text: "Temporadas", icon: <EventNoteRoundedIcon />, path: "/seasons" },
+  { text: "Eventos", icon: <EventNoteRoundedIcon />, path: "/seasons" },
   {
     text: "Fotógrafos",
     icon: <CameraAltRoundedIcon />,
