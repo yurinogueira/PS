@@ -98,7 +98,6 @@ export const LinkClientModal = ({
 
   const addDog = () => {
     setDogs([
-      ...dogs,
       {
         breed: "",
         judge: "",
@@ -107,6 +106,7 @@ export const LinkClientModal = ({
         won_competitions: [],
         photos: [],
       },
+      ...dogs,
     ]);
   };
 
@@ -152,12 +152,16 @@ export const LinkClientModal = ({
 
   const addPhoto = (dogIndex: number) => {
     const newDogs = [...dogs];
-    newDogs[dogIndex].photos.push({
+    const photos = newDogs[dogIndex].photos
+      ? [...newDogs[dogIndex].photos]
+      : [];
+    photos.unshift({
       file_number: "",
       photographer_id: "",
       payment_method: "Pix",
       amount_paid: 0,
     });
+    newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setDogs(newDogs);
   };
 
@@ -168,16 +172,20 @@ export const LinkClientModal = ({
     value: unknown,
   ) => {
     const newDogs = [...dogs];
-    newDogs[dogIndex].photos[photoIndex] = {
-      ...newDogs[dogIndex].photos[photoIndex],
+    const photos = [...newDogs[dogIndex].photos];
+    photos[photoIndex] = {
+      ...photos[photoIndex],
       [field]: value,
     };
+    newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setDogs(newDogs);
   };
 
   const removePhoto = (dogIndex: number, photoIndex: number) => {
     const newDogs = [...dogs];
-    newDogs[dogIndex].photos.splice(photoIndex, 1);
+    const photos = [...newDogs[dogIndex].photos];
+    photos.splice(photoIndex, 1);
+    newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setDogs(newDogs);
   };
 

@@ -160,7 +160,6 @@ export const ClientDetailsModal = ({
     setClient({
       ...client,
       dogs: [
-        ...(client.dogs || []),
         {
           breed: "",
           judge: "",
@@ -169,6 +168,7 @@ export const ClientDetailsModal = ({
           won_competitions: [],
           photos: [],
         },
+        ...(client.dogs || []),
       ],
     });
   };
@@ -193,7 +193,7 @@ export const ClientDetailsModal = ({
     const photos = newDogs[dogIndex].photos
       ? [...newDogs[dogIndex].photos]
       : [];
-    photos.push({
+    photos.unshift({
       file_number: "",
       photographer_id: "",
       payment_method: "Pix",
