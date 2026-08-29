@@ -51,10 +51,10 @@ git checkout -b <tipo>/<nome-da-branch>
 
 #### Convenção de Nomes de Branch:
 - **Com Issue vinculada**: `<tipo>/<id_da_issue>-<descricao-curta>`
-  - `feat/20-workflow-standardization`: Novas funcionalidades ou melhorias vinculadas à issue #20.
-  - `fix/21-auth-session-timeout`: Correções de bugs vinculadas à issue #21.
+  - `feat/27-async-clients-csv-report`: Novas funcionalidades vinculadas à issue #27.
+  - `fix/30-report-phone-format-portuguese-payments`: Correções de bugs vinculadas à issue #30.
 - **Sem Issue vinculada (manutenções internas/skills)**: `<tipo>/<descricao-curta>`
-  - `chore/skills-enhancement`: Ajustes de documentação interna e skills.
+  - `chore/enforce-main-sync-workflow`: Ajustes de documentação interna e skills.
   - `docs/readme-update`: Atualizações de documentação.
 
 ---
@@ -75,10 +75,10 @@ git checkout -b <tipo>/<nome-da-branch>
 ### 3. Commits Semânticos (Conventional Commits)
 - Organize os commits de forma atômica seguindo o padrão Conventional Commits:
   - **Com Issue**: `<tipo>(<escopo>): <descrição clara no imperativo> (#<id_da_issue>)`
-    - `feat(workflows): unificar e padronizar pipelines de ci e deploy (#20)`
-    - `fix(auth): implementar silent refresh e sessao de 24h (#21)`
+    - `feat(reports): extração assíncrona de relatório csv com baixo consumo de memória (#27)`
+    - `fix(reports): padronizar formatacao de telefone e traduzir formas de pagamento para portugues (#30)`
   - **Sem Issue**: `<tipo>(<escopo>): <descrição clara no imperativo>`
-    - `chore(skills): enhance ps-issues and ps-workflow guidelines`
+    - `chore(skills): align skills with domain models and real pull requests`
 
 ---
 

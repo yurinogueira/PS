@@ -56,9 +56,13 @@ Esta skill define as diretrizes de arquitetura, fluxos de edição, documentaç�
 - **Stack**: React 19, TypeScript, Vite, Material UI (MUI v6), `@mui/icons-material`, Zustand, React Router v7, Axios, Vitest.
 - **Estrutura de Pastas**:
   - `src/features/auth/`: Módulo de autenticação com layout Split-Screen (`LoginPage.tsx`, `RegisterPage.tsx`, `AuthHeroBanner.tsx`), store Zustand (`auth.store.ts` gerenciando apenas perfil público, sem tokens), `auth.service.ts` e tipos.
-  - `src/features/cars/`: Gestão de veículos (`VehiclesPage.tsx`, `VehicleCard.tsx`, `AddCarDialog.tsx`, `car.service.ts`).
-  - `src/features/dashboard/`: Painel geral com KPIs, CTA em gradiente e Empty State inteligente (`DashboardPage.tsx`).
-  - `src/features/maintenance/`: Histórico e revisões de veículos (`MaintenancePage.tsx`).
+  - `src/features/dashboard/`: Painel geral com KPIs da temporada ativa, métricas em tempo real e atalhos rápidos (`DashboardPage.tsx`).
+  - `src/features/people/`: Gestão de pessoas/proprietários com visão Master-Detail de cachorros e fotos (`PeoplePage.tsx`, `PersonDetailsPage.tsx`).
+  - `src/features/clients/`: Gestão de clientes vinculados à temporada ativa, competições ganhas e fotos (`ClientsPage.tsx`, `ClientDetailsPage.tsx`, `ClientDetailsModal.tsx`, `LinkClientModal.tsx`).
+  - `src/features/reports/`: Extração assíncrona e download seguro de relatórios CSV (`ReportDownloadPage.tsx`, `report.service.ts`).
+  - `src/features/seasons/`: Gestão e alternância de temporadas ativas de eventos fotográficos (`SeasonsPage.tsx`).
+  - `src/features/photographers/`: Gestão e cadastro de fotógrafos da equipe (`PhotographersPage.tsx`).
+  - `src/features/admin/`: Gestão administrativa multi-tenant e usuários (`TenantsPage.tsx`, `UsersPage.tsx`).
   - `src/layouts/`: Shell SaaS persistente (`Sidebar.tsx`, `Topbar.tsx`, `AppLayout.tsx`).
   - `src/routes/`: Definição de rotas públicas (`/login`, `/register`) e privadas via `ProtectedRoute.tsx`.
   - `src/services/api/`: Cliente Axios (`client.ts`) configurado para `/api/v1` com `withCredentials: true` para transporte transparente e seguro de cookies `HttpOnly`.
