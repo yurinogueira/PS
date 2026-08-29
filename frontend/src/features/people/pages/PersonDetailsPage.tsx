@@ -56,6 +56,7 @@ import {
   Photographer,
 } from "../../../services/api/photographer.service";
 import { useSeasonStore } from "../../../store/seasonStore";
+import { formatPhone } from "../../../utils/phone";
 
 const PAYMENT_METHODS = [
   "Pix",
@@ -99,12 +100,20 @@ export const PersonDetailsPage = () => {
   // Dog Dialog (Create / Edit)
   const [dogDialogOpen, setDogDialogOpen] = useState(false);
   const [editingDogIndex, setEditingDogIndex] = useState<number | null>(null);
-  const [dogForm, setDogForm] = useState({
+  const [dogForm, setDogForm] = useState<{
+    breed: string;
+    judge: string;
+    competitions_won: number;
+    won_competitions: string[];
+    is_owner: boolean;
+  }>({
     breed: "",
     judge: "",
     competitions_won: 0,
+    won_competitions: [],
     is_owner: true,
   });
+  const [newCompetitionInput, setNewCompetitionInput] = useState("");
 
   // Photo Dialog (Add - Batch / Single)
   const [addPhotoDialogOpen, setAddPhotoDialogOpen] = useState(false);
@@ -252,10 +261,12 @@ export const PersonDetailsPage = () => {
   // Dog CRUD Handlers
   const handleOpenAddDog = () => {
     setEditingDogIndex(null);
+    setNewCompetitionInput("");
     setDogForm({
       breed: "",
       judge: "",
       competitions_won: 0,
+      won_competitions: [],
       is_owner: true,
     });
     setDogDialogOpen(true);
@@ -265,13 +276,34 @@ export const PersonDetailsPage = () => {
     const d = dogsList[index];
     if (!d) return;
     setEditingDogIndex(index);
+    setNewCompetitionInput("");
     setDogForm({
       breed: d.breed || "",
       judge: d.judge || "",
       competitions_won: d.competitions_won || 0,
+      won_competitions: d.won_competitions || [],
       is_owner: d.is_owner ?? true,
     });
     setDogDialogOpen(true);
+  };
+
+  const handleAddCompetitionName = () => {
+    const trimmed = newCompetitionInput.trim();
+    if (!trimmed) return;
+    setDogForm((prev) => ({
+      ...prev,
+      won_competitions: [...(prev.won_competitions || []), trimmed],
+    }));
+    setNewCompetitionInput("");
+  };
+
+  const handleRemoveCompetitionName = (compIndex: number) => {
+    setDogForm((prev) => ({
+      ...prev,
+      won_competitions: (prev.won_competitions || []).filter(
+        (_, i) => i !== compIndex,
+      ),
+    }));
   };
 
   const handleSaveDog = async () => {
@@ -280,21 +312,32 @@ export const PersonDetailsPage = () => {
       return;
     }
 
+    const wonCount = Number(dogForm.competitions_won) || 0;
+    let finalWonCompetitions = [...(dogForm.won_competitions || [])];
+    if (newCompetitionInput.trim() && wonCount > 0) {
+      finalWonCompetitions.push(newCompetitionInput.trim());
+    }
+    finalWonCompetitions =
+      wonCount > 0
+        ? finalWonCompetitions.map((c) => c.trim()).filter((c) => c.length > 0)
+        : [];
+
     const newDogs = [...dogsList];
     if (editingDogIndex !== null) {
       newDogs[editingDogIndex] = {
         ...newDogs[editingDogIndex],
         breed: dogForm.breed.trim(),
         judge: dogForm.judge.trim(),
-        competitions_won: Number(dogForm.competitions_won) || 0,
+        competitions_won: wonCount,
+        won_competitions: finalWonCompetitions,
         is_owner: dogForm.is_owner,
       };
     } else {
       newDogs.push({
-        id: "dog_" + Date.now(),
         breed: dogForm.breed.trim(),
         judge: dogForm.judge.trim(),
-        competitions_won: Number(dogForm.competitions_won) || 0,
+        competitions_won: wonCount,
+        won_competitions: finalWonCompetitions,
         is_owner: dogForm.is_owner,
         photos: [],
       });
@@ -302,6 +345,7 @@ export const PersonDetailsPage = () => {
     }
 
     setDogDialogOpen(false);
+    setNewCompetitionInput("");
     await saveClientData(newDogs);
   };
 
@@ -360,9 +404,8 @@ export const PersonDetailsPage = () => {
         return;
       }
 
-      numbers.forEach((num, i) => {
+      numbers.forEach((num) => {
         currentPhotos.push({
-          id: "photo_" + Date.now() + "_" + i,
           file_number: num,
           photographer_id: batchPhotoForm.photographer_id,
           payment_method: batchPhotoForm.payment_method,
@@ -376,7 +419,6 @@ export const PersonDetailsPage = () => {
       }
 
       currentPhotos.push({
-        id: "photo_" + Date.now(),
         file_number: singlePhotoForm.file_number.trim(),
         photographer_id: singlePhotoForm.photographer_id,
         payment_method: singlePhotoForm.payment_method,
@@ -566,7 +608,7 @@ export const PersonDetailsPage = () => {
                     }}
                   >
                     <PhoneIcon fontSize="inherit" />
-                    <span>{person.phone}</span>
+                    <span>{formatPhone(person.phone)}</span>
                   </Box>
                 )}
               </Box>
@@ -714,7 +756,7 @@ export const PersonDetailsPage = () => {
                   const photoCount = dog.photos?.length || 0;
                   return (
                     <Card
-                      key={dog.id || idx}
+                      key={idx}
                       elevation={0}
                       sx={{
                         borderRadius: 2.5,
@@ -933,6 +975,50 @@ export const PersonDetailsPage = () => {
                       </Typography>
                     </Box>
                   </Box>
+                  {selectedDog.won_competitions &&
+                    selectedDog.won_competitions.length > 0 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.75,
+                          flexWrap: "wrap",
+                          mt: 1.5,
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontWeight: 700,
+                            color: "text.secondary",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                          }}
+                        >
+                          Competições Ganhas:
+                        </Typography>
+                        {selectedDog.won_competitions.map((comp, cIdx) => (
+                          <Chip
+                            key={cIdx}
+                            size="small"
+                            icon={
+                              <EmojiEventsIcon
+                                style={{ fontSize: 13, color: "#d97706" }}
+                              />
+                            }
+                            label={comp}
+                            sx={{
+                              bgcolor: "rgba(245, 158, 11, 0.1)",
+                              color: "#b45309",
+                              fontWeight: 600,
+                              fontSize: "0.75rem",
+                              borderRadius: 1.5,
+                              border: "1px solid rgba(245, 158, 11, 0.25)",
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    )}
                 </Box>
 
                 <Box sx={{ display: "flex", gap: 1.5 }}>
@@ -1047,10 +1133,7 @@ export const PersonDetailsPage = () => {
                       "Não atribuído";
                     const paymentColor = getPaymentColor(photo.payment_method);
                     return (
-                      <Grid
-                        size={{ xs: 12, sm: 6, lg: 4 }}
-                        key={photo.id || pIdx}
-                      >
+                      <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={pIdx}>
                         <Paper
                           elevation={0}
                           sx={{
@@ -1259,13 +1342,100 @@ export const PersonDetailsPage = () => {
             type="number"
             fullWidth
             value={dogForm.competitions_won}
-            onChange={(e) =>
+            onChange={(e) => {
+              const val = Math.max(0, parseInt(e.target.value) || 0);
               setDogForm({
                 ...dogForm,
-                competitions_won: Math.max(0, parseInt(e.target.value) || 0),
-              })
-            }
+                competitions_won: val,
+                won_competitions:
+                  val === 0 ? [] : dogForm.won_competitions || [],
+              });
+            }}
           />
+
+          {dogForm.competitions_won > 0 && (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 1.5,
+                p: 2,
+                bgcolor: "#f8fafc",
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  fontWeight: 700,
+                  color: "text.primary",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                }}
+              >
+                <EmojiEventsIcon fontSize="small" color="warning" />
+                Nomes das Competições Vencidas (
+                {dogForm.won_competitions?.length || 0})
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  placeholder="Nome da competição (ex: Best in Show, Especializada...)"
+                  value={newCompetitionInput}
+                  onChange={(e) => setNewCompetitionInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddCompetitionName();
+                    }
+                  }}
+                />
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={handleAddCompetitionName}
+                  disabled={!newCompetitionInput.trim()}
+                  startIcon={<AddIcon />}
+                  sx={{ textTransform: "none", whiteSpace: "nowrap" }}
+                >
+                  Adicionar
+                </Button>
+              </Box>
+
+              {dogForm.won_competitions &&
+                dogForm.won_competitions.length > 0 && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 0.8,
+                      mt: 0.5,
+                    }}
+                  >
+                    {dogForm.won_competitions.map((compName, cIdx) => (
+                      <Chip
+                        key={cIdx}
+                        label={compName}
+                        onDelete={() => handleRemoveCompetitionName(cIdx)}
+                        color="primary"
+                        variant="outlined"
+                        size="small"
+                        sx={{
+                          borderRadius: 1.5,
+                          fontWeight: 500,
+                          bgcolor: "background.paper",
+                        }}
+                      />
+                    ))}
+                  </Box>
+                )}
+            </Box>
+          )}
+
           <FormControlLabel
             control={
               <Checkbox

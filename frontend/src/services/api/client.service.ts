@@ -1,7 +1,6 @@
 import { apiClient } from "./client";
 
 export interface Photo {
-  id: string;
   file_number: string;
   photographer_id: string;
   payment_method: string;
@@ -9,11 +8,11 @@ export interface Photo {
 }
 
 export interface Dog {
-  id: string;
   breed: string;
   judge: string;
   is_owner?: boolean;
   competitions_won: number;
+  won_competitions?: string[];
   photos: Photo[];
 }
 

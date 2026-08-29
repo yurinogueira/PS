@@ -94,6 +94,7 @@ func TestClientService(t *testing.T) {
 				Breed:           "Border Collie",
 				Judge:           "Juiz 1",
 				CompetitionsWon: 2,
+				WonCompetitions: []string{"Best in Show 2026", "National Championship"},
 				Photos: []domain.Photo{
 					{
 						FileNumber:     "DSC_0001",
@@ -116,8 +117,8 @@ func TestClientService(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error on GetByID: %v", err)
 	}
-	if found.PersonID != "person-123" || len(found.Dogs) != 1 {
-		t.Fatalf("expected 1 dog and person-123, got %v", found)
+	if found.PersonID != "person-123" || len(found.Dogs) != 1 || len(found.Dogs[0].WonCompetitions) != 2 {
+		t.Fatalf("expected 1 dog, person-123, and 2 won competitions, got %v", found)
 	}
 
 	// Multi-tenant check

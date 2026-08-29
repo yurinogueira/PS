@@ -120,7 +120,7 @@ export const AdminTenantsPage = () => {
       >
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            Organizações (Tenants)
+            Organizações
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             Gerencie e provisione as organizações para isolamento multi-tenant
