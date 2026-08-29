@@ -58,7 +58,7 @@ func NewRouter(
 	seasonSvc := seasonusecase.NewService(seasons)
 	photographerSvc := photographerusecase.NewService(photographers)
 	personSvc := personusecase.NewService(persons)
-	clientSvc := clientusecase.NewService(clients)
+	clientSvc := clientusecase.NewService(clients, persons, seasons, photographers)
 	reportSvc := reportusecase.NewService(clients, persons, photographers, storageProvider, emailSender, cfg.AppBaseURL)
 
 	seasonHandler := handlers.NewSeasonHandler(seasonSvc)

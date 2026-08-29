@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -26,7 +27,7 @@ func NewSeasonClientHandler(service *client.Service) *SeasonClientHandler {
 // @Produce      json
 // @Param        client body client.SeasonClient true "Dados do Cliente da Temporada"
 // @Success      201    {object}  client.SeasonClient
-// @Failure      400    {string}  string "Requisição inválida"
+// @Failure      400    {string}  string "Requisição inválida ou referência não pertencente ao tenant"
 // @Failure      401    {string}  string "Não autenticado"
 // @Failure      500    {string}  string "Erro interno"
 // @Router       /api/v1/clients [post]
@@ -39,7 +40,14 @@ func (h *SeasonClientHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.Create(r.Context(), &req, tenantID); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		switch {
+		case errors.Is(err, client.ErrPersonNotFound),
+			errors.Is(err, client.ErrSeasonNotFound),
+			errors.Is(err, client.ErrPhotographerNotFound):
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -134,8 +142,9 @@ func (h *SeasonClientHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // @Param        id      path      string              true  "ID do Cliente"
 // @Param        client  body      client.SeasonClient true  "Dados do Cliente"
 // @Success      200     {object}  client.SeasonClient
-// @Failure      400     {string}  string "Requisição inválida"
+// @Failure      400     {string}  string "Requisição inválida ou referência não pertencente ao tenant"
 // @Failure      401     {string}  string "Não autenticado"
+// @Failure      404     {string}  string "Cliente não encontrado"
 // @Failure      500     {string}  string "Erro interno"
 // @Router       /api/v1/clients/{id} [put]
 func (h *SeasonClientHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +163,16 @@ func (h *SeasonClientHandler) Update(w http.ResponseWriter, r *http.Request) {
 	req.ID = id
 
 	if err := h.service.Update(r.Context(), &req, tenantID); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		switch {
+		case errors.Is(err, client.ErrClientNotFound):
+			http.Error(w, err.Error(), http.StatusNotFound)
+		case errors.Is(err, client.ErrPersonNotFound),
+			errors.Is(err, client.ErrSeasonNotFound),
+			errors.Is(err, client.ErrPhotographerNotFound):
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 
