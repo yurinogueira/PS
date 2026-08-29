@@ -45,6 +45,7 @@ import { personService, Person } from "../../../services/api/person.service";
 import { useSeasonStore } from "../../../store/seasonStore";
 import { LinkClientModal } from "../../clients/components/LinkClientModal";
 import { ClientDetailsModal } from "../../clients/components/ClientDetailsModal";
+import { formatPhone, maskPhone } from "../../../utils/phone";
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
@@ -236,7 +237,11 @@ export const DashboardPage = () => {
           <Box>
             <Typography
               variant="h4"
-              sx={{ fontWeight: 800, letterSpacing: "-0.5px" }}
+              sx={{
+                fontWeight: 800,
+                letterSpacing: "-0.5px",
+                color: "#ffffff",
+              }}
             >
               Visão Geral
             </Typography>
@@ -740,7 +745,9 @@ export const DashboardPage = () => {
                               variant="caption"
                               color="text.secondary"
                             >
-                              {person?.phone || "Sem telefone"}
+                              {person?.phone
+                                ? formatPhone(person.phone)
+                                : "Sem telefone"}
                             </Typography>
                           </TableCell>
 
@@ -943,7 +950,10 @@ export const DashboardPage = () => {
             fullWidth
             value={newPersonForm.phone}
             onChange={(e) =>
-              setNewPersonForm({ ...newPersonForm, phone: e.target.value })
+              setNewPersonForm({
+                ...newPersonForm,
+                phone: maskPhone(e.target.value),
+              })
             }
           />
         </DialogContent>

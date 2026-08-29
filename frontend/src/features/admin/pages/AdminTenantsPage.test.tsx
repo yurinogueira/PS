@@ -28,7 +28,7 @@ describe("AdminTenantsPage", () => {
       </BrowserRouter>,
     );
 
-    expect(screen.getByText("Organizações (Tenants)")).toBeInTheDocument();
+    expect(screen.getByText("Organizações")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText("tenant-alpha")).toBeInTheDocument();

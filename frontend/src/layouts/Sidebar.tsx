@@ -39,7 +39,7 @@ const menuItems = [
 
 const adminMenuItems = [
   {
-    text: "Organizações (Tenants)",
+    text: "Organizações",
     icon: <BusinessRoundedIcon />,
     path: "/admin/tenants",
   },

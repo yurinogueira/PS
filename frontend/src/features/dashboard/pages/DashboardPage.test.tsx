@@ -78,20 +78,18 @@ describe("DashboardPage", () => {
           season_id: "season-1",
           dogs: [
             {
-              id: "dog-1",
               breed: "Border Collie",
               judge: "Juiz Silva",
               competitions_won: 1,
+              won_competitions: ["Nacional 2026"],
               photos: [
                 {
-                  id: "photo-1",
                   file_number: "DSC_001",
                   photographer_id: "photog-1",
                   payment_method: "Pix",
                   amount_paid: 50,
                 },
                 {
-                  id: "photo-2",
                   file_number: "DSC_002",
                   photographer_id: "photog-1",
                   payment_method: "Pix",

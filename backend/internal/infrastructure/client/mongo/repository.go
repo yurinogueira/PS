@@ -61,6 +61,17 @@ func (r *repository) GetByID(ctx context.Context, id, tenantID string) (*domain.
 	if err != nil {
 		return nil, err
 	}
+	if client.Dogs == nil {
+		client.Dogs = make([]domain.Dog, 0)
+	}
+	for i := range client.Dogs {
+		if client.Dogs[i].WonCompetitions == nil {
+			client.Dogs[i].WonCompetitions = make([]string, 0)
+		}
+		if client.Dogs[i].Photos == nil {
+			client.Dogs[i].Photos = make([]domain.Photo, 0)
+		}
+	}
 	return &client, nil
 }
 
@@ -123,6 +134,7 @@ func (r *repository) List(ctx context.Context, tenantID string, filter domain.Li
 			bson.D{{Key: "person_doc.phone", Value: regexDoc}},
 			bson.D{{Key: "dogs.breed", Value: regexDoc}},
 			bson.D{{Key: "dogs.judge", Value: regexDoc}},
+			bson.D{{Key: "dogs.won_competitions", Value: regexDoc}},
 			bson.D{{Key: "dogs.photos.file_number", Value: regexDoc}},
 		}
 		pipeline = append(pipeline, bson.D{{Key: "$match", Value: bson.D{{Key: "$or", Value: orConditions}}}})
@@ -181,6 +193,9 @@ func (r *repository) List(ctx context.Context, tenantID string, filter domain.Li
 			c.Dogs = make([]domain.Dog, 0)
 		}
 		for i := range c.Dogs {
+			if c.Dogs[i].WonCompetitions == nil {
+				c.Dogs[i].WonCompetitions = make([]string, 0)
+			}
 			if c.Dogs[i].Photos == nil {
 				c.Dogs[i].Photos = make([]domain.Photo, 0)
 			}

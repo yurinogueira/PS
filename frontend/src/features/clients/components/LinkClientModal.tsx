@@ -17,14 +17,12 @@ import {
   FormControlLabel,
   IconButton,
   Alert,
+  Chip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {
-  clientService,
-  Dog,
-  Photo,
-} from "../../../services/api/client.service";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import { clientService, Dog } from "../../../services/api/client.service";
 import { personService, Person } from "../../../services/api/person.service";
 import {
   photographerService,
@@ -55,15 +53,17 @@ export const LinkClientModal = ({
   const [people, setPeople] = useState<Person[]>([]);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
   const [personId, setPersonId] = useState("");
-  const [dogs, setDogs] = useState<Omit<Dog, "id">[]>([]);
+  const [dogs, setDogs] = useState<Dog[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [compInputs, setCompInputs] = useState<{ [key: number]: string }>({});
 
   useEffect(() => {
     if (open) {
       setError(null);
       setPersonId("");
       setDogs([]);
+      setCompInputs({});
       Promise.all([personService.list(), photographerService.list()])
         .then(([pData, photogData]) => {
           setPeople(pData || []);
@@ -84,7 +84,7 @@ export const LinkClientModal = ({
       await clientService.create({
         person_id: personId,
         season_id: seasonId,
-        dogs: dogs as Dog[],
+        dogs,
       });
       onSuccess();
       onClose();
@@ -104,6 +104,7 @@ export const LinkClientModal = ({
         judge: "",
         is_owner: false,
         competitions_won: 0,
+        won_competitions: [],
         photos: [],
       },
     ]);
@@ -112,6 +113,34 @@ export const LinkClientModal = ({
   const updateDog = (index: number, field: string, value: unknown) => {
     const newDogs = [...dogs];
     newDogs[index] = { ...newDogs[index], [field]: value };
+    setDogs(newDogs);
+  };
+
+  const handleAddCompetitionToDog = (dogIndex: number) => {
+    const text = (compInputs[dogIndex] || "").trim();
+    if (!text) return;
+    const newDogs = [...dogs];
+    const currentWon = newDogs[dogIndex].won_competitions || [];
+    newDogs[dogIndex] = {
+      ...newDogs[dogIndex],
+      won_competitions: [...currentWon, text],
+    };
+    setDogs(newDogs);
+    setCompInputs({ ...compInputs, [dogIndex]: "" });
+  };
+
+  const handleRemoveCompetitionFromDog = (
+    dogIndex: number,
+    compIndex: number,
+  ) => {
+    const newDogs = [...dogs];
+    const currentWon = (newDogs[dogIndex].won_competitions || []).filter(
+      (_, i) => i !== compIndex,
+    );
+    newDogs[dogIndex] = {
+      ...newDogs[dogIndex],
+      won_competitions: currentWon,
+    };
     setDogs(newDogs);
   };
 
@@ -124,12 +153,11 @@ export const LinkClientModal = ({
   const addPhoto = (dogIndex: number) => {
     const newDogs = [...dogs];
     newDogs[dogIndex].photos.push({
-      id: "",
       file_number: "",
       photographer_id: "",
       payment_method: "Pix",
       amount_paid: 0,
-    } as Photo);
+    });
     setDogs(newDogs);
   };
 
@@ -273,6 +301,93 @@ export const LinkClientModal = ({
                 label="Dono?"
               />
             </Box>
+
+            {dog.competitions_won > 0 && (
+              <Box
+                sx={{
+                  p: 1.5,
+                  mt: 1.5,
+                  bgcolor: "#ffffff",
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 700,
+                    color: "text.primary",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                  }}
+                >
+                  <EmojiEventsIcon fontSize="inherit" color="warning" />
+                  Competições Vencidas ({dog.won_competitions?.length || 0})
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    placeholder="Nome da competição vencida..."
+                    value={compInputs[dIdx] || ""}
+                    onChange={(e) =>
+                      setCompInputs({
+                        ...compInputs,
+                        [dIdx]: e.target.value,
+                      })
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddCompetitionToDog(dIdx);
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => handleAddCompetitionToDog(dIdx)}
+                    disabled={!(compInputs[dIdx] || "").trim()}
+                    startIcon={<AddIcon />}
+                    sx={{ textTransform: "none", whiteSpace: "nowrap" }}
+                  >
+                    Adicionar
+                  </Button>
+                </Box>
+                {dog.won_competitions && dog.won_competitions.length > 0 && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 0.75,
+                      mt: 0.5,
+                    }}
+                  >
+                    {dog.won_competitions.map((compName, cIdx) => (
+                      <Chip
+                        key={cIdx}
+                        label={compName}
+                        size="small"
+                        onDelete={() =>
+                          handleRemoveCompetitionFromDog(dIdx, cIdx)
+                        }
+                        color="primary"
+                        variant="outlined"
+                        sx={{
+                          borderRadius: 1.5,
+                          bgcolor: "background.paper",
+                        }}
+                      />
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            )}
 
             <Box
               sx={{

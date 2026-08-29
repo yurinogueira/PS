@@ -23,10 +23,11 @@ import {
   TableHead,
   TableRow,
   IconButton,
+  Chip,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import {
   clientService,
   SeasonClient,
@@ -88,6 +89,8 @@ export const ClientsPage = () => {
     load();
   };
 
+  const [compInputs, setCompInputs] = useState<{ [key: number]: string }>({});
+
   const addDog = () => {
     setDogs([
       ...dogs,
@@ -96,9 +99,38 @@ export const ClientsPage = () => {
         judge: "",
         is_owner: false,
         competitions_won: 0,
+        won_competitions: [],
         photos: [],
       },
     ]);
+  };
+
+  const handleAddCompetitionToDog = (dogIndex: number) => {
+    const text = (compInputs[dogIndex] || "").trim();
+    if (!text) return;
+    const newDogs = [...dogs];
+    const currentWon = newDogs[dogIndex].won_competitions || [];
+    newDogs[dogIndex] = {
+      ...newDogs[dogIndex],
+      won_competitions: [...currentWon, text],
+    };
+    setDogs(newDogs);
+    setCompInputs({ ...compInputs, [dogIndex]: "" });
+  };
+
+  const handleRemoveCompetitionFromDog = (
+    dogIndex: number,
+    compIndex: number,
+  ) => {
+    const newDogs = [...dogs];
+    const currentWon = (newDogs[dogIndex].won_competitions || []).filter(
+      (_, i) => i !== compIndex,
+    );
+    newDogs[dogIndex] = {
+      ...newDogs[dogIndex],
+      won_competitions: currentWon,
+    };
+    setDogs(newDogs);
   };
 
   const updateDog = (index: number, field: string, value: any) => {
@@ -306,6 +338,93 @@ export const ClientsPage = () => {
                   <DeleteIcon />
                 </IconButton>
               </Box>
+
+              {dog.competitions_won > 0 && (
+                <Box
+                  sx={{
+                    p: 2,
+                    mb: 2,
+                    bgcolor: "#ffffff",
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1.5,
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 700,
+                      color: "text.primary",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                    }}
+                  >
+                    <EmojiEventsIcon fontSize="small" color="warning" />
+                    Competições Vencidas ({dog.won_competitions?.length || 0})
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      placeholder="Nome da competição vencida..."
+                      value={compInputs[dIdx] || ""}
+                      onChange={(e) =>
+                        setCompInputs({
+                          ...compInputs,
+                          [dIdx]: e.target.value,
+                        })
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddCompetitionToDog(dIdx);
+                        }
+                      }}
+                    />
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => handleAddCompetitionToDog(dIdx)}
+                      disabled={!(compInputs[dIdx] || "").trim()}
+                      startIcon={<AddIcon />}
+                      sx={{ textTransform: "none", whiteSpace: "nowrap" }}
+                    >
+                      Adicionar
+                    </Button>
+                  </Box>
+                  {dog.won_competitions && dog.won_competitions.length > 0 && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 0.75,
+                        mt: 0.5,
+                      }}
+                    >
+                      {dog.won_competitions.map((compName, cIdx) => (
+                        <Chip
+                          key={cIdx}
+                          label={compName}
+                          size="small"
+                          onDelete={() =>
+                            handleRemoveCompetitionFromDog(dIdx, cIdx)
+                          }
+                          color="primary"
+                          variant="outlined"
+                          sx={{
+                            borderRadius: 1.5,
+                            bgcolor: "background.paper",
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                </Box>
+              )}
 
               <Box
                 sx={{
