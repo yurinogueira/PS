@@ -164,6 +164,12 @@ Diretrizes de segurança e canais para reporte responsável de vulnerabilidades 
 
 ---
 
+## 🤝 Contribuição & Comunidade
+
+Contribuições são muito bem-vindas! Por favor, leia nosso [Guia de Contribuição](CONTRIBUTING.md) para conhecer o fluxo de desenvolvimento, convenções de commits e padrões de teste, e consulte nosso [Código de Conduta](CODE_OF_CONDUCT.md).
+
+---
+
 ## 📄 Licença
 
 Este projeto está sob a licença **MIT**. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
