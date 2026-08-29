@@ -1,6 +1,7 @@
 # Build outputs
 dist/
 backend/bin/
+backend/api
 backend/.coverprofile
 
 # Node
