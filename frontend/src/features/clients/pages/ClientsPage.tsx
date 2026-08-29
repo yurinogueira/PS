@@ -116,7 +116,6 @@ export const ClientsPage = () => {
 
   const addDog = () => {
     setDogs([
-      ...dogs,
       {
         breed: "",
         judge: "",
@@ -125,6 +124,7 @@ export const ClientsPage = () => {
         won_competitions: [],
         photos: [],
       },
+      ...dogs,
     ]);
   };
 
@@ -170,12 +170,16 @@ export const ClientsPage = () => {
 
   const addPhoto = (dogIndex: number) => {
     const newDogs = [...dogs];
-    newDogs[dogIndex].photos.push({
+    const photos = newDogs[dogIndex].photos
+      ? [...newDogs[dogIndex].photos]
+      : [];
+    photos.unshift({
       file_number: "",
       photographer_id: "",
       payment_method: "Pix",
       amount_paid: 0,
     } as Photo);
+    newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setDogs(newDogs);
   };
 

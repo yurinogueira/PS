@@ -336,7 +336,7 @@ export const PersonDetailsPage = () => {
         is_owner: dogForm.is_owner,
       };
     } else {
-      newDogs.push({
+      newDogs.unshift({
         breed: dogForm.breed.trim(),
         judge: dogForm.judge.trim(),
         competitions_won: wonCount,
@@ -344,7 +344,7 @@ export const PersonDetailsPage = () => {
         is_owner: dogForm.is_owner,
         photos: [],
       });
-      setSelectedDogIndex(newDogs.length - 1);
+      setSelectedDogIndex(0);
     }
 
     setDogDialogOpen(false);
@@ -407,21 +407,20 @@ export const PersonDetailsPage = () => {
         return;
       }
 
-      numbers.forEach((num) => {
-        currentPhotos.push({
-          file_number: num,
-          photographer_id: batchPhotoForm.photographer_id,
-          payment_method: batchPhotoForm.payment_method,
-          amount_paid: Number(batchPhotoForm.amount_paid) || 0,
-        });
-      });
+      const newPhotos: Photo[] = numbers.map((num) => ({
+        file_number: num,
+        photographer_id: batchPhotoForm.photographer_id,
+        payment_method: batchPhotoForm.payment_method,
+        amount_paid: Number(batchPhotoForm.amount_paid) || 0,
+      }));
+      currentPhotos.unshift(...newPhotos);
     } else {
       if (!singlePhotoForm.file_number.trim()) {
         showNotification("Digite o número do arquivo da foto.", "warning");
         return;
       }
 
-      currentPhotos.push({
+      currentPhotos.unshift({
         file_number: singlePhotoForm.file_number.trim(),
         photographer_id: singlePhotoForm.photographer_id,
         payment_method: singlePhotoForm.payment_method,

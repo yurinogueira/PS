@@ -130,7 +130,6 @@ export const ClientDetailsPage = () => {
     setClient({
       ...client,
       dogs: [
-        ...(client.dogs || []),
         {
           breed: "",
           judge: "",
@@ -139,6 +138,7 @@ export const ClientDetailsPage = () => {
           won_competitions: [],
           photos: [],
         },
+        ...(client.dogs || []),
       ],
     });
   };
@@ -189,13 +189,16 @@ export const ClientDetailsPage = () => {
   const addPhoto = (dogIndex: number) => {
     if (!client) return;
     const newDogs = [...client.dogs];
-    newDogs[dogIndex].photos = newDogs[dogIndex].photos || [];
-    newDogs[dogIndex].photos.push({
+    const photos = newDogs[dogIndex].photos
+      ? [...newDogs[dogIndex].photos]
+      : [];
+    photos.unshift({
       file_number: "",
       photographer_id: "",
       payment_method: "Pix",
       amount_paid: 0,
     } as Photo);
+    newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setClient({ ...client, dogs: newDogs });
   };
 
