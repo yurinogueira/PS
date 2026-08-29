@@ -31,6 +31,11 @@ const ResetPasswordPage = lazy(() =>
     default: m.ResetPasswordPage,
   })),
 );
+const ReportDownloadPage = lazy(() =>
+  import("../features/reports/pages/ReportDownloadPage").then((m) => ({
+    default: m.ReportDownloadPage,
+  })),
+);
 const DashboardPage = lazy(() =>
   import("../features/dashboard/pages/DashboardPage").then((m) => ({
     default: m.DashboardPage,
@@ -95,6 +100,7 @@ export function AppRoutes() {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/reports/download" element={<ReportDownloadPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>

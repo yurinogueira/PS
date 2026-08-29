@@ -1,5 +1,9 @@
 import React, { useState } from "react";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import {
+  Link as RouterLink,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import {
   Box,
   Card,
@@ -28,6 +32,8 @@ import { brandColors } from "../../../styles/theme";
 export function LoginPage() {
   useDocumentTitle("Entrar");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get("redirect") || "/dashboard";
   const setUser = useAuthStore((state) => state.setUser);
 
   const [email, setEmail] = useState("");
@@ -49,7 +55,7 @@ export function LoginPage() {
       setLoading(true);
       const data = await authService.login({ email: email.trim(), password });
       setUser(data.user);
-      navigate("/dashboard", { replace: true });
+      navigate(redirectUrl, { replace: true });
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } } };
       const message =

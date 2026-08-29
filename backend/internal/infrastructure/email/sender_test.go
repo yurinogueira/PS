@@ -30,7 +30,7 @@ func TestEmailSenderSimulation(t *testing.T) {
 	}
 
 	// 3. Send report ready email
-	err = service.SendReportReadyEmail(ctx, "motorista@ps.com.br", "Yuri Nogueira", "Relatório de Clientes", "https://ps.com.br/api/v1/reports/download?file=abc")
+	err = service.SendReportReadyEmail(ctx, "motorista@ps.com.br", "Yuri Nogueira", "Relatório de Clientes", "https://ps.com.br/reports/download?file=abc")
 	if err != nil {
 		t.Fatalf("expected SendReportReadyEmail to succeed in simulation mode, got %v", err)
 	}
@@ -100,14 +100,14 @@ func TestEmailTemplatesRender(t *testing.T) {
 	}{
 		Name:        "Carlos Silva",
 		ReportName:  "Relatório de Clientes",
-		DownloadURL: "https://ps.com.br/api/v1/reports/download?file=xyz",
+		DownloadURL: "https://ps.com.br/reports/download?file=xyz",
 		CurrentYear: currentYear,
 	})
 	if err != nil {
 		t.Fatalf("failed to render report ready template: %v", err)
 	}
 	reportStr := bufReport.String()
-	if !strings.Contains(reportStr, "Carlos Silva") || !strings.Contains(reportStr, "Relatório de Clientes") || !strings.Contains(reportStr, "https://ps.com.br/api/v1/reports/download?file=xyz") {
+	if !strings.Contains(reportStr, "Carlos Silva") || !strings.Contains(reportStr, "Relatório de Clientes") || !strings.Contains(reportStr, "https://ps.com.br/reports/download?file=xyz") {
 		t.Fatalf("report ready template missing expected fields")
 	}
 	if !strings.Contains(reportStr, expectedYearStr) {

@@ -11,4 +11,12 @@ export const reportService = {
     );
     return data;
   },
+
+  downloadReport: async (filePath: string): Promise<Blob> => {
+    const { data } = await apiClient.get<Blob>("/reports/download", {
+      params: { file: filePath },
+      responseType: "blob",
+    });
+    return data;
+  },
 };
