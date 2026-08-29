@@ -29,6 +29,7 @@ var (
 
 	verificationTmpl  = htmltemplate.Must(htmltemplate.ParseFS(templateFS, "templates/verification.html"))
 	passwordResetTmpl = htmltemplate.Must(htmltemplate.ParseFS(templateFS, "templates/password_reset.html"))
+	reportReadyTmpl   = htmltemplate.Must(htmltemplate.ParseFS(templateFS, "templates/report_ready.html"))
 )
 
 type Config struct {
@@ -121,6 +122,46 @@ func (s *Service) SendPasswordResetEmail(ctx context.Context, toEmail, toName, t
 		"Olá, %s!\n\nRecebemos uma solicitação para redefinir a senha da sua conta no PS.\n\nPara criar uma nova senha, acesse o link abaixo:\n%s\n\nEste link é válido por 30 minutos.\n\nSe você não solicitou a redefinição de senha, ignore este e-mail com segurança.",
 		cleanName,
 		resetURL,
+	)
+
+	return s.send(toEmail, subject, plainBody, htmlBuf.String())
+}
+
+func (s *Service) SendReportReadyEmail(ctx context.Context, toEmail, toName, reportName, downloadURL string) error {
+	_ = ctx
+
+	cleanName := strings.TrimSpace(toName)
+	if cleanName == "" {
+		cleanName = "Usuário"
+	}
+	cleanReportName := strings.TrimSpace(reportName)
+	if cleanReportName == "" {
+		cleanReportName = "Relatório de Clientes"
+	}
+
+	subject := fmt.Sprintf("PS - %s Disponível", cleanReportName)
+
+	var htmlBuf bytes.Buffer
+	data := struct {
+		Name        string
+		ReportName  string
+		DownloadURL string
+		CurrentYear int
+	}{
+		Name:        cleanName,
+		ReportName:  cleanReportName,
+		DownloadURL: downloadURL,
+		CurrentYear: time.Now().Year(),
+	}
+	if err := reportReadyTmpl.Execute(&htmlBuf, data); err != nil {
+		return fmt.Errorf("failed to render report ready email template: %w", err)
+	}
+
+	plainBody := fmt.Sprintf(
+		"Olá, %s!\n\nA exportação do seu relatório %s foi concluída com sucesso.\n\nPara fazer o download do arquivo, acesse o link abaixo:\n%s\n\nAtenciosamente,\nEquipe Photo Storage (PS)",
+		cleanName,
+		cleanReportName,
+		downloadURL,
 	)
 
 	return s.send(toEmail, subject, plainBody, htmlBuf.String())

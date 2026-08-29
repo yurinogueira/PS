@@ -210,6 +210,42 @@ func (r *repository) List(ctx context.Context, tenantID string, filter domain.Li
 	}, nil
 }
 
+func (r *repository) StreamByTenant(ctx context.Context, tenantID string, fn func(c *domain.SeasonClient) error) error {
+	cleanTenantID, err := mongoinfra.SanitizeID(tenantID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.D{{Key: "tenant_id", Value: cleanTenantID}}
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var item domain.SeasonClient
+		if err := cursor.Decode(&item); err != nil {
+			return err
+		}
+		if item.Dogs == nil {
+			item.Dogs = make([]domain.Dog, 0)
+		}
+		for i := range item.Dogs {
+			if item.Dogs[i].WonCompetitions == nil {
+				item.Dogs[i].WonCompetitions = make([]string, 0)
+			}
+			if item.Dogs[i].Photos == nil {
+				item.Dogs[i].Photos = make([]domain.Photo, 0)
+			}
+		}
+		if err := fn(&item); err != nil {
+			return err
+		}
+	}
+	return cursor.Err()
+}
+
 func (r *repository) Update(ctx context.Context, client *domain.SeasonClient) error {
 	cleanID, err := mongoinfra.SanitizeID(client.ID)
 	if err != nil {

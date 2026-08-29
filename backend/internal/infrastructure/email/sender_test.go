@@ -28,6 +28,12 @@ func TestEmailSenderSimulation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected SendPasswordResetEmail to succeed in simulation mode, got %v", err)
 	}
+
+	// 3. Send report ready email
+	err = service.SendReportReadyEmail(ctx, "motorista@ps.com.br", "Yuri Nogueira", "Relatório de Clientes", "https://ps.com.br/api/v1/reports/download?file=abc")
+	if err != nil {
+		t.Fatalf("expected SendReportReadyEmail to succeed in simulation mode, got %v", err)
+	}
 }
 
 func TestEmailTemplatesRender(t *testing.T) {
@@ -82,6 +88,33 @@ func TestEmailTemplatesRender(t *testing.T) {
 	}
 	if !strings.Contains(resetStr, "#0F52BA") {
 		t.Fatalf("password reset template missing brand color")
+	}
+
+	// 3. Report ready template
+	var bufReport bytes.Buffer
+	err = reportReadyTmpl.Execute(&bufReport, struct {
+		Name        string
+		ReportName  string
+		DownloadURL string
+		CurrentYear int
+	}{
+		Name:        "Carlos Silva",
+		ReportName:  "Relatório de Clientes",
+		DownloadURL: "https://ps.com.br/api/v1/reports/download?file=xyz",
+		CurrentYear: currentYear,
+	})
+	if err != nil {
+		t.Fatalf("failed to render report ready template: %v", err)
+	}
+	reportStr := bufReport.String()
+	if !strings.Contains(reportStr, "Carlos Silva") || !strings.Contains(reportStr, "Relatório de Clientes") || !strings.Contains(reportStr, "https://ps.com.br/api/v1/reports/download?file=xyz") {
+		t.Fatalf("report ready template missing expected fields")
+	}
+	if !strings.Contains(reportStr, expectedYearStr) {
+		t.Fatalf("report ready template missing dynamic current year, got: %s", reportStr)
+	}
+	if !strings.Contains(reportStr, "#0F52BA") {
+		t.Fatalf("report ready template missing brand color")
 	}
 }
 

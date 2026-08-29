@@ -1,0 +1,287 @@
+package report
+
+import (
+	"bytes"
+	"context"
+	"encoding/csv"
+	"errors"
+	"fmt"
+	"log"
+	"net/url"
+	"path/filepath"
+	"strings"
+	"time"
+
+	clientport "ps/internal/application/ports/client"
+	emailport "ps/internal/application/ports/email"
+	personport "ps/internal/application/ports/person"
+	photographerport "ps/internal/application/ports/photographer"
+	storageport "ps/internal/application/ports/storage"
+	clientdomain "ps/internal/domain/client"
+	persondomain "ps/internal/domain/person"
+)
+
+var (
+	ErrUnauthorizedTenant = errors.New("unauthorized tenant access to report")
+	ErrInvalidReportPath  = errors.New("invalid report path")
+)
+
+type Service struct {
+	clientRepo       clientport.Repository
+	personRepo       personport.Repository
+	photographerRepo photographerport.Repository
+	storageProvider  storageport.Provider
+	emailSender      emailport.Sender
+	appBaseURL       string
+}
+
+func NewService(
+	clientRepo clientport.Repository,
+	personRepo personport.Repository,
+	photographerRepo photographerport.Repository,
+	storageProvider storageport.Provider,
+	emailSender emailport.Sender,
+	appBaseURL string,
+) *Service {
+	if appBaseURL == "" {
+		appBaseURL = "http://localhost:8080"
+	}
+	return &Service{
+		clientRepo:       clientRepo,
+		personRepo:       personRepo,
+		photographerRepo: photographerRepo,
+		storageProvider:  storageProvider,
+		emailSender:      emailSender,
+		appBaseURL:       strings.TrimRight(appBaseURL, "/"),
+	}
+}
+
+// SanitizeCSVField prevents CSV Formula Injection (CWE-1236)
+func SanitizeCSVField(val string) string {
+	if len(val) == 0 {
+		return ""
+	}
+	first := val[0]
+	if first == '=' || first == '+' || first == '-' || first == '@' || first == '\t' || first == '\r' {
+		return "'" + val
+	}
+	trimmed := strings.TrimSpace(val)
+	if len(trimmed) > 0 {
+		firstTrimmed := trimmed[0]
+		if firstTrimmed == '=' || firstTrimmed == '+' || firstTrimmed == '-' || firstTrimmed == '@' {
+			return "'" + val
+		}
+	}
+	return val
+}
+
+func sanitizeRow(row []string) []string {
+	sanitized := make([]string, len(row))
+	for i, col := range row {
+		sanitized[i] = SanitizeCSVField(col)
+	}
+	return sanitized
+}
+
+func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, userName string) (string, error) {
+	if tenantID == "" {
+		return "", errors.New("tenant ID cannot be empty")
+	}
+
+	// 1. Fetch photographers to map IDs to names
+	photographersList, err := s.photographerRepo.List(ctx, tenantID)
+	if err != nil {
+		log.Printf("[REPORT] Failed to list photographers for tenant %s: %v", tenantID, err)
+		photographersList = nil
+	}
+	photogMap := make(map[string]string)
+	for _, p := range photographersList {
+		photogMap[p.ID] = p.Name
+	}
+
+	// 2. Cache persons dynamically during stream to avoid repeated identical queries
+	personCache := make(map[string]*persondomain.Person)
+
+	// 3. Prepare CSV buffer with headers
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+
+	headers := []string{
+		"Nome",
+		"E-mail",
+		"E-mail alternativo",
+		"Telefone",
+		"Número do Arquivo da Foto",
+		"Fotografo",
+		"Competição Ganha",
+		"Juiz",
+		"Forma de Pagamento",
+		"Raça",
+		"Valor Pago",
+	}
+	if err := writer.Write(sanitizeRow(headers)); err != nil {
+		return "", fmt.Errorf("failed to write csv headers: %w", err)
+	}
+
+	// 4. Stream clients from MongoDB
+	streamErr := s.clientRepo.StreamByTenant(ctx, tenantID, func(c *clientdomain.SeasonClient) error {
+		p, ok := personCache[c.PersonID]
+		if !ok {
+			personObj, err := s.personRepo.GetByID(ctx, c.PersonID, tenantID)
+			if err != nil || personObj == nil {
+				personObj = &persondomain.Person{
+					Name: "Desconhecido",
+				}
+			}
+			personCache[c.PersonID] = personObj
+			p = personObj
+		}
+
+		if len(c.Dogs) == 0 {
+			row := []string{
+				p.Name,
+				p.Email,
+				p.AlternativeEmail,
+				p.Phone,
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+			}
+			return writer.Write(sanitizeRow(row))
+		}
+
+		for _, dog := range c.Dogs {
+			numPhotos := len(dog.Photos)
+			wonCompsList := dog.WonCompetitions
+			numCompetitions := len(wonCompsList)
+			if numCompetitions == 0 {
+				numCompetitions = dog.CompetitionsWon
+			}
+			totalLinhas := max(numCompetitions, numPhotos)
+
+			if totalLinhas == 0 {
+				row := []string{
+					p.Name,
+					p.Email,
+					p.AlternativeEmail,
+					p.Phone,
+					"",
+					"",
+					"",
+					dog.Judge,
+					"",
+					dog.Breed,
+					"",
+				}
+				if err := writer.Write(sanitizeRow(row)); err != nil {
+					return err
+				}
+				continue
+			}
+
+			for i := 0; i < totalLinhas; i++ {
+				var fileNumber, photographerName, paymentMethod, amountPaid string
+				if numPhotos > 0 {
+					var photo clientdomain.Photo
+					if i < numPhotos {
+						photo = dog.Photos[i]
+					} else {
+						photo = dog.Photos[numPhotos-1]
+					}
+					fileNumber = photo.FileNumber
+					if name, exists := photogMap[photo.PhotographerID]; exists && name != "" {
+						photographerName = name
+					} else {
+						photographerName = photo.PhotographerID
+					}
+					paymentMethod = photo.PaymentMethod
+					if photo.AmountPaid != nil {
+						amountPaid = fmt.Sprintf("%.2f", *photo.AmountPaid)
+					}
+				}
+
+				var competitionWon string
+				if len(wonCompsList) > 0 {
+					if i < len(wonCompsList) {
+						competitionWon = wonCompsList[i]
+					} else {
+						competitionWon = wonCompsList[len(wonCompsList)-1]
+					}
+				} else if dog.CompetitionsWon > 0 {
+					competitionWon = "Sim"
+				}
+
+				row := []string{
+					p.Name,
+					p.Email,
+					p.AlternativeEmail,
+					p.Phone,
+					fileNumber,
+					photographerName,
+					competitionWon,
+					dog.Judge,
+					paymentMethod,
+					dog.Breed,
+					amountPaid,
+				}
+				if err := writer.Write(sanitizeRow(row)); err != nil {
+					return err
+				}
+			}
+		}
+
+		writer.Flush()
+		return writer.Error()
+	})
+
+	if streamErr != nil {
+		return "", fmt.Errorf("error during client streaming: %w", streamErr)
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return "", fmt.Errorf("error finishing csv writer: %w", err)
+	}
+
+	// 5. Store generated CSV in Storage Provider with isolated tenant path
+	timestamp := time.Now().UTC().Unix()
+	fileName := fmt.Sprintf("clientes_%d.csv", timestamp)
+	relativePath := fmt.Sprintf("reports/tenant_%s/%s", tenantID, fileName)
+
+	_, err = s.storageProvider.Save(ctx, relativePath, storageport.File{
+		Name:        fileName,
+		Data:        buf.Bytes(),
+		ContentType: "text/csv; charset=utf-8",
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to save report to storage: %w", err)
+	}
+
+	// 6. Send notification email with download link if userEmail is provided
+	if userEmail != "" {
+		downloadURL := fmt.Sprintf("%s/api/v1/reports/download?file=%s", s.appBaseURL, url.QueryEscape(relativePath))
+		if err := s.emailSender.SendReportReadyEmail(ctx, userEmail, userName, "Relatório de Clientes", downloadURL); err != nil {
+			log.Printf("[REPORT-EMAIL-ERROR] Failed to send report ready email to %s: %v", userEmail, err)
+		}
+	}
+
+	return relativePath, nil
+}
+
+func (s *Service) GetReportFile(ctx context.Context, tenantID, relativePath string) ([]byte, error) {
+	cleanPath := filepath.Clean(strings.TrimPrefix(relativePath, "/"))
+	if strings.Contains(cleanPath, "..") {
+		return nil, ErrInvalidReportPath
+	}
+
+	expectedPrefix := fmt.Sprintf("reports/tenant_%s/", tenantID)
+	if !strings.HasPrefix(cleanPath, expectedPrefix) {
+		return nil, ErrUnauthorizedTenant
+	}
+
+	return s.storageProvider.Get(ctx, cleanPath)
+}
