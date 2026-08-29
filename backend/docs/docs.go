@@ -1300,6 +1300,103 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/reports/clients-csv": {
+            "post": {
+                "description": "Inicia a extração assíncrona do relatório consolidado de clientes, cães, fotos e pagamentos do tenant autenticado e envia o link para o e-mail cadastrado",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Exportar relatório CSV de clientes",
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.SuccessEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant não associado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reports/download": {
+            "get": {
+                "description": "Permite o download seguro de um arquivo de relatório previamente gerado, validando isolamento de tenant",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Baixar arquivo de relatório gerado",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Caminho relativo do arquivo de relatório",
+                        "name": "file",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Arquivo CSV",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Parâmetro inválido",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Acesso não autorizado ao arquivo",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Arquivo não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/seasons": {
             "get": {
                 "description": "Retorna a lista de temporadas do tenant autenticado",

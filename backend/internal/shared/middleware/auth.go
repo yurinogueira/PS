@@ -24,6 +24,13 @@ func GetTenantID(ctx context.Context) string {
 	return ""
 }
 
+func GetUserID(ctx context.Context) string {
+	if val, ok := ctx.Value(UserIDKey).(string); ok {
+		return val
+	}
+	return ""
+}
+
 func IsSuperAdmin(ctx context.Context) bool {
 	if val, ok := ctx.Value(SuperAdminKey).(bool); ok {
 		return val

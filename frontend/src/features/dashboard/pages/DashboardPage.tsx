@@ -25,6 +25,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  Snackbar,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
@@ -37,11 +41,15 @@ import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
 import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   clientService,
   SeasonClient,
 } from "../../../services/api/client.service";
 import { personService, Person } from "../../../services/api/person.service";
+import { reportService } from "../../../services/api/report.service";
 import { useSeasonStore } from "../../../store/seasonStore";
 import { LinkClientModal } from "../../clients/components/LinkClientModal";
 import { ClientDetailsModal } from "../../clients/components/ClientDetailsModal";
@@ -74,6 +82,46 @@ export const DashboardPage = () => {
     alternative_email: "",
     phone: "",
   });
+
+  // Report Export Menu & Snackbar state
+  const [reportMenuAnchor, setReportMenuAnchor] = useState<null | HTMLElement>(
+    null,
+  );
+  const [exportingReport, setExportingReport] = useState(false);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const handleExportClientsCsv = async () => {
+    setReportMenuAnchor(null);
+    setExportingReport(true);
+    try {
+      const resp = await reportService.exportClientsCsv();
+      setSnackbar({
+        open: true,
+        message:
+          resp?.message ||
+          "Processamento do relatório iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
+        severity: "success",
+      });
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message:
+          err?.response?.data?.message ||
+          "Erro ao solicitar exportação do relatório.",
+        severity: "error",
+      });
+    } finally {
+      setExportingReport(false);
+    }
+  };
 
   // Debounce search input
   useEffect(() => {
@@ -295,6 +343,45 @@ export const DashboardPage = () => {
                 }}
               />
             )}
+            <Button
+              variant="outlined"
+              startIcon={
+                exportingReport ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <AssessmentIcon />
+                )
+              }
+              endIcon={<ExpandMoreIcon />}
+              onClick={(e) => setReportMenuAnchor(e.currentTarget)}
+              disabled={exportingReport}
+              sx={{
+                borderColor: "rgba(255,255,255,0.4)",
+                color: "white",
+                "&:hover": {
+                  borderColor: "white",
+                  bgcolor: "rgba(255,255,255,0.08)",
+                },
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 600,
+              }}
+            >
+              {exportingReport ? "Gerando..." : "Relatórios"}
+            </Button>
+            <Menu
+              anchorEl={reportMenuAnchor}
+              open={Boolean(reportMenuAnchor)}
+              onClose={() => setReportMenuAnchor(null)}
+            >
+              <MenuItem onClick={handleExportClientsCsv}>
+                <ListItemIcon>
+                  <FileDownloadIcon fontSize="small" />
+                </ListItemIcon>
+                Exportar Clientes (.csv)
+              </MenuItem>
+            </Menu>
+
             <Button
               variant="outlined"
               startIcon={<PersonAddAlt1Icon />}
@@ -974,6 +1061,22 @@ export const DashboardPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

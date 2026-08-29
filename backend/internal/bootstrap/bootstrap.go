@@ -10,6 +10,7 @@ import (
 	"ps/internal/application/ports/person"
 	"ps/internal/application/ports/photographer"
 	"ps/internal/application/ports/season"
+	storageport "ps/internal/application/ports/storage"
 	tenantport "ps/internal/application/ports/tenant"
 	userport "ps/internal/application/ports/user"
 	"ps/internal/config"
@@ -21,6 +22,8 @@ import (
 	personMongo "ps/internal/infrastructure/person/mongo"
 	photographerMongo "ps/internal/infrastructure/photographer/mongo"
 	seasonMongo "ps/internal/infrastructure/season/mongo"
+	localstorage "ps/internal/infrastructure/storage/local"
+	ocistorage "ps/internal/infrastructure/storage/oci"
 	tenantMongo "ps/internal/infrastructure/tenant/mongo"
 	userMongo "ps/internal/infrastructure/user/mongo"
 	"ps/internal/interfaces/rest"
@@ -35,14 +38,15 @@ type App struct {
 
 func New(ctx context.Context, cfg config.Config) (*App, error) {
 	var (
-		users         userport.Repository
-		tenants       tenantport.Repository
-		seasons       season.Repository
-		photographers photographer.Repository
-		persons       person.Repository
-		clients       client.Repository
-		mongoClient   *mongo.Client
-		emailSender   emailport.Sender
+		users           userport.Repository
+		tenants         tenantport.Repository
+		seasons         season.Repository
+		photographers   photographer.Repository
+		persons         person.Repository
+		clients         client.Repository
+		mongoClient     *mongo.Client
+		emailSender     emailport.Sender
+		storageProvider storageport.Provider
 	)
 
 	hasher := bcryptinfra.NewHasher()
@@ -55,6 +59,17 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		EmailFrom:  cfg.EmailFrom,
 		AppBaseURL: cfg.AppBaseURL,
 	})
+
+	if cfg.StorageProvider == "oci" {
+		storageProvider = ocistorage.New(ocistorage.Config{
+			Namespace: cfg.OCIStorageNamespace,
+			Bucket:    cfg.OCIStorageBucket,
+			Region:    cfg.OCIStorageRegion,
+			Endpoint:  cfg.OCIStorageEndpoint,
+		})
+	} else {
+		storageProvider = localstorage.New(cfg.UploadPath)
+	}
 
 	log.Printf("Connecting to MongoDB database %q...", cfg.MongoDatabase)
 	mClient, err := mongoinfra.Connect(ctx, cfg.MongoURI)
@@ -78,7 +93,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	persons = peMongo
 	clients = cMongo
 
-	handler := rest.NewRouter(cfg, users, tenants, hasher, tokens, emailSender, seasons, photographers, persons, clients)
+	handler := rest.NewRouter(cfg, users, tenants, hasher, tokens, emailSender, seasons, photographers, persons, clients, storageProvider)
 	return &App{
 		handler:     handler,
 		mongoClient: mongoClient,

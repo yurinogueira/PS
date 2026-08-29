@@ -17,10 +17,12 @@ import (
 	"ps/internal/application/ports/person"
 	"ps/internal/application/ports/photographer"
 	"ps/internal/application/ports/season"
+	storageport "ps/internal/application/ports/storage"
 	adminusecase "ps/internal/application/usecase/admin"
 	clientusecase "ps/internal/application/usecase/client"
 	personusecase "ps/internal/application/usecase/person"
 	photographerusecase "ps/internal/application/usecase/photographer"
+	reportusecase "ps/internal/application/usecase/report"
 	seasonusecase "ps/internal/application/usecase/season"
 	tenantusecase "ps/internal/application/usecase/tenant"
 
@@ -42,6 +44,7 @@ func NewRouter(
 	photographers photographer.Repository,
 	persons person.Repository,
 	clients client.Repository,
+	storageProvider storageport.Provider,
 ) *Router {
 	mux := http.NewServeMux()
 	healthHandler := handlers.NewHealthHandler()
@@ -56,11 +59,13 @@ func NewRouter(
 	photographerSvc := photographerusecase.NewService(photographers)
 	personSvc := personusecase.NewService(persons)
 	clientSvc := clientusecase.NewService(clients)
+	reportSvc := reportusecase.NewService(clients, persons, photographers, storageProvider, emailSender, cfg.AppBaseURL)
 
 	seasonHandler := handlers.NewSeasonHandler(seasonSvc)
 	photographerHandler := handlers.NewPhotographerHandler(photographerSvc)
 	personHandler := handlers.NewPersonHandler(personSvc)
 	clientHandler := handlers.NewSeasonClientHandler(clientSvc)
+	reportHandler := handlers.NewReportHandler(reportSvc, users)
 
 	// Rate limiters
 	globalLimiter := middleware.NewRateLimiter(100.0/60.0, 100, cfg.TrustedProxies...)
@@ -142,6 +147,9 @@ func NewRouter(
 	mux.Handle("GET /api/v1/clients/{id}", businessChain(clientHandler.GetByID))
 	mux.Handle("PUT /api/v1/clients/{id}", businessChain(clientHandler.Update))
 	mux.Handle("DELETE /api/v1/clients/{id}", businessChain(clientHandler.Delete))
+
+	mux.Handle("POST /api/v1/reports/clients-csv", businessChain(reportHandler.ExportClientsCSV))
+	mux.Handle("GET /api/v1/reports/download", businessChain(reportHandler.DownloadReport))
 
 	handler := middleware.SecurityHeaders(
 		middleware.CORS(

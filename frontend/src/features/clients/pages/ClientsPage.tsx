@@ -24,10 +24,18 @@ import {
   TableRow,
   IconButton,
   Chip,
+  Menu,
+  ListItemIcon,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   clientService,
   SeasonClient,
@@ -39,6 +47,7 @@ import {
   photographerService,
   Photographer,
 } from "../../../services/api/photographer.service";
+import { reportService } from "../../../services/api/report.service";
 import { useSeasonStore } from "../../../store/seasonStore";
 
 const PAYMENT_METHODS = [
@@ -59,6 +68,20 @@ export const ClientsPage = () => {
   const [open, setOpen] = useState(false);
   const [personId, setPersonId] = useState("");
   const [dogs, setDogs] = useState<Omit<Dog, "id">[]>([]);
+
+  const [reportMenuAnchor, setReportMenuAnchor] = useState<null | HTMLElement>(
+    null,
+  );
+  const [exportingReport, setExportingReport] = useState(false);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const load = async () => {
     if (!activeSeason) return;
@@ -176,6 +199,31 @@ export const ClientsPage = () => {
     setDogs(newDogs);
   };
 
+  const handleExportClientsCsv = async () => {
+    setReportMenuAnchor(null);
+    setExportingReport(true);
+    try {
+      const resp = await reportService.exportClientsCsv();
+      setSnackbar({
+        open: true,
+        message:
+          resp?.message ||
+          "Processamento do relatório iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
+        severity: "success",
+      });
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message:
+          err?.response?.data?.message ||
+          "Erro ao solicitar exportação do relatório.",
+        severity: "error",
+      });
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
   if (!activeSeason)
     return (
       <Box sx={{ p: 3 }}>
@@ -187,9 +235,39 @@ export const ClientsPage = () => {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
         <Typography variant="h4">Clientes da Temporada Atual</Typography>
-        <Button variant="contained" onClick={() => setOpen(true)}>
-          Vincular Cliente
-        </Button>
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          <Button
+            variant="outlined"
+            startIcon={
+              exportingReport ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <AssessmentIcon />
+              )
+            }
+            endIcon={<ExpandMoreIcon />}
+            onClick={(e) => setReportMenuAnchor(e.currentTarget)}
+            disabled={exportingReport}
+          >
+            {exportingReport ? "Gerando..." : "Relatórios"}
+          </Button>
+          <Menu
+            anchorEl={reportMenuAnchor}
+            open={Boolean(reportMenuAnchor)}
+            onClose={() => setReportMenuAnchor(null)}
+          >
+            <MenuItem onClick={handleExportClientsCsv}>
+              <ListItemIcon>
+                <FileDownloadIcon fontSize="small" />
+              </ListItemIcon>
+              Exportar Clientes (.csv)
+            </MenuItem>
+          </Menu>
+
+          <Button variant="contained" onClick={() => setOpen(true)}>
+            Vincular Cliente
+          </Button>
+        </Box>
       </Box>
 
       <Paper sx={{ width: "100%", overflow: "hidden" }}>
@@ -578,6 +656,22 @@ export const ClientsPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
