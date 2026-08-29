@@ -263,7 +263,7 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, u
 
 	// 6. Send notification email with download link if userEmail is provided
 	if userEmail != "" {
-		downloadURL := fmt.Sprintf("%s/api/v1/reports/download?file=%s", s.appBaseURL, url.QueryEscape(relativePath))
+		downloadURL := fmt.Sprintf("%s/reports/download?file=%s", s.appBaseURL, url.QueryEscape(relativePath))
 		if err := s.emailSender.SendReportReadyEmail(ctx, userEmail, userName, "Relatório de Clientes", downloadURL); err != nil {
 			log.Printf("[REPORT-EMAIL-ERROR] Failed to send report ready email to %s: %v", userEmail, err)
 		}
