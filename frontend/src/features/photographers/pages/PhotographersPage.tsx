@@ -95,25 +95,54 @@ export const PhotographersPage = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h4">Fotógrafos</Typography>
+    <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "stretch", sm: "center" },
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        <Typography
+          variant="h4"
+          sx={{
+            fontSize: { xs: "1.5rem", sm: "2rem" },
+            fontWeight: 700,
+          }}
+        >
+          Fotógrafos
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleOpenCreate}
+          sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
         >
           Novo Fotógrafo
         </Button>
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{
+          border: "1px solid #E2E8F0",
+          borderRadius: 2,
+          width: "100%",
+          overflowX: "auto",
+        }}
+      >
+        <Table sx={{ minWidth: 450 }}>
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Nome</TableCell>
-              <TableCell align="right">Ações</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Nome</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>
+                Ações
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

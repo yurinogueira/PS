@@ -101,13 +101,20 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
           </Typography>
         </Box>
 
-        <Box sx={{ minWidth: 200, mr: 3 }}>
+        <Box
+          sx={{
+            minWidth: { xs: 130, sm: 180, md: 220 },
+            maxWidth: { xs: 170, sm: 260 },
+            mr: { xs: 1, sm: 2, md: 3 },
+          }}
+        >
           <FormControl fullWidth size="small">
             <InputLabel>Temporada Ativa</InputLabel>
             <Select
               value={activeSeason?.id || ""}
               label="Temporada Ativa"
               onChange={(e) => handleChangeSeason(e.target.value)}
+              sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
             >
               {(seasons || []).map((s) => (
                 <MenuItem key={s.id} value={s.id}>
