@@ -1,0 +1,1 @@
+import{o as e}from"./index-DcHCILAp.js";var t={exportClientsCsv:async()=>{let{data:t}=await e.post(`/reports/clients-csv`);return t}};export{t};
