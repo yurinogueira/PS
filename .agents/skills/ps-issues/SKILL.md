@@ -150,7 +150,7 @@ Execute o comando via terminal (sandboxed):
 ```bash
 gh issue create \
   --repo yurinogueira/PS \
-  --title "feat(cars): adicionar exportação do histórico de manutenção em PDF" \
+  --title "feat(reports): extração assíncrona de relatório csv de clientes" \
   --body-file /caminho/para/issue_body.md \
   --label "enhancement,feature"
 ```

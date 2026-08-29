@@ -33,9 +33,10 @@ Antes de submeter qualquer modificação que envolva autenticação, usuários, 
   - **Nunca armazene tokens em texto plano no banco**. Persista apenas o **hash SHA-256** do token.
   - Validade estrita com timestamp de expiração (máx. 30 min para reset de senha; 24h para validação de e-mail).
   - Invalidação atômica e imediata do token após o uso bem-sucedido.
-- [ ] **Controle de Cota e Permissão por Status de Conta**:
-  - Usuários não verificados (`emailVerified == false`) têm o cadastro de recursos sensíveis (ex.: veículos) bloqueado (`403 Forbidden`).
-  - Verificação atômica de cota máxima de recursos (`maxVehicles`) antes da criação para evitar abusos.
+- [ ] **Controle de Cota, Permissão e Multitenancy**:
+  - Usuários não verificados (`emailVerified == false`) têm operações administrativas e cadastros sensíveis bloqueados (`403 Forbidden`).
+  - Todas as consultas e mutações em banco e storage são estritamente isoladas por `tenant_id`.
+  - Provedores de relatórios e arquivos sanitizam contra CSV Injection (CWE-1236) prefixando com `'` campos que iniciam por `=`, `+`, `-`, `@`, `\t` ou `\r`.
 
 ### 3. Checklist de E-mails & Prevenção de SMTP Header Injection (CWE-93 / CWE-20)
 - [ ] **Sanitização de Cabeçalhos**:
@@ -88,7 +89,8 @@ Antes de submeter qualquer modificação que envolva autenticação, usuários, 
 | Vazar `ErrUserNotFound` em `/forgot-password` | Retornar `200 OK` genérico | Enumeração de usuários |
 | Salvar token de reset em texto claro no banco | Salvar hash SHA-256 do token | Comprometimento por vazamento de banco |
 | Senha sem limite máximo (`len > 72`) | Validar `8 <= len(password) <= 72` | DoS no Bcrypt (CPU Exhaustion) |
-| Permitir cadastro de carro com e-mail não validado | Validar `user.EmailVerified == true` | Criação de spam e contas falsas |
+| Permitir operações protegidas com e-mail não validado | Validar `user.EmailVerified == true` | Criação de spam e contas falsas |
+| Exportar CSV sem sanitização de fórmulas | Prefixar caracteres (`=`, `+`, `-`, `@`) com `'` | CSV Injection (CWE-1236) |
 | `w.Header().Set("Access-Control-Allow-Origin", "*")` com credenciais | Whitelist de origens via `ALLOWED_ORIGINS` | Vazamento de dados cross-origin |
 | `filepath.Join(base, path)` sem checagem de prefixo | `filepath.Abs()` + checagem de prefixo base | Arbitrary File Read / Path Traversal |
 | `ports: - "27017:27017"` no MongoDB em produção | Rede interna Docker (`mongodb://mongo:27017`) | Exposição pública do banco de dados |
