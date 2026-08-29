@@ -1,0 +1,1 @@
+import{o as e}from"./index-CieLdYUN.js";var t={exportClientsCsv:async()=>{let{data:t}=await e.post(`/reports/clients-csv`);return t},exportUnpaidClientsCsv:async()=>{let{data:t}=await e.post(`/reports/unpaid-clients-csv`);return t},downloadReport:async t=>{let{data:n}=await e.get(`/reports/download`,{params:{file:t},responseType:`blob`});return n}};export{t};
