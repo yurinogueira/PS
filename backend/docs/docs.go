@@ -654,7 +654,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Requisição inválida",
+                        "description": "Requisição inválida ou referência não pertencente ao tenant",
                         "schema": {
                             "type": "string"
                         }
@@ -764,13 +764,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Requisição inválida",
+                        "description": "Requisição inválida ou referência não pertencente ao tenant",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "401": {
                         "description": "Não autenticado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Cliente não encontrado",
                         "schema": {
                             "type": "string"
                         }
