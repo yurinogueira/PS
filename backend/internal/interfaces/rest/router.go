@@ -149,6 +149,7 @@ func NewRouter(
 	mux.Handle("DELETE /api/v1/clients/{id}", businessChain(clientHandler.Delete))
 
 	mux.Handle("POST /api/v1/reports/clients-csv", businessChain(reportHandler.ExportClientsCSV))
+	mux.Handle("POST /api/v1/reports/unpaid-clients-csv", businessChain(reportHandler.ExportUnpaidClientsCSV))
 	mux.Handle("GET /api/v1/reports/download", businessChain(reportHandler.DownloadReport))
 
 	handler := middleware.SecurityHeaders(

@@ -228,6 +228,31 @@ export const ClientsPage = () => {
     }
   };
 
+  const handleExportUnpaidClientsCsv = async () => {
+    setReportMenuAnchor(null);
+    setExportingReport(true);
+    try {
+      const resp = await reportService.exportUnpaidClientsCsv();
+      setSnackbar({
+        open: true,
+        message:
+          resp?.message ||
+          "Processamento do relatório iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
+        severity: "success",
+      });
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message:
+          err?.response?.data?.message ||
+          "Erro ao solicitar exportação do relatório.",
+        severity: "error",
+      });
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
   if (!activeSeason) {
     return (
       <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
@@ -292,6 +317,12 @@ export const ClientsPage = () => {
                 <FileDownloadIcon fontSize="small" />
               </ListItemIcon>
               Exportar Clientes (.csv)
+            </MenuItem>
+            <MenuItem onClick={handleExportUnpaidClientsCsv}>
+              <ListItemIcon>
+                <FileDownloadIcon fontSize="small" />
+              </ListItemIcon>
+              Exportar Não Pagos (.csv)
             </MenuItem>
           </Menu>
 

@@ -397,3 +397,189 @@ func TestNormalizePaymentMethod(t *testing.T) {
 		}
 	}
 }
+
+func TestGenerateUnpaidClientsCSV(t *testing.T) {
+	tenantID := "tenant-456"
+	amount50 := 50.0
+	amount150 := 150.0
+	amount200 := 200.0
+
+	clientRepo := &mockClientRepo{
+		clients: []*clientdomain.SeasonClient{
+			{
+				ID:       "client-1",
+				TenantID: tenantID,
+				PersonID: "person-1",
+				Dogs: []clientdomain.Dog{
+					{
+						Breed: "Golden",
+						Judge: "Juiz A",
+						Photos: []clientdomain.Photo{
+							{
+								FileNumber:     "IMG_101",
+								PhotographerID: "photog-1",
+								PaymentMethod:  "Pix",
+								AmountPaid:     &amount50,
+							},
+							{
+								FileNumber:     "=CMD_INJECTION",
+								PhotographerID: "photog-2",
+								PaymentMethod:  "Não pago",
+								AmountPaid:     &amount150,
+							},
+						},
+					},
+					{
+						Breed: "Poodle",
+						Judge: "Juiz B",
+						Photos: []clientdomain.Photo{
+							{
+								FileNumber:     "IMG_103",
+								PhotographerID: "photog-1",
+								PaymentMethod:  "pendente",
+								AmountPaid:     nil,
+							},
+						},
+					},
+				},
+			},
+			{
+				ID:       "client-2",
+				TenantID: tenantID,
+				PersonID: "person-2",
+				Dogs: []clientdomain.Dog{
+					{
+						Breed: "Bulldog",
+						Judge: "Juiz C",
+						Photos: []clientdomain.Photo{
+							{
+								FileNumber:     "IMG_201",
+								PhotographerID: "photog-1",
+								PaymentMethod:  "Cartão de Crédito",
+								AmountPaid:     &amount200,
+							},
+						},
+					},
+				},
+			},
+			{
+				ID:       "client-3",
+				TenantID: tenantID,
+				PersonID: "person-3",
+				Dogs: []clientdomain.Dog{
+					{
+						Breed: "Shih Tzu",
+						Judge: "Juiz D",
+						Photos: []clientdomain.Photo{
+							{
+								FileNumber:     "IMG_301",
+								PhotographerID: "photog-unknown",
+								PaymentMethod:  "",
+								AmountPaid:     nil,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	personRepo := &mockPersonRepo{
+		people: map[string]*persondomain.Person{
+			"person-1": {
+				ID:               "person-1",
+				Name:             "Carlos Lima",
+				Email:            "carlos@test.com",
+				AlternativeEmail: "carlos.alt@test.com",
+				Phone:            "11988887777",
+			},
+			"person-2": {
+				ID:    "person-2",
+				Name:  "Renata Costa",
+				Email: "renata@test.com",
+				Phone: "21977776666",
+			},
+			"person-3": {
+				ID:    "person-3",
+				Name:  "Marcos Souza",
+				Email: "marcos@test.com",
+				Phone: "81966665555",
+			},
+		},
+	}
+
+	photographerRepo := &mockPhotographerRepo{
+		photographers: []*photographerdomain.Photographer{
+			{ID: "photog-1", Name: "Fotógrafo Alpha"},
+			{ID: "photog-2", Name: "Fotógrafo Beta"},
+		},
+	}
+
+	storage := &mockStorageProvider{}
+	emailSender := &mockEmailSender{}
+
+	svc := NewService(clientRepo, personRepo, photographerRepo, storage, emailSender, "http://localhost:8080")
+
+	filePath, err := svc.GenerateUnpaidClientsCSV(context.Background(), tenantID, "user@test.com", "Tester")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !strings.HasPrefix(filePath, "reports/tenant_tenant-456/clientes_nao_pagos_") {
+		t.Fatalf("unexpected file path: %s", filePath)
+	}
+
+	csvData, ok := storage.files[filePath]
+	if !ok || len(csvData) == 0 {
+		t.Fatalf("CSV not saved in storage")
+	}
+
+	reader := csv.NewReader(bytes.NewReader(csvData))
+	records, err := reader.ReadAll()
+	if err != nil {
+		t.Fatalf("failed to parse CSV: %v", err)
+	}
+
+	// 1 Header + 2 rows from client-1 + 0 from client-2 + 1 from client-3 = 4 rows
+	if len(records) != 4 {
+		t.Fatalf("expected 4 rows, got %d", len(records))
+	}
+
+	// Header check
+	expectedHeaders := []string{
+		"Nome", "E-mail", "E-mail alternativo", "Telefone", "Raça", "Juiz",
+		"Número do Arquivo da Foto", "Fotografo", "Status do Pagamento", "Valor Devido / Pago",
+	}
+	for i, h := range expectedHeaders {
+		if records[0][i] != h {
+			t.Fatalf("header mismatch at %d: got %s, want %s", i, records[0][i], h)
+		}
+	}
+
+	// Row 1: client-1 photo 2
+	row1 := records[1]
+	if row1[0] != "Carlos Lima" || row1[3] != "(11) 98888-7777" || row1[4] != "Golden" || row1[5] != "Juiz A" || row1[6] != "'=CMD_INJECTION" || row1[7] != "Fotógrafo Beta" || row1[8] != "Não pago" || row1[9] != "150.00" {
+		t.Fatalf("row 1 mismatch: %v", row1)
+	}
+
+	// Row 2: client-1 photo 3
+	row2 := records[2]
+	if row2[0] != "Carlos Lima" || row2[4] != "Poodle" || row2[5] != "Juiz B" || row2[6] != "IMG_103" || row2[7] != "Fotógrafo Alpha" || row2[8] != "Não pago" || row2[9] != "" {
+		t.Fatalf("row 2 mismatch: %v", row2)
+	}
+
+	// Row 3: client-3 photo 1
+	row3 := records[3]
+	if row3[0] != "Marcos Souza" || row3[3] != "(81) 96666-5555" || row3[4] != "Shih Tzu" || row3[5] != "Juiz D" || row3[6] != "IMG_301" || row3[7] != "photog-unknown" || row3[8] != "Não pago" || row3[9] != "" {
+		t.Fatalf("row 3 mismatch: %v", row3)
+	}
+
+	// Check email notification
+	if len(emailSender.sentReports) != 1 {
+		t.Fatalf("expected 1 email sent, got %d", len(emailSender.sentReports))
+	}
+	if emailSender.sentReports[0].Email != "user@test.com" || emailSender.sentReports[0].ReportName != "Relatório de Clientes Não Pagos" {
+		t.Fatalf("unexpected email details: %v", emailSender.sentReports[0])
+	}
+}
+

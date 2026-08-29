@@ -69,6 +69,48 @@ func (h *ReportHandler) ExportClientsCSV(w http.ResponseWriter, r *http.Request)
 	})
 }
 
+// ExportUnpaidClientsCSV godoc
+// @Summary      Exportar relatório CSV de clientes com pagamentos não pagos
+// @Description  Inicia a extração assíncrona do relatório de clientes e fotos com pagamentos não quitados ou pendentes do tenant autenticado e envia o link para o e-mail cadastrado
+// @Tags         Reports
+// @Produce      json
+// @Success      202  {object}  httpx.SuccessEnvelope
+// @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
+// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado"
+// @Failure      500  {object}  httpx.ErrorEnvelope "Erro interno"
+// @Router       /api/v1/reports/unpaid-clients-csv [post]
+func (h *ReportHandler) ExportUnpaidClientsCSV(w http.ResponseWriter, r *http.Request) {
+	tenantID := middleware.GetTenantID(r.Context())
+	if tenantID == "" {
+		httpx.Error(w, http.StatusForbidden, "Tenant is required", nil)
+		return
+	}
+
+	userID := middleware.GetUserID(r.Context())
+	var userEmail, userName string
+	if userID != "" && h.userRepo != nil {
+		user, err := h.userRepo.FindByID(r.Context(), userID)
+		if err == nil && user.Email != "" {
+			userEmail = user.Email
+			userName = user.Name
+		}
+	}
+
+	// Launch async extraction job in background goroutine with detached context
+	go func(tID, uEmail, uName string) {
+		jobCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
+
+		if _, err := h.service.GenerateUnpaidClientsCSV(jobCtx, tID, uEmail, uName); err != nil {
+			log.Printf("[REPORT-JOB-ERROR] Failed to generate unpaid clients CSV for tenant %s: %v", tID, err)
+		}
+	}(tenantID, userEmail, userName)
+
+	httpx.Accepted(w, map[string]string{
+		"message": "Geração do relatório iniciada com sucesso. O arquivo CSV será enviado para o seu e-mail em instantes.",
+	})
+}
+
 // DownloadReport godoc
 // @Summary      Baixar arquivo de relatório gerado
 // @Description  Permite o download seguro de um arquivo de relatório previamente gerado, validando isolamento de tenant

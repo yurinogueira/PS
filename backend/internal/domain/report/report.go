@@ -14,7 +14,8 @@ const (
 type ReportType string
 
 const (
-	TypeClientsCSV ReportType = "clients_csv"
+	TypeClientsCSV       ReportType = "clients_csv"
+	TypeUnpaidClientsCSV ReportType = "unpaid_clients_csv"
 )
 
 type ReportJob struct {
