@@ -1316,6 +1316,14 @@ const docTemplate = `{
                     "Reports"
                 ],
                 "summary": "Exportar relatório CSV de clientes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID do evento para filtrar o relatório",
+                        "name": "season_id",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "202": {
                         "description": "Accepted",
@@ -1354,6 +1362,14 @@ const docTemplate = `{
                     "Reports"
                 ],
                 "summary": "Download direto do relatório PDF de clientes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID do evento para filtrar o relatório",
+                        "name": "season_id",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Arquivo PDF",
@@ -1390,6 +1406,14 @@ const docTemplate = `{
                     "Reports"
                 ],
                 "summary": "Exportar relatório PDF de clientes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID do evento para filtrar o relatório",
+                        "name": "season_id",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "202": {
                         "description": "Accepted",
@@ -1488,6 +1512,14 @@ const docTemplate = `{
                     "Reports"
                 ],
                 "summary": "Exportar relatório CSV de clientes com pagamentos não pagos",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID do evento para filtrar o relatório",
+                        "name": "season_id",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "202": {
                         "description": "Accepted",

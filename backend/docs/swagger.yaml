@@ -1058,6 +1058,11 @@ paths:
       description: Inicia a extração assíncrona do relatório consolidado de clientes,
         cães, fotos e pagamentos do tenant autenticado e envia o link para o e-mail
         cadastrado
+      parameters:
+      - description: ID do evento para filtrar o relatório
+        in: query
+        name: season_id
+        type: string
       produces:
       - application/json
       responses:
@@ -1084,6 +1089,11 @@ paths:
     get:
       description: Gera e faz o download direto instantâneo do relatório consolidado
         em formato PDF
+      parameters:
+      - description: ID do evento para filtrar o relatório
+        in: query
+        name: season_id
+        type: string
       produces:
       - application/pdf
       responses:
@@ -1110,6 +1120,11 @@ paths:
       description: Inicia a extração assíncrona do relatório consolidado em PDF de
         clientes, cães e fotos para o tenant autenticado e envia o link para o e-mail
         cadastrado
+      parameters:
+      - description: ID do evento para filtrar o relatório
+        in: query
+        name: season_id
+        type: string
       produces:
       - application/json
       responses:
@@ -1178,6 +1193,11 @@ paths:
       description: Inicia a extração assíncrona do relatório de clientes e fotos com
         pagamentos não quitados ou pendentes do tenant autenticado e envia o link
         para o e-mail cadastrado
+      parameters:
+      - description: ID do evento para filtrar o relatório
+        in: query
+        name: season_id
+        type: string
       produces:
       - application/json
       responses:

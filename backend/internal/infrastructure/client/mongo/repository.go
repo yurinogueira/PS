@@ -212,13 +212,21 @@ func (r *repository) List(ctx context.Context, tenantID string, filter domain.Li
 	}, nil
 }
 
-func (r *repository) StreamByTenant(ctx context.Context, tenantID string, fn func(c *domain.SeasonClient) error) error {
+func (r *repository) StreamByTenant(ctx context.Context, tenantID, seasonID string, fn func(c *domain.SeasonClient) error) error {
 	cleanTenantID, err := mongoinfra.SanitizeID(tenantID)
 	if err != nil {
 		return err
 	}
 
 	filter := bson.D{{Key: "tenant_id", Value: cleanTenantID}}
+	if strings.TrimSpace(seasonID) != "" {
+		cleanSeasonID, err := mongoinfra.SanitizeID(seasonID)
+		if err != nil {
+			return err
+		}
+		filter = append(filter, bson.E{Key: "season_id", Value: cleanSeasonID})
+	}
+
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
 		return err

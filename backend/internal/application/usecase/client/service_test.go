@@ -64,9 +64,9 @@ func (m *mockRepo) List(ctx context.Context, tenantID string, filter domain.List
 	}, nil
 }
 
-func (m *mockRepo) StreamByTenant(ctx context.Context, tenantID string, fn func(c *domain.SeasonClient) error) error {
+func (m *mockRepo) StreamByTenant(ctx context.Context, tenantID, seasonID string, fn func(c *domain.SeasonClient) error) error {
 	for _, c := range m.items {
-		if c.TenantID == tenantID {
+		if c.TenantID == tenantID && (seasonID == "" || c.SeasonID == seasonID) {
 			if err := fn(c); err != nil {
 				return err
 			}

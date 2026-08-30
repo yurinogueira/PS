@@ -31,9 +31,9 @@ func (m *mockClientRepo) List(ctx context.Context, tenantID string, filter clien
 		Total: int64(len(m.clients)),
 	}, nil
 }
-func (m *mockClientRepo) StreamByTenant(ctx context.Context, tenantID string, fn func(c *clientdomain.SeasonClient) error) error {
+func (m *mockClientRepo) StreamByTenant(ctx context.Context, tenantID, seasonID string, fn func(c *clientdomain.SeasonClient) error) error {
 	for _, c := range m.clients {
-		if c.TenantID == tenantID {
+		if c.TenantID == tenantID && (seasonID == "" || c.SeasonID == seasonID) {
 			if err := fn(c); err != nil {
 				return err
 			}
@@ -253,7 +253,7 @@ func TestGenerateClientsCSV_FullExpansionAndRules(t *testing.T) {
 
 	svc := NewService(clientRepo, personRepo, photographerRepo, storage, emailSender, "http://localhost:8080")
 
-	filePath, err := svc.GenerateClientsCSV(context.Background(), tenantID, "admin@tenant.com", "Admin")
+	filePath, err := svc.GenerateClientsCSV(context.Background(), tenantID, "", "admin@tenant.com", "Admin")
 	if err != nil {
 		t.Fatalf("unexpected error generating CSV: %v", err)
 	}
@@ -386,7 +386,7 @@ func TestGenerateClientsPDF_Success(t *testing.T) {
 	svc := NewService(clientRepo, personRepo, photographerRepo, storage, emailSender, "http://localhost:8080")
 
 	// Direct PDF test
-	pdfBytes, err := svc.GenerateDirectClientsPDF(context.Background(), tenantID)
+	pdfBytes, err := svc.GenerateDirectClientsPDF(context.Background(), tenantID, "")
 	if err != nil {
 		t.Fatalf("unexpected error generating direct PDF: %v", err)
 	}
@@ -399,7 +399,7 @@ func TestGenerateClientsPDF_Success(t *testing.T) {
 	}
 
 	// Async PDF test with email
-	pdfPath, err := svc.GenerateClientsPDF(context.Background(), tenantID, "user@example.com", "User")
+	pdfPath, err := svc.GenerateClientsPDF(context.Background(), tenantID, "", "user@example.com", "User")
 	if err != nil {
 		t.Fatalf("unexpected error generating PDF with email: %v", err)
 	}
@@ -604,7 +604,7 @@ func TestGenerateUnpaidClientsCSV(t *testing.T) {
 
 	svc := NewService(clientRepo, personRepo, photographerRepo, storage, emailSender, "http://localhost:8080")
 
-	filePath, err := svc.GenerateUnpaidClientsCSV(context.Background(), tenantID, "user@test.com", "Tester")
+	filePath, err := svc.GenerateUnpaidClientsCSV(context.Background(), tenantID, "", "user@test.com", "Tester")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -664,5 +664,87 @@ func TestGenerateUnpaidClientsCSV(t *testing.T) {
 	}
 	if emailSender.sentReports[0].Email != "user@test.com" || emailSender.sentReports[0].ReportName != "Relatório de Clientes Não Pagos" {
 		t.Fatalf("unexpected email details: %v", emailSender.sentReports[0])
+	}
+}
+
+func TestGenerateReports_FilterBySeasonID(t *testing.T) {
+	tenantID := "tenant-xyz"
+	season1 := "season-1"
+	season2 := "season-2"
+
+	clientRepo := &mockClientRepo{
+		clients: []*clientdomain.SeasonClient{
+			{
+				ID:       "client-s1",
+				TenantID: tenantID,
+				SeasonID: season1,
+				PersonID: "person-1",
+				Dogs: []clientdomain.Dog{
+					{
+						Breed: "Golden",
+						Photos: []clientdomain.Photo{
+							{FileNumber: "S1_001", PaymentMethod: "Pix"},
+						},
+					},
+				},
+			},
+			{
+				ID:       "client-s2",
+				TenantID: tenantID,
+				SeasonID: season2,
+				PersonID: "person-2",
+				Dogs: []clientdomain.Dog{
+					{
+						Breed: "Poodle",
+						Photos: []clientdomain.Photo{
+							{FileNumber: "S2_001", PaymentMethod: "Pix"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	personRepo := &mockPersonRepo{
+		people: map[string]*persondomain.Person{
+			"person-1": {ID: "person-1", Name: "Cliente Evento 1"},
+			"person-2": {ID: "person-2", Name: "Cliente Evento 2"},
+		},
+	}
+
+	photographerRepo := &mockPhotographerRepo{}
+	storage := &mockStorageProvider{}
+	emailSender := &mockEmailSender{}
+
+	svc := NewService(clientRepo, personRepo, photographerRepo, storage, emailSender, "http://localhost:8080")
+
+	// Export CSV filtered by season 1
+	filePath, err := svc.GenerateClientsCSV(context.Background(), tenantID, season1, "admin@test.com", "Admin")
+	if err != nil {
+		t.Fatalf("unexpected error generating filtered CSV: %v", err)
+	}
+
+	csvData := storage.files[filePath]
+	reader := csv.NewReader(bytes.NewReader(csvData))
+	records, err := reader.ReadAll()
+	if err != nil {
+		t.Fatalf("failed to read CSV records: %v", err)
+	}
+
+	// Header (1) + Client Season 1 (1) = 2 rows
+	if len(records) != 2 {
+		t.Fatalf("expected 2 rows for season 1 filter, got %d", len(records))
+	}
+	if records[1][0] != "Cliente Evento 1" || records[1][5] != "Golden" {
+		t.Fatalf("unexpected record content: %v", records[1])
+	}
+
+	// Export PDF filtered by season 2
+	pdfBytes, err := svc.GenerateDirectClientsPDF(context.Background(), tenantID, season2)
+	if err != nil {
+		t.Fatalf("unexpected error generating filtered PDF: %v", err)
+	}
+	if len(pdfBytes) < 500 {
+		t.Fatalf("expected valid PDF bytes, got %d", len(pdfBytes))
 	}
 }

@@ -209,12 +209,12 @@ export const ClientsPage = () => {
     setReportMenuAnchor(null);
     setExportingReport(true);
     try {
-      const resp = await reportService.exportClientsCsv();
+      const resp = await reportService.exportClientsCsv(activeSeason?.id);
       setSnackbar({
         open: true,
         message:
           resp?.message ||
-          "Processamento do relatório iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
+          "Processamento do relatório iniciado! O link do arquivo CSV será enviado para o seu e-mail cadastrado.",
         severity: "success",
       });
     } catch (err: any) {
@@ -234,26 +234,20 @@ export const ClientsPage = () => {
     setReportMenuAnchor(null);
     setExportingReport(true);
     try {
-      const blob = await reportService.downloadClientsPdfDirect();
-      const fileName = `clientes_${Math.floor(Date.now() / 1000)}.pdf`;
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.setAttribute("download", fileName);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(blobUrl);
-
+      const resp = await reportService.exportClientsPdf(activeSeason?.id);
       setSnackbar({
         open: true,
-        message: "Relatório PDF gerado e baixado com sucesso!",
+        message:
+          resp?.message ||
+          "Processamento do relatório em PDF iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
         severity: "success",
       });
     } catch (err: any) {
       setSnackbar({
         open: true,
-        message: err?.response?.data?.message || "Erro ao gerar relatório PDF.",
+        message:
+          err?.response?.data?.message ||
+          "Erro ao solicitar exportação do relatório PDF.",
         severity: "error",
       });
     } finally {
@@ -265,7 +259,7 @@ export const ClientsPage = () => {
     setReportMenuAnchor(null);
     setExportingReport(true);
     try {
-      const resp = await reportService.exportUnpaidClientsCsv();
+      const resp = await reportService.exportUnpaidClientsCsv(activeSeason?.id);
       setSnackbar({
         open: true,
         message:
