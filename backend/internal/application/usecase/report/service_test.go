@@ -772,10 +772,10 @@ func TestGenerateClientsPDF_MultiLineJudgesAndAccents(t *testing.T) {
 						},
 						Photos: []clientdomain.Photo{
 							{
-								FileNumber:     "IMG_9999",
-								PaymentMethod:  "Cartão de Crédito",
-								AmountPaid:     &amount,
-								Judges:         []string{"Dr. Thiago Lopes Moreira", "Norberto da Silva Castro", "José Maurício Medeiros Júnior"},
+								FileNumber:    "IMG_9999",
+								PaymentMethod: "Cartão de Crédito",
+								AmountPaid:    &amount,
+								Judges:        []string{"Dr. Thiago Lopes Moreira", "Norberto da Silva Castro", "José Maurício Medeiros Júnior"},
 							},
 						},
 					},

@@ -268,4 +268,34 @@ describe("DashboardPage", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("opens quick create person modal when clicking Nova Pessoa", async () => {
+    useSeasonStore.setState({
+      activeSeason: { id: "season-1", name: "Temporada 2026" },
+    });
+
+    vi.spyOn(clientService, "list").mockResolvedValue({
+      data: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+    });
+    vi.spyOn(personService, "list").mockResolvedValue([]);
+    vi.spyOn(photographerService, "list").mockResolvedValue([]);
+
+    render(
+      <BrowserRouter>
+        <DashboardPage />
+      </BrowserRouter>,
+    );
+
+    const novaPessoaBtn = screen.getByRole("button", {
+      name: /Nova Pessoa/i,
+    });
+    fireEvent.click(novaPessoaBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText("Cadastrar Nova Pessoa")).toBeInTheDocument();
+    });
+  });
 });
