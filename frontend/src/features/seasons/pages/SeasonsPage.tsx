@@ -33,8 +33,10 @@ import {
   photographerService,
   Photographer,
 } from "../../../services/api/photographer.service";
+import { useSeasonStore } from "../../../store/seasonStore";
 
 export const SeasonsPage = () => {
+  const { activeSeason, setActiveSeason } = useSeasonStore();
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
   const [open, setOpen] = useState(false);
@@ -132,6 +134,10 @@ export const SeasonsPage = () => {
     if (!deletingSeason) return;
     try {
       await seasonService.delete(deletingSeason.id);
+      if (activeSeason?.id === deletingSeason.id) {
+        const remaining = seasons.filter((s) => s.id !== deletingSeason.id);
+        setActiveSeason(remaining.length > 0 ? remaining[0] : null);
+      }
       setDeleteConfirmOpen(false);
       setDeletingSeason(null);
       await load();
@@ -417,6 +423,8 @@ export const SeasonsPage = () => {
       <Dialog
         open={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
+        maxWidth="xs"
+        fullWidth
       >
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
@@ -424,8 +432,13 @@ export const SeasonsPage = () => {
             Tem certeza que deseja excluir o evento{" "}
             <strong>{deletingSeason?.name}</strong>?
           </Typography>
+          <Typography variant="body2" color="error.main" sx={{ mt: 1.5 }}>
+            Atenção: Ao excluir este evento, todas as entidades e registros
+            vinculados a ele (como vínculos de clientes, cães e fotos
+            participantes) serão removidos permanentemente em cascata.
+          </Typography>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setDeleteConfirmOpen(false)}>Cancelar</Button>
           <Button
             onClick={handleConfirmDelete}

@@ -1,0 +1,100 @@
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
+import { SeasonsPage } from "./SeasonsPage";
+import { seasonService, Season } from "../../../services/api/season.service";
+import { photographerService } from "../../../services/api/photographer.service";
+import { useSeasonStore } from "../../../store/seasonStore";
+
+describe("SeasonsPage", () => {
+  const mockSeasons: Season[] = [
+    {
+      id: "season-1",
+      name: "Dog Show 2026",
+      photographer_ids: ["p1"],
+      judges: ["Juiz A", "Juiz B"],
+    },
+    {
+      id: "season-2",
+      name: "Agility Cup 2026",
+      photographer_ids: [],
+      judges: [],
+    },
+  ];
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    useSeasonStore.setState({ activeSeason: null });
+    vi.spyOn(seasonService, "list").mockResolvedValue(mockSeasons);
+    vi.spyOn(photographerService, "list").mockResolvedValue([]);
+    vi.spyOn(seasonService, "delete").mockResolvedValue();
+  });
+
+  it("renders seasons list correctly", async () => {
+    render(
+      <BrowserRouter>
+        <SeasonsPage />
+      </BrowserRouter>,
+    );
+
+    expect(screen.getByText("Eventos")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Dog Show 2026")).toBeInTheDocument();
+      expect(screen.getByText("Agility Cup 2026")).toBeInTheDocument();
+    });
+  });
+
+  it("opens delete confirmation modal with cascade entities warning", async () => {
+    render(
+      <BrowserRouter>
+        <SeasonsPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Dog Show 2026")).toBeInTheDocument();
+    });
+
+    const deleteButtons = screen.getAllByRole("button", { name: /excluir/i });
+    fireEvent.click(deleteButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText("Confirmar Exclusão")).toBeInTheDocument();
+      expect(
+        screen.getByText(/removidos permanentemente em cascata/i),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("deletes season and updates activeSeason in store when deleted season was active", async () => {
+    useSeasonStore.setState({ activeSeason: mockSeasons[0] });
+
+    render(
+      <BrowserRouter>
+        <SeasonsPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Dog Show 2026")).toBeInTheDocument();
+    });
+
+    const deleteButtons = screen.getAllByRole("button", { name: /excluir/i });
+    fireEvent.click(deleteButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText("Confirmar Exclusão")).toBeInTheDocument();
+    });
+
+    // Mock list after delete returning only season-2
+    vi.spyOn(seasonService, "list").mockResolvedValue([mockSeasons[1]]);
+
+    const confirmButton = screen.getByRole("button", { name: "Excluir" });
+    fireEvent.click(confirmButton);
+
+    await waitFor(() => {
+      expect(seasonService.delete).toHaveBeenCalledWith("season-1");
+      expect(useSeasonStore.getState().activeSeason?.id).toBe("season-2");
+    });
+  });
+});

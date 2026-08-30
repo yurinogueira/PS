@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"ps/internal/application/usecase/season"
+	clientdomain "ps/internal/domain/client"
 	domain "ps/internal/domain/season"
 )
 
@@ -61,9 +63,74 @@ func (m *mockRepo) Delete(ctx context.Context, id, tenantID string) error {
 	return nil
 }
 
+type mockClientRepo struct {
+	items map[string]*clientdomain.SeasonClient
+}
+
+func newMockClientRepo() *mockClientRepo {
+	return &mockClientRepo{items: make(map[string]*clientdomain.SeasonClient)}
+}
+
+func (m *mockClientRepo) Create(ctx context.Context, c *clientdomain.SeasonClient) error {
+	m.items[c.ID] = c
+	return nil
+}
+
+func (m *mockClientRepo) GetByID(ctx context.Context, id, tenantID string) (*clientdomain.SeasonClient, error) {
+	c, ok := m.items[id]
+	if !ok || c.TenantID != tenantID {
+		return nil, errors.New("not found")
+	}
+	return c, nil
+}
+
+func (m *mockClientRepo) List(ctx context.Context, tenantID string, filter clientdomain.ListFilter) (*clientdomain.PaginatedClients, error) {
+	var data []*clientdomain.SeasonClient
+	for _, c := range m.items {
+		if c.TenantID == tenantID && (filter.SeasonID == "" || c.SeasonID == filter.SeasonID) {
+			data = append(data, c)
+		}
+	}
+	return &clientdomain.PaginatedClients{
+		Data:  data,
+		Total: int64(len(data)),
+	}, nil
+}
+
+func (m *mockClientRepo) StreamByTenant(ctx context.Context, tenantID, seasonID string, fn func(c *clientdomain.SeasonClient) error) error {
+	for _, c := range m.items {
+		if c.TenantID == tenantID && (seasonID == "" || c.SeasonID == seasonID) {
+			if err := fn(c); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (m *mockClientRepo) Update(ctx context.Context, c *clientdomain.SeasonClient) error {
+	m.items[c.ID] = c
+	return nil
+}
+
+func (m *mockClientRepo) Delete(ctx context.Context, id, tenantID string) error {
+	delete(m.items, id)
+	return nil
+}
+
+func (m *mockClientRepo) DeleteBySeasonID(ctx context.Context, seasonID, tenantID string) error {
+	for id, c := range m.items {
+		if c.TenantID == tenantID && c.SeasonID == seasonID {
+			delete(m.items, id)
+		}
+	}
+	return nil
+}
+
 func TestSeasonService(t *testing.T) {
 	repo := newMockRepo()
-	svc := season.NewService(repo)
+	clientRepo := newMockClientRepo()
+	svc := season.NewService(repo, clientRepo)
 	ctx := context.Background()
 	tenantID := "tenant-xyz"
 
@@ -113,11 +180,34 @@ func TestSeasonService(t *testing.T) {
 		t.Fatalf("expected updated season, got %v", updated)
 	}
 
-	// 5. Delete
+	// Add dependent clients for this season, another season, and another tenant
+	clientRepo.Create(ctx, &clientdomain.SeasonClient{ID: "client-1", TenantID: tenantID, SeasonID: s.ID})
+	clientRepo.Create(ctx, &clientdomain.SeasonClient{ID: "client-2", TenantID: tenantID, SeasonID: s.ID})
+	clientRepo.Create(ctx, &clientdomain.SeasonClient{ID: "client-other-season", TenantID: tenantID, SeasonID: "other-season"})
+	clientRepo.Create(ctx, &clientdomain.SeasonClient{ID: "client-other-tenant", TenantID: "other-tenant", SeasonID: s.ID})
+
+	// 5. Delete (with cascade in background)
 	if err := svc.Delete(ctx, s.ID, tenantID); err != nil {
 		t.Fatalf("unexpected error on Delete: %v", err)
 	}
 	if _, err := svc.GetByID(ctx, s.ID, tenantID); err == nil {
 		t.Fatalf("expected error after delete, got nil")
+	}
+
+	// Give background goroutine a moment to complete
+	time.Sleep(50 * time.Millisecond)
+
+	// Check cascade deletion: client-1 and client-2 must be removed, other clients must remain
+	if _, err := clientRepo.GetByID(ctx, "client-1", tenantID); err == nil {
+		t.Fatalf("expected client-1 to be cascade deleted")
+	}
+	if _, err := clientRepo.GetByID(ctx, "client-2", tenantID); err == nil {
+		t.Fatalf("expected client-2 to be cascade deleted")
+	}
+	if _, err := clientRepo.GetByID(ctx, "client-other-season", tenantID); err != nil {
+		t.Fatalf("expected client-other-season to remain, got err: %v", err)
+	}
+	if _, err := clientRepo.GetByID(ctx, "client-other-tenant", "other-tenant"); err != nil {
+		t.Fatalf("expected client-other-tenant to remain, got err: %v", err)
 	}
 }

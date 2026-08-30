@@ -296,3 +296,21 @@ func (r *repository) Delete(ctx context.Context, id, tenantID string) error {
 	_, err = r.collection.DeleteOne(ctx, filter)
 	return err
 }
+
+func (r *repository) DeleteBySeasonID(ctx context.Context, seasonID, tenantID string) error {
+	cleanSeasonID, err := mongoinfra.SanitizeID(seasonID)
+	if err != nil {
+		return err
+	}
+	cleanTenantID, err := mongoinfra.SanitizeID(tenantID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.D{
+		{Key: "season_id", Value: cleanSeasonID},
+		{Key: "tenant_id", Value: cleanTenantID},
+	}
+	_, err = r.collection.DeleteMany(ctx, filter)
+	return err
+}
