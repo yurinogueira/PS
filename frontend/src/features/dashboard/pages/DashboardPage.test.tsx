@@ -130,7 +130,7 @@ describe("DashboardPage", () => {
     ).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Fotos Registradas")).toBeInTheDocument();
     expect(screen.getByText("Cachorros & Fotos")).toBeInTheDocument();
-    expect(screen.getByText("Detalhes")).toBeInTheDocument();
+    expect(screen.getByText("Editar Dados")).toBeInTheDocument();
   });
 
   it("triggers search and shows empty search state when no results", async () => {
@@ -296,6 +296,7 @@ describe("DashboardPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Cadastrar Nova Pessoa")).toBeInTheDocument();
+      expect(screen.getByText("Salvar e Editar Dados")).toBeInTheDocument();
     });
   });
 });
