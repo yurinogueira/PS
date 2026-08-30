@@ -372,37 +372,20 @@ export const DashboardPage = () => {
             }}
           >
             {activeSeason ? (
-              <>
-                <Chip
-                  icon={<EventNoteRoundedIcon style={{ color: "#38bdf8" }} />}
-                  label={`Evento: ${activeSeason.name}`}
-                  sx={{
-                    bgcolor: "rgba(56, 189, 248, 0.15)",
-                    color: "#38bdf8",
-                    fontWeight: 700,
-                    fontSize: "0.95rem",
-                    py: 2.2,
-                    px: 1,
-                    borderRadius: 2,
-                    border: "1px solid rgba(56, 189, 248, 0.3)",
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setLinkModalOpen(true)}
-                  sx={{
-                    bgcolor: "primary.main",
-                    "&:hover": { bgcolor: "primary.dark" },
-                    borderRadius: 2,
-                    textTransform: "none",
-                    fontWeight: 700,
-                    px: 2.5,
-                  }}
-                >
-                  Vincular Cliente
-                </Button>
-              </>
+              <Chip
+                icon={<EventNoteRoundedIcon style={{ color: "#38bdf8" }} />}
+                label={`Evento: ${activeSeason.name}`}
+                sx={{
+                  bgcolor: "rgba(56, 189, 248, 0.15)",
+                  color: "#38bdf8",
+                  fontWeight: 700,
+                  fontSize: "0.95rem",
+                  py: 2.2,
+                  px: 1,
+                  borderRadius: 2,
+                  border: "1px solid rgba(56, 189, 248, 0.3)",
+                }}
+              />
             ) : (
               <Chip
                 label="Selecione um evento no menu superior"
@@ -463,25 +446,6 @@ export const DashboardPage = () => {
                 Exportar Não Pagos (.csv)
               </MenuItem>
             </Menu>
-
-            <Button
-              variant="outlined"
-              startIcon={<PersonAddAlt1Icon />}
-              onClick={() => setNewPersonOpen(true)}
-              sx={{
-                borderColor: "rgba(255,255,255,0.4)",
-                color: "white",
-                "&:hover": {
-                  borderColor: "white",
-                  bgcolor: "rgba(255,255,255,0.08)",
-                },
-                borderRadius: 2,
-                textTransform: "none",
-                fontWeight: 600,
-              }}
-            >
-              Nova Pessoa
-            </Button>
           </Box>
         </Box>
       </Paper>
@@ -747,22 +711,63 @@ export const DashboardPage = () => {
               </Typography>
             </Box>
 
-            <TextField
-              size="small"
-              placeholder="Buscar por pessoa, cão ou número da foto..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{ width: { xs: "100%", sm: 380 } }}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon color="action" />
-                    </InputAdornment>
-                  ),
-                },
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 1.5,
+                width: { xs: "100%", md: "auto" },
               }}
-            />
+            >
+              <TextField
+                size="small"
+                placeholder="Buscar por pessoa, cão ou número da foto..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{ width: { xs: "100%", sm: 280, md: 340 } }}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setLinkModalOpen(true)}
+                disabled={!activeSeason}
+                sx={{
+                  bgcolor: "primary.main",
+                  "&:hover": { bgcolor: "primary.dark" },
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: 700,
+                  px: 2,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Vincular Cliente
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<PersonAddAlt1Icon />}
+                onClick={() => setNewPersonOpen(true)}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  px: 2,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Nova Pessoa
+              </Button>
+            </Box>
           </Box>
 
           {/* Table Content */}
