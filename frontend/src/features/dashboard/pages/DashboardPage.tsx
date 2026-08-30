@@ -40,7 +40,7 @@ import AddIcon from "@mui/icons-material/Add";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
 import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
-import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
@@ -1016,7 +1016,7 @@ export const DashboardPage = () => {
                               <Button
                                 size="small"
                                 variant="outlined"
-                                startIcon={<VisibilityRoundedIcon />}
+                                startIcon={<EditRoundedIcon />}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleOpenDetails(client.id);
@@ -1026,7 +1026,7 @@ export const DashboardPage = () => {
                                   textTransform: "none",
                                 }}
                               >
-                                Detalhes
+                                Editar Dados
                               </Button>
                             </Box>
                           </TableCell>
@@ -1144,7 +1144,7 @@ export const DashboardPage = () => {
             disabled={!newPersonForm.name.trim()}
             sx={{ textTransform: "none", fontWeight: 600 }}
           >
-            Salvar e Abrir Detalhes
+            Salvar e Editar Dados
           </Button>
         </DialogActions>
       </Dialog>
