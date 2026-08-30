@@ -1,0 +1,1 @@
+import{D as e,yt as t}from"./client-DOGCo7I1.js";var n=t(),r=e((0,n.jsx)(`path`,{d:`M22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2zm-2 0-8 5-8-5zm0 12H4V8l8 5 8-5z`}),`EmailOutlined`);export{r as t};
