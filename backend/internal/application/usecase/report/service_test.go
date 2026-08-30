@@ -47,6 +47,9 @@ func (m *mockClientRepo) Update(ctx context.Context, client *clientdomain.Season
 func (m *mockClientRepo) Delete(ctx context.Context, id, tenantID string) error {
 	return nil
 }
+func (m *mockClientRepo) DeleteBySeasonID(ctx context.Context, seasonID, tenantID string) error {
+	return nil
+}
 
 type mockPersonRepo struct {
 	people map[string]*persondomain.Person

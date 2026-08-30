@@ -55,7 +55,7 @@ func NewRouter(
 	adminSvc := adminusecase.NewService(users, tenants)
 	adminHandler := handlers.NewAdminHandler(tenantSvc, adminSvc)
 
-	seasonSvc := seasonusecase.NewService(seasons)
+	seasonSvc := seasonusecase.NewService(seasons, clients)
 	photographerSvc := photographerusecase.NewService(photographers)
 	personSvc := personusecase.NewService(persons)
 	clientSvc := clientusecase.NewService(clients, persons, seasons, photographers)

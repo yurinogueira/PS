@@ -93,6 +93,15 @@ func (m *mockRepo) Delete(ctx context.Context, id, tenantID string) error {
 	return nil
 }
 
+func (m *mockRepo) DeleteBySeasonID(ctx context.Context, seasonID, tenantID string) error {
+	for id, c := range m.items {
+		if c.TenantID == tenantID && c.SeasonID == seasonID {
+			delete(m.items, id)
+		}
+	}
+	return nil
+}
+
 type mockPersonRepo struct {
 	items map[string]*persondomain.Person
 }
