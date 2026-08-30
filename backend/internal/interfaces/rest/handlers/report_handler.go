@@ -32,6 +32,7 @@ func NewReportHandler(service *reportusecase.Service, userRepo userport.Reposito
 // @Summary      Exportar relatório CSV de clientes
 // @Description  Inicia a extração assíncrona do relatório consolidado de clientes, cães, fotos e pagamentos do tenant autenticado e envia o link para o e-mail cadastrado
 // @Tags         Reports
+// @Param        season_id query string false "ID do evento para filtrar o relatório"
 // @Produce      json
 // @Success      202  {object}  httpx.SuccessEnvelope
 // @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
@@ -45,6 +46,8 @@ func (h *ReportHandler) ExportClientsCSV(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	seasonID := r.URL.Query().Get("season_id")
+
 	userID := middleware.GetUserID(r.Context())
 	var userEmail, userName string
 	if userID != "" && h.userRepo != nil {
@@ -56,14 +59,14 @@ func (h *ReportHandler) ExportClientsCSV(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Launch async extraction job in background goroutine with detached context
-	go func(tID, uEmail, uName string) {
+	go func(tID, sID, uEmail, uName string) {
 		jobCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 
-		if _, err := h.service.GenerateClientsCSV(jobCtx, tID, uEmail, uName); err != nil {
+		if _, err := h.service.GenerateClientsCSV(jobCtx, tID, sID, uEmail, uName); err != nil {
 			log.Printf("[REPORT-JOB-ERROR] Failed to generate clients CSV for tenant %s: %v", tID, err)
 		}
-	}(tenantID, userEmail, userName)
+	}(tenantID, seasonID, userEmail, userName)
 
 	httpx.Accepted(w, map[string]string{
 		"message": "Geração do relatório iniciada com sucesso. O arquivo CSV será enviado para o seu e-mail em instantes.",
@@ -74,6 +77,7 @@ func (h *ReportHandler) ExportClientsCSV(w http.ResponseWriter, r *http.Request)
 // @Summary      Exportar relatório CSV de clientes com pagamentos não pagos
 // @Description  Inicia a extração assíncrona do relatório de clientes e fotos com pagamentos não quitados ou pendentes do tenant autenticado e envia o link para o e-mail cadastrado
 // @Tags         Reports
+// @Param        season_id query string false "ID do evento para filtrar o relatório"
 // @Produce      json
 // @Success      202  {object}  httpx.SuccessEnvelope
 // @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
@@ -87,6 +91,8 @@ func (h *ReportHandler) ExportUnpaidClientsCSV(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	seasonID := r.URL.Query().Get("season_id")
+
 	userID := middleware.GetUserID(r.Context())
 	var userEmail, userName string
 	if userID != "" && h.userRepo != nil {
@@ -98,14 +104,14 @@ func (h *ReportHandler) ExportUnpaidClientsCSV(w http.ResponseWriter, r *http.Re
 	}
 
 	// Launch async extraction job in background goroutine with detached context
-	go func(tID, uEmail, uName string) {
+	go func(tID, sID, uEmail, uName string) {
 		jobCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 
-		if _, err := h.service.GenerateUnpaidClientsCSV(jobCtx, tID, uEmail, uName); err != nil {
+		if _, err := h.service.GenerateUnpaidClientsCSV(jobCtx, tID, sID, uEmail, uName); err != nil {
 			log.Printf("[REPORT-JOB-ERROR] Failed to generate unpaid clients CSV for tenant %s: %v", tID, err)
 		}
-	}(tenantID, userEmail, userName)
+	}(tenantID, seasonID, userEmail, userName)
 
 	httpx.Accepted(w, map[string]string{
 		"message": "Geração do relatório iniciada com sucesso. O arquivo CSV será enviado para o seu e-mail em instantes.",
@@ -116,6 +122,7 @@ func (h *ReportHandler) ExportUnpaidClientsCSV(w http.ResponseWriter, r *http.Re
 // @Summary      Exportar relatório PDF de clientes
 // @Description  Inicia a extração assíncrona do relatório consolidado em PDF de clientes, cães e fotos para o tenant autenticado e envia o link para o e-mail cadastrado
 // @Tags         Reports
+// @Param        season_id query string false "ID do evento para filtrar o relatório"
 // @Produce      json
 // @Success      202  {object}  httpx.SuccessEnvelope
 // @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
@@ -129,6 +136,8 @@ func (h *ReportHandler) ExportClientsPDF(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	seasonID := r.URL.Query().Get("season_id")
+
 	userID := middleware.GetUserID(r.Context())
 	var userEmail, userName string
 	if userID != "" && h.userRepo != nil {
@@ -140,14 +149,14 @@ func (h *ReportHandler) ExportClientsPDF(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Launch async extraction job in background goroutine with detached context
-	go func(tID, uEmail, uName string) {
+	go func(tID, sID, uEmail, uName string) {
 		jobCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 
-		if _, err := h.service.GenerateClientsPDF(jobCtx, tID, uEmail, uName); err != nil {
+		if _, err := h.service.GenerateClientsPDF(jobCtx, tID, sID, uEmail, uName); err != nil {
 			log.Printf("[REPORT-JOB-ERROR] Failed to generate clients PDF for tenant %s: %v", tID, err)
 		}
-	}(tenantID, userEmail, userName)
+	}(tenantID, seasonID, userEmail, userName)
 
 	httpx.Accepted(w, map[string]string{
 		"message": "Geração do relatório em PDF iniciada com sucesso. O arquivo será enviado para o seu e-mail em instantes.",
@@ -158,6 +167,7 @@ func (h *ReportHandler) ExportClientsPDF(w http.ResponseWriter, r *http.Request)
 // @Summary      Download direto do relatório PDF de clientes
 // @Description  Gera e faz o download direto instantâneo do relatório consolidado em formato PDF
 // @Tags         Reports
+// @Param        season_id query string false "ID do evento para filtrar o relatório"
 // @Produce      application/pdf
 // @Success      200  {string}  string "Arquivo PDF"
 // @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
@@ -171,7 +181,9 @@ func (h *ReportHandler) DownloadDirectClientsPDF(w http.ResponseWriter, r *http.
 		return
 	}
 
-	pdfData, err := h.service.GenerateDirectClientsPDF(r.Context(), tenantID)
+	seasonID := r.URL.Query().Get("season_id")
+
+	pdfData, err := h.service.GenerateDirectClientsPDF(r.Context(), tenantID, seasonID)
 	if err != nil {
 		httpx.Error(w, http.StatusInternalServerError, "Falha ao gerar relatório PDF", nil)
 		return

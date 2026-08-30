@@ -156,7 +156,7 @@ func formatPhotoDate(photo *clientdomain.Photo, clientCreatedAt time.Time) strin
 	return ""
 }
 
-func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, userName string) (string, error) {
+func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, seasonID, userEmail, userName string) (string, error) {
 	if tenantID == "" {
 		return "", errors.New("tenant ID cannot be empty")
 	}
@@ -199,7 +199,7 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, u
 	}
 
 	// 4. Stream clients from MongoDB
-	streamErr := s.clientRepo.StreamByTenant(ctx, tenantID, func(c *clientdomain.SeasonClient) error {
+	streamErr := s.clientRepo.StreamByTenant(ctx, tenantID, seasonID, func(c *clientdomain.SeasonClient) error {
 		p, ok := personCache[c.PersonID]
 		if !ok {
 			personObj, err := s.personRepo.GetByID(ctx, c.PersonID, tenantID)
@@ -360,7 +360,7 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, u
 	return relativePath, nil
 }
 
-func (s *Service) GenerateUnpaidClientsCSV(ctx context.Context, tenantID, userEmail, userName string) (string, error) {
+func (s *Service) GenerateUnpaidClientsCSV(ctx context.Context, tenantID, seasonID, userEmail, userName string) (string, error) {
 	if tenantID == "" {
 		return "", errors.New("tenant ID cannot be empty")
 	}
@@ -400,7 +400,7 @@ func (s *Service) GenerateUnpaidClientsCSV(ctx context.Context, tenantID, userEm
 	}
 
 	// 4. Stream clients from MongoDB and filter unpaid photos
-	streamErr := s.clientRepo.StreamByTenant(ctx, tenantID, func(c *clientdomain.SeasonClient) error {
+	streamErr := s.clientRepo.StreamByTenant(ctx, tenantID, seasonID, func(c *clientdomain.SeasonClient) error {
 		var personObj *persondomain.Person
 		var ok bool
 
@@ -514,7 +514,7 @@ func fitPdfText(pdf *fpdf.Fpdf, text string, maxWidth float64) string {
 	return string(runes) + "..."
 }
 
-func (s *Service) buildClientsPDF(ctx context.Context, tenantID string) ([]byte, error) {
+func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string) ([]byte, error) {
 	if tenantID == "" {
 		return nil, errors.New("tenant ID cannot be empty")
 	}
@@ -532,7 +532,7 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID string) ([]byte,
 	// Collect clients
 	personCache := make(map[string]*persondomain.Person)
 	var clients []*clientdomain.SeasonClient
-	err = s.clientRepo.StreamByTenant(ctx, tenantID, func(c *clientdomain.SeasonClient) error {
+	err = s.clientRepo.StreamByTenant(ctx, tenantID, seasonID, func(c *clientdomain.SeasonClient) error {
 		clients = append(clients, c)
 		if _, ok := personCache[c.PersonID]; !ok {
 			personObj, pErr := s.personRepo.GetByID(ctx, c.PersonID, tenantID)
@@ -730,8 +730,8 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID string) ([]byte,
 	return buf.Bytes(), nil
 }
 
-func (s *Service) GenerateClientsPDF(ctx context.Context, tenantID, userEmail, userName string) (string, error) {
-	pdfBytes, err := s.buildClientsPDF(ctx, tenantID)
+func (s *Service) GenerateClientsPDF(ctx context.Context, tenantID, seasonID, userEmail, userName string) (string, error) {
+	pdfBytes, err := s.buildClientsPDF(ctx, tenantID, seasonID)
 	if err != nil {
 		return "", err
 	}
@@ -759,8 +759,8 @@ func (s *Service) GenerateClientsPDF(ctx context.Context, tenantID, userEmail, u
 	return relativePath, nil
 }
 
-func (s *Service) GenerateDirectClientsPDF(ctx context.Context, tenantID string) ([]byte, error) {
-	return s.buildClientsPDF(ctx, tenantID)
+func (s *Service) GenerateDirectClientsPDF(ctx context.Context, tenantID, seasonID string) ([]byte, error) {
+	return s.buildClientsPDF(ctx, tenantID, seasonID)
 }
 
 func (s *Service) GetReportFile(ctx context.Context, tenantID, relativePath string) ([]byte, error) {
