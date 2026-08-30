@@ -279,36 +279,6 @@ export const LinkClientModal = ({
                 onChange={(e) => updateDog(dIdx, "breed", e.target.value)}
                 sx={{ flex: 1, minWidth: 150 }}
               />
-              <Autocomplete
-                multiple
-                freeSolo
-                size="small"
-                options={activeSeason?.judges || []}
-                value={
-                  dog.judges ||
-                  (dog.judge
-                    ? dog.judge
-                        .split(",")
-                        .map((j) => j.trim())
-                        .filter(Boolean)
-                    : [])
-                }
-                onChange={(_, val) => {
-                  const cleaned = val.map((v) => v.trim()).filter(Boolean);
-                  updateDog(dIdx, "judges", cleaned);
-                  updateDog(dIdx, "judge", cleaned.join(", "));
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Juiz"
-                    placeholder={
-                      dog.judges?.length ? "" : "Selecione ou digite"
-                    }
-                  />
-                )}
-                sx={{ flex: 1, minWidth: 180 }}
-              />
               <TextField
                 type="number"
                 label="Competições Ganhas"
@@ -483,6 +453,29 @@ export const LinkClientModal = ({
                     ))}
                   </Select>
                 </FormControl>
+                <Autocomplete
+                  multiple
+                  size="small"
+                  options={activeSeason?.judges || []}
+                  value={photo.judges || []}
+                  onChange={(_, val) => {
+                    updatePhoto(dIdx, pIdx, "judges", val);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Juízes"
+                      placeholder={
+                        photo.judges?.length
+                          ? ""
+                          : activeSeason?.judges?.length
+                            ? "Selecione juízes"
+                            : "Nenhum juiz no evento"
+                      }
+                    />
+                  )}
+                  sx={{ minWidth: 180, flex: 1 }}
+                />
                 <FormControl size="small" sx={{ minWidth: 140, flex: 1 }}>
                   <InputLabel id={`payment-label-${dIdx}-${pIdx}`}>
                     Pagamento

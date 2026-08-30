@@ -39,7 +39,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import PetsIcon from "@mui/icons-material/Pets";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import GavelIcon from "@mui/icons-material/Gavel";
 import PersonIcon from "@mui/icons-material/Person";
 import PhoneIcon from "@mui/icons-material/Phone";
 import EmailIcon from "@mui/icons-material/Email";
@@ -107,15 +106,11 @@ export const PersonDetailsPage = () => {
   const [editingDogIndex, setEditingDogIndex] = useState<number | null>(null);
   const [dogForm, setDogForm] = useState<{
     breed: string;
-    judge: string;
-    judges: string[];
     competitions_won: number;
     won_competitions: string[];
     is_owner: boolean;
   }>({
     breed: "",
-    judge: "",
-    judges: [],
     competitions_won: 0,
     won_competitions: [],
     is_owner: true,
@@ -280,8 +275,6 @@ export const PersonDetailsPage = () => {
     setNewCompetitionInput("");
     setDogForm({
       breed: "",
-      judge: "",
-      judges: [],
       competitions_won: 0,
       won_competitions: [],
       is_owner: true,
@@ -294,19 +287,8 @@ export const PersonDetailsPage = () => {
     if (!d) return;
     setEditingDogIndex(index);
     setNewCompetitionInput("");
-    const parsedJudges =
-      d.judges && d.judges.length > 0
-        ? d.judges
-        : d.judge
-          ? d.judge
-              .split(",")
-              .map((j) => j.trim())
-              .filter(Boolean)
-          : [];
     setDogForm({
       breed: d.breed || "",
-      judge: d.judge || "",
-      judges: parsedJudges,
       competitions_won: d.competitions_won || 0,
       won_competitions: d.won_competitions || [],
       is_owner: d.is_owner ?? true,
@@ -349,24 +331,11 @@ export const PersonDetailsPage = () => {
         ? finalWonCompetitions.map((c) => c.trim()).filter((c) => c.length > 0)
         : [];
 
-    const finalJudges =
-      dogForm.judges && dogForm.judges.length > 0
-        ? dogForm.judges
-        : dogForm.judge
-          ? dogForm.judge
-              .split(",")
-              .map((j) => j.trim())
-              .filter(Boolean)
-          : [];
-    const finalJudge = finalJudges.join(", ");
-
     const newDogs = [...dogsList];
     if (editingDogIndex !== null) {
       newDogs[editingDogIndex] = {
         ...newDogs[editingDogIndex],
         breed: dogForm.breed.trim(),
-        judge: finalJudge,
-        judges: finalJudges,
         competitions_won: wonCount,
         won_competitions: finalWonCompetitions,
         is_owner: dogForm.is_owner,
@@ -374,8 +343,6 @@ export const PersonDetailsPage = () => {
     } else {
       newDogs.unshift({
         breed: dogForm.breed.trim(),
-        judge: finalJudge,
-        judges: finalJudges,
         competitions_won: wonCount,
         won_competitions: finalWonCompetitions,
         is_owner: dogForm.is_owner,
@@ -408,29 +375,20 @@ export const PersonDetailsPage = () => {
       return;
     }
     const defaultPhotog = photographers[0]?.id || "";
-    const defaultJudges =
-      selectedDog.judges && selectedDog.judges.length > 0
-        ? selectedDog.judges
-        : selectedDog.judge
-          ? selectedDog.judge
-              .split(",")
-              .map((j) => j.trim())
-              .filter(Boolean)
-          : [];
 
     setBatchPhotoForm({
       fileNumbersText: "",
       photographer_id: defaultPhotog,
       payment_method: "Pix",
       amount_paid: 0,
-      judges: defaultJudges,
+      judges: [],
     });
     setSinglePhotoForm({
       file_number: "",
       photographer_id: defaultPhotog,
       payment_method: "Pix",
       amount_paid: 0,
-      judges: defaultJudges,
+      judges: [],
     });
     setAddPhotoDialogOpen(true);
   };
@@ -877,36 +835,6 @@ export const PersonDetailsPage = () => {
                           <Box
                             sx={{
                               display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              color: "text.secondary",
-                              fontSize: "0.8rem",
-                              mb: 1,
-                            }}
-                          >
-                            {(dog.judges && dog.judges.length > 0) ||
-                            dog.judge ? (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 0.5,
-                                }}
-                              >
-                                <GavelIcon fontSize="inherit" />
-                                <span>
-                                  Juiz:{" "}
-                                  {dog.judges && dog.judges.length > 0
-                                    ? dog.judges.join(", ")
-                                    : dog.judge}
-                                </span>
-                              </Box>
-                            ) : null}
-                          </Box>
-
-                          <Box
-                            sx={{
-                              display: "flex",
                               justifyContent: "space-between",
                               alignItems: "center",
                               mt: 1,
@@ -1017,27 +945,12 @@ export const PersonDetailsPage = () => {
                     sx={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 3,
+                      gap: 2,
                       flexWrap: "wrap",
                       color: "text.secondary",
                       mt: 1,
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                      }}
-                    >
-                      <GavelIcon fontSize="small" color="action" />
-                      <Typography variant="body2">
-                        <strong>Juiz:</strong>{" "}
-                        {selectedDog.judges && selectedDog.judges.length > 0
-                          ? selectedDog.judges.join(", ")
-                          : selectedDog.judge || "Não informado"}
-                      </Typography>
-                    </Box>
                     <Box
                       sx={{
                         display: "flex",
@@ -1453,43 +1366,6 @@ export const PersonDetailsPage = () => {
             value={dogForm.breed}
             onChange={(e) => setDogForm({ ...dogForm, breed: e.target.value })}
           />
-          <Autocomplete
-            multiple
-            freeSolo
-            options={activeSeason?.judges || []}
-            value={
-              dogForm.judges && dogForm.judges.length > 0
-                ? dogForm.judges
-                : dogForm.judge
-                  ? dogForm.judge
-                      .split(",")
-                      .map((j) => j.trim())
-                      .filter(Boolean)
-                  : []
-            }
-            onChange={(_, val) => {
-              const cleaned = val.map((v) => v.trim()).filter(Boolean);
-              setDogForm({
-                ...dogForm,
-                judges: cleaned,
-                judge: cleaned.join(", "),
-              });
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Juízes do Evento"
-                placeholder={
-                  dogForm.judges?.length ? "" : "Selecione ou digite juízes"
-                }
-                helperText={
-                  activeSeason?.judges && activeSeason.judges.length > 0
-                    ? "Selecione da lista de juízes do evento ou digite um novo nome e pressione Enter."
-                    : "Cadastre juízes no evento para selecioná-los aqui ou digite o nome e pressione Enter."
-                }
-              />
-            )}
-          />
           <TextField
             label="Competições Ganhas"
             type="number"
@@ -1695,23 +1571,30 @@ export const PersonDetailsPage = () => {
               </FormControl>
               <Autocomplete
                 multiple
-                freeSolo
                 size="small"
                 options={activeSeason?.judges || []}
                 value={batchPhotoForm.judges || []}
                 onChange={(_, val) => {
-                  const cleaned = val.map((v) => v.trim()).filter(Boolean);
                   setBatchPhotoForm({
                     ...batchPhotoForm,
-                    judges: cleaned,
+                    judges: val,
                   });
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Juízes da Foto (Opcional - padrão do cão)"
+                    label="Juízes da Foto"
                     placeholder={
-                      batchPhotoForm.judges?.length ? "" : "Selecione ou digite"
+                      batchPhotoForm.judges?.length
+                        ? ""
+                        : activeSeason?.judges?.length
+                          ? "Selecione os juízes"
+                          : "Nenhum juiz cadastrado no evento"
+                    }
+                    helperText={
+                      activeSeason?.judges?.length
+                        ? "Selecione os juízes do evento vinculados a estas fotos."
+                        : "Cadastre juízes no evento para poder selecioná-los aqui."
                     }
                   />
                 )}
@@ -1798,25 +1681,30 @@ export const PersonDetailsPage = () => {
               </FormControl>
               <Autocomplete
                 multiple
-                freeSolo
                 size="small"
                 options={activeSeason?.judges || []}
                 value={singlePhotoForm.judges || []}
                 onChange={(_, val) => {
-                  const cleaned = val.map((v) => v.trim()).filter(Boolean);
                   setSinglePhotoForm({
                     ...singlePhotoForm,
-                    judges: cleaned,
+                    judges: val,
                   });
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Juízes da Foto (Opcional - padrão do cão)"
+                    label="Juízes da Foto"
                     placeholder={
                       singlePhotoForm.judges?.length
                         ? ""
-                        : "Selecione ou digite"
+                        : activeSeason?.judges?.length
+                          ? "Selecione os juízes"
+                          : "Nenhum juiz cadastrado no evento"
+                    }
+                    helperText={
+                      activeSeason?.judges?.length
+                        ? "Selecione os juízes do evento vinculados a esta foto."
+                        : "Cadastre juízes no evento para poder selecioná-los aqui."
                     }
                   />
                 )}
@@ -1930,15 +1818,13 @@ export const PersonDetailsPage = () => {
           </FormControl>
           <Autocomplete
             multiple
-            freeSolo
             size="small"
             options={activeSeason?.judges || []}
             value={editPhotoForm.judges || []}
             onChange={(_, val) => {
-              const cleaned = val.map((v) => v.trim()).filter(Boolean);
               setEditPhotoForm({
                 ...editPhotoForm,
-                judges: cleaned,
+                judges: val,
               });
             }}
             renderInput={(params) => (
@@ -1946,7 +1832,16 @@ export const PersonDetailsPage = () => {
                 {...params}
                 label="Juízes da Foto"
                 placeholder={
-                  editPhotoForm.judges?.length ? "" : "Selecione ou digite"
+                  editPhotoForm.judges?.length
+                    ? ""
+                    : activeSeason?.judges?.length
+                      ? "Selecione os juízes"
+                      : "Nenhum juiz cadastrado no evento"
+                }
+                helperText={
+                  activeSeason?.judges?.length
+                    ? "Selecione os juízes do evento vinculados a esta foto."
+                    : "Cadastre juízes no evento para poder selecioná-los aqui."
                 }
               />
             )}

@@ -321,38 +321,6 @@ export const ClientDetailsPage = () => {
                   minWidth: "160px",
                 }}
               />
-              <Autocomplete
-                multiple
-                freeSolo
-                options={activeSeason?.judges || []}
-                value={
-                  dog.judges ||
-                  (dog.judge
-                    ? dog.judge
-                        .split(",")
-                        .map((j) => j.trim())
-                        .filter(Boolean)
-                    : [])
-                }
-                onChange={(_, val) => {
-                  const cleaned = val.map((v) => v.trim()).filter(Boolean);
-                  updateDog(dIdx, "judges", cleaned);
-                  updateDog(dIdx, "judge", cleaned.join(", "));
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Juiz (Opcional)"
-                    placeholder={
-                      dog.judges?.length ? "" : "Selecione ou digite"
-                    }
-                  />
-                )}
-                sx={{
-                  flex: { xs: "1 1 100%", sm: "1 1 240px" },
-                  minWidth: "200px",
-                }}
-              />
               <TextField
                 type="number"
                 label="Competições Ganhas"
@@ -550,6 +518,32 @@ export const ClientDetailsPage = () => {
                     ))}
                   </Select>
                 </FormControl>
+                <Autocomplete
+                  multiple
+                  size="small"
+                  options={activeSeason?.judges || []}
+                  value={photo.judges || []}
+                  onChange={(_, val) => {
+                    updatePhoto(dIdx, pIdx, "judges", val);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Juízes"
+                      placeholder={
+                        photo.judges?.length
+                          ? ""
+                          : activeSeason?.judges?.length
+                            ? "Selecione juízes"
+                            : "Nenhum juiz no evento"
+                      }
+                    />
+                  )}
+                  sx={{
+                    flex: { xs: "1 1 100%", sm: "1 1 200px" },
+                    minWidth: "180px",
+                  }}
+                />
                 <FormControl
                   size="small"
                   required
