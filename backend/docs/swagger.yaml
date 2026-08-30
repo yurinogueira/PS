@@ -1188,6 +1188,38 @@ paths:
       summary: Baixar arquivo de relatório gerado
       tags:
       - Reports
+  /api/v1/reports/paid-clients-csv:
+    post:
+      description: Inicia a extração assíncrona do relatório de clientes e fotos com
+        pagamentos confirmados (pagos) do tenant autenticado e envia o link para o
+        e-mail cadastrado
+      parameters:
+      - description: ID do evento para filtrar o relatório
+        in: query
+        name: season_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/httpx.SuccessEnvelope'
+        "401":
+          description: Não autenticado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Tenant não associado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      summary: Exportar relatório CSV de clientes com pagamentos confirmados
+      tags:
+      - Reports
   /api/v1/reports/unpaid-clients-csv:
     post:
       description: Inicia a extração assíncrona do relatório de clientes e fotos com

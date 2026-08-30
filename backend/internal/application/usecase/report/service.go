@@ -509,6 +509,157 @@ func (s *Service) GenerateUnpaidClientsCSV(ctx context.Context, tenantID, season
 	return relativePath, nil
 }
 
+func (s *Service) GeneratePaidClientsCSV(ctx context.Context, tenantID, seasonID, userEmail, userName string) (string, error) {
+	if tenantID == "" {
+		return "", errors.New("tenant ID cannot be empty")
+	}
+
+	// 1. Fetch photographers to map IDs to names
+	photographersList, err := s.photographerRepo.List(ctx, tenantID)
+	if err != nil {
+		log.Printf("[REPORT] Failed to list photographers for tenant %s: %v", tenantID, err)
+		photographersList = nil
+	}
+	photogMap := make(map[string]string)
+	for _, p := range photographersList {
+		photogMap[p.ID] = p.Name
+	}
+
+	// 2. Cache persons dynamically during stream to avoid repeated identical queries
+	personCache := make(map[string]*persondomain.Person)
+
+	// 3. Prepare CSV buffer with UTF-8 BOM for Excel compatibility and headers
+	var buf bytes.Buffer
+	buf.WriteString("\xEF\xBB\xBF")
+	writer := csv.NewWriter(&buf)
+
+	headers := []string{
+		"Nome",
+		"E-mail",
+		"E-mail alternativo",
+		"Telefone",
+		"Dono",
+		"Raça",
+		"Juiz",
+		"Competições Vencidas",
+		"Número do Arquivo da Foto",
+		"Fotografo",
+		"Forma de Pagamento",
+		"Valor Pago",
+		"Data da Foto",
+	}
+	if err := writer.Write(sanitizeRow(headers)); err != nil {
+		return "", fmt.Errorf("failed to write csv headers: %w", err)
+	}
+
+	// 4. Stream clients from MongoDB and filter paid photos
+	streamErr := s.clientRepo.StreamByTenant(ctx, tenantID, seasonID, func(c *clientdomain.SeasonClient) error {
+		var personObj *persondomain.Person
+		var ok bool
+
+		for _, dog := range c.Dogs {
+			isOwnerStr := formatIsOwner(dog.IsOwner)
+			var wonCompStr string
+			if len(dog.WonCompetitions) > 0 {
+				wonCompStr = strings.Join(dog.WonCompetitions, ", ")
+			} else if dog.CompetitionsWon > 0 {
+				wonCompStr = "Sim"
+			}
+
+			for _, photo := range dog.Photos {
+				normPay := NormalizePaymentMethod(photo.PaymentMethod)
+				if normPay == "Não pago" || normPay == "" {
+					continue
+				}
+
+				if personObj == nil {
+					personObj, ok = personCache[c.PersonID]
+					if !ok {
+						p, err := s.personRepo.GetByID(ctx, c.PersonID, tenantID)
+						if err != nil || p == nil {
+							p = &persondomain.Person{
+								Name: "Desconhecido",
+							}
+						}
+						personCache[c.PersonID] = p
+						personObj = p
+					}
+				}
+
+				var photographerName string
+				if name, exists := photogMap[photo.PhotographerID]; exists && name != "" {
+					photographerName = name
+				} else {
+					photographerName = photo.PhotographerID
+				}
+
+				var amountPaid string
+				if photo.AmountPaid != nil {
+					amountPaid = fmt.Sprintf("%.2f", *photo.AmountPaid)
+				}
+
+				photoDate := formatPhotoDate(&photo, c.CreatedAt)
+				judgeStr := formatJudges(&photo)
+
+				row := []string{
+					personObj.Name,
+					personObj.Email,
+					personObj.AlternativeEmail,
+					FormatPhone(personObj.Phone),
+					isOwnerStr,
+					dog.Breed,
+					judgeStr,
+					wonCompStr,
+					photo.FileNumber,
+					photographerName,
+					normPay,
+					amountPaid,
+					photoDate,
+				}
+				if err := writer.Write(sanitizeRow(row)); err != nil {
+					return err
+				}
+			}
+		}
+
+		writer.Flush()
+		return writer.Error()
+	})
+
+	if streamErr != nil {
+		return "", fmt.Errorf("error during client streaming: %w", streamErr)
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return "", fmt.Errorf("error finishing csv writer: %w", err)
+	}
+
+	// 5. Store generated CSV in Storage Provider with isolated tenant path
+	timestamp := time.Now().UTC().Unix()
+	fileName := fmt.Sprintf("clientes_pagos_%d.csv", timestamp)
+	relativePath := fmt.Sprintf("reports/tenant_%s/%s", tenantID, fileName)
+
+	_, err = s.storageProvider.Save(ctx, relativePath, storageport.File{
+		Name:        fileName,
+		Data:        buf.Bytes(),
+		ContentType: "text/csv; charset=utf-8",
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to save report to storage: %w", err)
+	}
+
+	// 6. Send notification email with download link if userEmail is provided
+	if userEmail != "" {
+		downloadURL := fmt.Sprintf("%s/reports/download?file=%s", s.appBaseURL, url.QueryEscape(relativePath))
+		if err := s.emailSender.SendReportReadyEmail(ctx, userEmail, userName, "Relatório de Clientes Pagos", downloadURL); err != nil {
+			log.Printf("[REPORT-EMAIL-ERROR] Failed to send report ready email to %s: %v", userEmail, err)
+		}
+	}
+
+	return relativePath, nil
+}
+
 func renderPdfRow(pdf *fpdf.Fpdf, tr func(string) string, colWidths []float64, rowVals []string, aligns []string, lineHeight float64, pageHeight float64, bottomMargin float64) {
 	if tr == nil {
 		tr = func(s string) string { return s }
