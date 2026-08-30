@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -34,6 +34,7 @@ import {
   clientService,
   SeasonClient,
   Photo,
+  Dog,
 } from "../../../services/api/client.service";
 import { personService, Person } from "../../../services/api/person.service";
 import {
@@ -70,7 +71,7 @@ export const ClientDetailsPage = () => {
     severity: "success",
   });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!id) return;
     try {
       const c = await clientService.getById(id);
@@ -85,11 +86,11 @@ export const ClientDetailsPage = () => {
       console.error(e);
       navigate("/clients");
     }
-  };
+  }, [id, navigate]);
 
   useEffect(() => {
     load();
-  }, [id]);
+  }, [load]);
 
   const handleSave = async () => {
     if (!client || !id) return;
@@ -175,7 +176,11 @@ export const ClientDetailsPage = () => {
     setClient({ ...client, dogs: newDogs });
   };
 
-  const updateDog = (index: number, field: string, value: any) => {
+  const updateDog = <K extends keyof Dog>(
+    index: number,
+    field: K,
+    value: Dog[K],
+  ) => {
     if (!client) return;
     const newDogs = [...client.dogs];
     newDogs[index] = { ...newDogs[index], [field]: value };
@@ -205,11 +210,11 @@ export const ClientDetailsPage = () => {
     setClient({ ...client, dogs: newDogs });
   };
 
-  const updatePhoto = (
+  const updatePhoto = <K extends keyof Photo>(
     dogIndex: number,
     photoIndex: number,
-    field: string,
-    value: any,
+    field: K,
+    value: Photo[K],
   ) => {
     if (!client) return;
     const newDogs = [...client.dogs];

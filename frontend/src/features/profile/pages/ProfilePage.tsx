@@ -10,7 +10,6 @@ import {
   Stack,
   Alert,
   Chip,
-  LinearProgress,
   Divider,
   InputAdornment,
   IconButton,

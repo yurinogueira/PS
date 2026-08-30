@@ -41,11 +41,12 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
         const seasonList = data || [];
         setSeasons(seasonList);
         if (seasonList.length > 0) {
-          if (!activeSeason) {
+          const currentActive = useSeasonStore.getState().activeSeason;
+          if (!currentActive) {
             setActiveSeason(seasonList[0]);
           } else {
             // Keep active season updated with latest judges
-            const found = seasonList.find((x) => x.id === activeSeason.id);
+            const found = seasonList.find((x) => x.id === currentActive.id);
             if (found) {
               setActiveSeason(found);
             }

@@ -111,11 +111,12 @@ export const DashboardPage = () => {
           "Processamento do relatório iniciado! O link do arquivo CSV será enviado para o seu e-mail cadastrado.",
         severity: "success",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } };
       setSnackbar({
         open: true,
         message:
-          err?.response?.data?.message ||
+          errorObj?.response?.data?.message ||
           "Erro ao solicitar exportação do relatório CSV.",
         severity: "error",
       });
@@ -136,11 +137,12 @@ export const DashboardPage = () => {
           "Processamento do relatório em PDF iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
         severity: "success",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } };
       setSnackbar({
         open: true,
         message:
-          err?.response?.data?.message ||
+          errorObj?.response?.data?.message ||
           "Erro ao solicitar exportação do relatório PDF.",
         severity: "error",
       });
@@ -161,11 +163,12 @@ export const DashboardPage = () => {
           "Processamento do relatório iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
         severity: "success",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } };
       setSnackbar({
         open: true,
         message:
-          err?.response?.data?.message ||
+          errorObj?.response?.data?.message ||
           "Erro ao solicitar exportação do relatório.",
         severity: "error",
       });

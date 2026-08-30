@@ -21,7 +21,7 @@ export function PendingApprovalPage() {
   const handleLogout = async () => {
     try {
       await authService.logout();
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       clearAuth();

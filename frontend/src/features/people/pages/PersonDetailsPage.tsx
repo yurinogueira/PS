@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -188,7 +188,7 @@ export const PersonDetailsPage = () => {
     setSnackbar({ open: true, message, severity });
   };
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     try {
@@ -221,11 +221,11 @@ export const PersonDetailsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, activeSeason]);
 
   useEffect(() => {
     loadData();
-  }, [id, activeSeason?.id]);
+  }, [loadData]);
 
   // Ensure selected dog index is within bounds
   const dogsList = client?.dogs || [];
