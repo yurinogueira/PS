@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -85,7 +85,7 @@ export const ClientsPage = () => {
     severity: "success",
   });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!activeSeason) return;
     const [cRes, pData, photogData] = await Promise.all([
       clientService.list({ season_id: activeSeason.id, limit: 100 }),
@@ -95,11 +95,11 @@ export const ClientsPage = () => {
     setClients(cRes?.data || []);
     setPeople(pData || []);
     setPhotographers(photogData || []);
-  };
+  }, [activeSeason]);
 
   useEffect(() => {
     load();
-  }, [activeSeason]);
+  }, [load]);
 
   const handleSave = async () => {
     if (!activeSeason) return;
@@ -158,7 +158,11 @@ export const ClientsPage = () => {
     setDogs(newDogs);
   };
 
-  const updateDog = (index: number, field: string, value: any) => {
+  const updateDog = <K extends keyof Dog>(
+    index: number,
+    field: K,
+    value: Dog[K],
+  ) => {
     const newDogs = [...dogs];
     newDogs[index] = { ...newDogs[index], [field]: value };
     setDogs(newDogs);
@@ -185,11 +189,11 @@ export const ClientsPage = () => {
     setDogs(newDogs);
   };
 
-  const updatePhoto = (
+  const updatePhoto = <K extends keyof Photo>(
     dogIndex: number,
     photoIndex: number,
-    field: string,
-    value: any,
+    field: K,
+    value: Photo[K],
   ) => {
     const newDogs = [...dogs];
     newDogs[dogIndex].photos[photoIndex] = {
@@ -217,11 +221,12 @@ export const ClientsPage = () => {
           "Processamento do relatório iniciado! O link do arquivo CSV será enviado para o seu e-mail cadastrado.",
         severity: "success",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } };
       setSnackbar({
         open: true,
         message:
-          err?.response?.data?.message ||
+          errorObj?.response?.data?.message ||
           "Erro ao solicitar exportação do relatório CSV.",
         severity: "error",
       });
@@ -242,11 +247,12 @@ export const ClientsPage = () => {
           "Processamento do relatório em PDF iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
         severity: "success",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } };
       setSnackbar({
         open: true,
         message:
-          err?.response?.data?.message ||
+          errorObj?.response?.data?.message ||
           "Erro ao solicitar exportação do relatório PDF.",
         severity: "error",
       });
@@ -267,11 +273,12 @@ export const ClientsPage = () => {
           "Processamento do relatório iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
         severity: "success",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } };
       setSnackbar({
         open: true,
         message:
-          err?.response?.data?.message ||
+          errorObj?.response?.data?.message ||
           "Erro ao solicitar exportação do relatório.",
         severity: "error",
       });

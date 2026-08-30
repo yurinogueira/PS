@@ -267,7 +267,11 @@ func TestGenerateClientsCSV_FullExpansionAndRules(t *testing.T) {
 		t.Fatalf("CSV data not saved in storage")
 	}
 
-	reader := csv.NewReader(bytes.NewReader(csvData))
+	if !bytes.HasPrefix(csvData, []byte("\xEF\xBB\xBF")) {
+		t.Fatalf("expected UTF-8 BOM at start of CSV file")
+	}
+
+	reader := csv.NewReader(bytes.NewReader(bytes.TrimPrefix(csvData, []byte("\xEF\xBB\xBF"))))
 	records, err := reader.ReadAll()
 	if err != nil {
 		t.Fatalf("failed to read parsed CSV records: %v", err)
@@ -618,7 +622,7 @@ func TestGenerateUnpaidClientsCSV(t *testing.T) {
 		t.Fatalf("CSV not saved in storage")
 	}
 
-	reader := csv.NewReader(bytes.NewReader(csvData))
+	reader := csv.NewReader(bytes.NewReader(bytes.TrimPrefix(csvData, []byte("\xEF\xBB\xBF"))))
 	records, err := reader.ReadAll()
 	if err != nil {
 		t.Fatalf("failed to parse CSV: %v", err)
@@ -725,7 +729,7 @@ func TestGenerateReports_FilterBySeasonID(t *testing.T) {
 	}
 
 	csvData := storage.files[filePath]
-	reader := csv.NewReader(bytes.NewReader(csvData))
+	reader := csv.NewReader(bytes.NewReader(bytes.TrimPrefix(csvData, []byte("\xEF\xBB\xBF"))))
 	records, err := reader.ReadAll()
 	if err != nil {
 		t.Fatalf("failed to read CSV records: %v", err)
@@ -746,5 +750,58 @@ func TestGenerateReports_FilterBySeasonID(t *testing.T) {
 	}
 	if len(pdfBytes) < 500 {
 		t.Fatalf("expected valid PDF bytes, got %d", len(pdfBytes))
+	}
+}
+
+func TestGenerateClientsPDF_MultiLineJudgesAndAccents(t *testing.T) {
+	tenantID := "tenant-accents"
+	amount := 250.0
+
+	clientRepo := &mockClientRepo{
+		clients: []*clientdomain.SeasonClient{
+			{
+				ID:       "client-1",
+				TenantID: tenantID,
+				PersonID: "person-1",
+				Dogs: []clientdomain.Dog{
+					{
+						Breed: "Pastor Alemão Capa Preta com Pedigree",
+						WonCompetitions: []string{
+							"Melhor Filhote Américas e Caribe 2026 - Exposição Internacional",
+							"Campeão Adulto Nacional de Criação",
+						},
+						Photos: []clientdomain.Photo{
+							{
+								FileNumber:     "IMG_9999",
+								PaymentMethod:  "Cartão de Crédito",
+								AmountPaid:     &amount,
+								Judges:         []string{"Dr. Thiago Lopes Moreira", "Norberto da Silva Castro", "José Maurício Medeiros Júnior"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	personRepo := &mockPersonRepo{
+		people: map[string]*persondomain.Person{
+			"person-1": {
+				ID:    "person-1",
+				Name:  "João da Silva Conceição & Família",
+				Email: "joao.conceicao@exemplo.com.br",
+				Phone: "11988887777",
+			},
+		},
+	}
+
+	svc := NewService(clientRepo, personRepo, &mockPhotographerRepo{}, &mockStorageProvider{}, &mockEmailSender{}, "http://localhost:8080")
+
+	pdfBytes, err := svc.GenerateDirectClientsPDF(context.Background(), tenantID, "")
+	if err != nil {
+		t.Fatalf("unexpected error generating PDF with accents: %v", err)
+	}
+	if !bytes.HasPrefix(pdfBytes, []byte("%PDF-")) {
+		t.Fatalf("expected PDF magic header %%PDF-")
 	}
 }

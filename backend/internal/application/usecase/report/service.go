@@ -136,6 +136,13 @@ func formatJudges(photo *clientdomain.Photo) string {
 	return strings.Join(photo.Judges, ", ")
 }
 
+func formatJudgesPDF(photo *clientdomain.Photo) string {
+	if photo == nil || len(photo.Judges) == 0 {
+		return ""
+	}
+	return strings.Join(photo.Judges, "\n")
+}
+
 func formatIsOwner(isOwner *bool) string {
 	if isOwner != nil {
 		if *isOwner {
@@ -175,8 +182,9 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, seasonID, us
 	// 2. Cache persons dynamically during stream to avoid repeated identical queries
 	personCache := make(map[string]*persondomain.Person)
 
-	// 3. Prepare CSV buffer with updated headers
+	// 3. Prepare CSV buffer with UTF-8 BOM for Excel compatibility and updated headers
 	var buf bytes.Buffer
+	buf.WriteString("\xEF\xBB\xBF")
 	writer := csv.NewWriter(&buf)
 
 	headers := []string{
@@ -379,8 +387,9 @@ func (s *Service) GenerateUnpaidClientsCSV(ctx context.Context, tenantID, season
 	// 2. Cache persons dynamically during stream to avoid repeated identical queries
 	personCache := make(map[string]*persondomain.Person)
 
-	// 3. Prepare CSV buffer with headers
+	// 3. Prepare CSV buffer with UTF-8 BOM for Excel compatibility and headers
 	var buf bytes.Buffer
+	buf.WriteString("\xEF\xBB\xBF")
 	writer := csv.NewWriter(&buf)
 
 	headers := []string{
@@ -500,18 +509,90 @@ func (s *Service) GenerateUnpaidClientsCSV(ctx context.Context, tenantID, season
 	return relativePath, nil
 }
 
-func fitPdfText(pdf *fpdf.Fpdf, text string, maxWidth float64) string {
-	if pdf.GetStringWidth(text) <= maxWidth {
-		return text
+func renderPdfRow(pdf *fpdf.Fpdf, tr func(string) string, colWidths []float64, rowVals []string, aligns []string, lineHeight float64, pageHeight float64, bottomMargin float64) {
+	if tr == nil {
+		tr = func(s string) string { return s }
 	}
-	runes := []rune(text)
-	for len(runes) > 0 && pdf.GetStringWidth(string(runes)+"...") > maxWidth {
-		runes = runes[:len(runes)-1]
+
+	numCols := len(colWidths)
+	colLines := make([][]string, numCols)
+	maxLines := 1
+
+	for i := 0; i < numCols; i++ {
+		val := ""
+		if i < len(rowVals) {
+			val = rowVals[i]
+		}
+		if strings.TrimSpace(val) == "" {
+			colLines[i] = []string{""}
+			continue
+		}
+
+		usableWidth := colWidths[i] - 2.0
+		if usableWidth < 1.0 {
+			usableWidth = colWidths[i]
+		}
+
+		var lines []string
+		rawParts := strings.Split(val, "\n")
+		for _, part := range rawParts {
+			trimmedPart := strings.TrimSpace(part)
+			if trimmedPart == "" {
+				lines = append(lines, "")
+				continue
+			}
+			translated := tr(trimmedPart)
+			splitLines := pdf.SplitLines([]byte(translated), usableWidth)
+			if len(splitLines) == 0 {
+				lines = append(lines, translated)
+			} else {
+				for _, sl := range splitLines {
+					lines = append(lines, string(sl))
+				}
+			}
+		}
+
+		if len(lines) == 0 {
+			lines = []string{""}
+		}
+		colLines[i] = lines
+		if len(lines) > maxLines {
+			maxLines = len(lines)
+		}
 	}
-	if len(runes) == 0 {
-		return ""
+
+	rowHeight := float64(maxLines) * lineHeight
+
+	// Check page break (210mm A4 landscape - bottomMargin)
+	if pdf.GetY()+rowHeight > (pageHeight - bottomMargin) {
+		pdf.AddPage()
 	}
-	return string(runes) + "..."
+
+	startX := pdf.GetX()
+	startY := pdf.GetY()
+
+	// Draw each cell
+	currentX := startX
+	for i := 0; i < numCols; i++ {
+		align := "L"
+		if i < len(aligns) && aligns[i] != "" {
+			align = aligns[i]
+		}
+
+		// Draw border box
+		pdf.Rect(currentX, startY, colWidths[i], rowHeight, "D")
+
+		// Render text lines inside the cell
+		for lIdx, lineText := range colLines[i] {
+			pdf.SetXY(currentX+1.0, startY+float64(lIdx)*lineHeight)
+			pdf.CellFormat(colWidths[i]-2.0, lineHeight, lineText, "", 0, align, false, 0, "")
+		}
+
+		currentX += colWidths[i]
+	}
+
+	// Move cursor to bottom of the row
+	pdf.SetXY(startX, startY+rowHeight)
 }
 
 func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string) ([]byte, error) {
@@ -553,11 +634,13 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string
 	pdf.SetAutoPageBreak(true, 12)
 	tr := pdf.UnicodeTranslatorFromDescriptor("")
 
-	colWidths := []float64{32, 40, 24, 24, 12, 32, 38, 16, 23, 18, 18}
+	// Columns without "Dono" (Total = 277mm)
+	colWidths := []float64{32, 42, 24, 30, 36, 42, 16, 22, 16, 17}
 	colHeaders := []string{
-		"Nome", "E-mail", "Telefone", "Raça", "Dono", "Juiz",
+		"Nome", "E-mail", "Telefone", "Raça", "Juiz",
 		"Competições Vencidas", "Arquivo", "Forma de Pagamento", "Valor Pago", "Data da Foto",
 	}
+	aligns := []string{"L", "L", "L", "L", "L", "L", "C", "C", "C", "C"}
 
 	pdf.SetHeaderFunc(func() {
 		pdf.SetFont("Arial", "B", 12)
@@ -577,7 +660,7 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string
 
 		for i, h := range colHeaders {
 			align := "L"
-			if i == 4 || i == 7 || i == 9 || i == 10 {
+			if aligns[i] == "C" {
 				align = "C"
 			}
 			pdf.CellFormat(colWidths[i], 6.5, tr(h), "1", 0, align, true, 0, "")
@@ -610,6 +693,11 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string
 	pdf.SetFont("Arial", "", 7)
 	pdf.SetDrawColor(226, 232, 240) // border color #e2e8f0
 	pdf.SetLineWidth(0.15)
+	pdf.SetTextColor(30, 41, 59)
+
+	lineHeight := 4.2
+	pageHeight := 210.0
+	bottomMargin := 12.0
 
 	for cIdx, client := range clients {
 		p := personCache[client.PersonID]
@@ -619,23 +707,13 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string
 		formattedPhone := FormatPhone(p.Phone)
 
 		if len(client.Dogs) == 0 {
-			pdf.SetTextColor(15, 23, 42)
 			rowVals := []string{
 				p.Name, p.Email, formattedPhone,
-				"-", "-", "-", "-", "-", "-", "-", "-",
+				"-", "-", "-", "-", "-", "-", "-",
 			}
-			for i, val := range rowVals {
-				align := "L"
-				if i == 4 || i == 7 || i == 9 || i == 10 {
-					align = "C"
-				}
-				fitted := fitPdfText(pdf, tr(val), colWidths[i]-2)
-				pdf.CellFormat(colWidths[i], 5.5, fitted, "1", 0, align, false, 0, "")
-			}
-			pdf.Ln(-1)
+			renderPdfRow(pdf, tr, colWidths, rowVals, aligns, lineHeight, pageHeight, bottomMargin)
 		} else {
 			for dIdx, dog := range client.Dogs {
-				isOwnerStr := formatIsOwner(dog.IsOwner)
 				wonComps := dog.WonCompetitions
 				if len(wonComps) == 0 && dog.CompetitionsWon > 0 {
 					wonComps = []string{"Sim"}
@@ -647,7 +725,7 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string
 				}
 
 				for rIdx := 0; rIdx < totalRows; rIdx++ {
-					var colName, colEmail, colPhone, colBreed, colOwner, colJudge, colComp, colFile, colPayment, colAmount, colDate string
+					var colName, colEmail, colPhone, colBreed, colJudge, colComp, colFile, colPayment, colAmount, colDate string
 
 					// Show person info only on the very first row of the very first dog for this client
 					if dIdx == 0 && rIdx == 0 {
@@ -656,10 +734,9 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string
 						colPhone = formattedPhone
 					}
 
-					// Show dog info only on the first row of this dog
+					// Show dog breed only on the first row of this dog
 					if rIdx == 0 {
 						colBreed = dog.Breed
-						colOwner = isOwnerStr
 					}
 
 					// Won competition on current row index
@@ -676,47 +753,29 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string
 							colAmount = fmt.Sprintf("R$ %.2f", *photo.AmountPaid)
 						}
 						colDate = formatPhotoDate(&photo, client.CreatedAt)
-						colJudge = formatJudges(&photo)
+						colJudge = formatJudgesPDF(&photo)
 					}
 
-					pdf.SetTextColor(30, 41, 59)
 					rowVals := []string{
 						colName, colEmail, colPhone,
-						colBreed, colOwner, colJudge,
+						colBreed, colJudge,
 						colComp, colFile, colPayment, colAmount, colDate,
 					}
 
-					for i, val := range rowVals {
-						align := "L"
-						if i == 4 || i == 7 || i == 9 || i == 10 {
-							align = "C"
-						}
-						fitted := fitPdfText(pdf, tr(val), colWidths[i]-2)
-						pdf.CellFormat(colWidths[i], 5.5, fitted, "1", 0, align, false, 0, "")
-					}
-					pdf.Ln(-1)
-				}
-
-				// Draw a subtle line between dogs of the same client
-				if dIdx < len(client.Dogs)-1 {
-					pdf.SetDrawColor(203, 213, 225)
-					pdf.SetLineWidth(0.1)
-					x := pdf.GetX()
-					y := pdf.GetY()
-					pdf.Line(x+colWidths[0]+colWidths[1]+colWidths[2], y, x+277, y)
-					pdf.SetDrawColor(226, 232, 240)
-					pdf.SetLineWidth(0.15)
+					renderPdfRow(pdf, tr, colWidths, rowVals, aligns, lineHeight, pageHeight, bottomMargin)
 				}
 			}
 		}
 
-		// Draw a solid divider line between distinct clients
+		// Draw a solid divider line between distinct clients if not at the end
 		if cIdx < len(clients)-1 {
 			pdf.SetDrawColor(100, 116, 139)
 			pdf.SetLineWidth(0.35)
 			x := pdf.GetX()
 			y := pdf.GetY()
-			pdf.Line(x, y, x+277, y)
+			if y < (pageHeight - bottomMargin) {
+				pdf.Line(x, y, x+277, y)
+			}
 			pdf.SetDrawColor(226, 232, 240)
 			pdf.SetLineWidth(0.15)
 		}
