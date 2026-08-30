@@ -29,6 +29,7 @@ import {
   MenuItem,
   ListItemIcon,
   Snackbar,
+  Tooltip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
@@ -52,6 +53,7 @@ import {
 import { personService, Person } from "../../../services/api/person.service";
 import { reportService } from "../../../services/api/report.service";
 import { useSeasonStore } from "../../../store/seasonStore";
+import { useTenantStore } from "../../../store/tenantStore";
 import { LinkClientModal } from "../../clients/components/LinkClientModal";
 import { ClientDetailsModal } from "../../clients/components/ClientDetailsModal";
 import { formatPhone, maskPhone } from "../../../utils/phone";
@@ -59,6 +61,40 @@ import { formatPhone, maskPhone } from "../../../utils/phone";
 export const DashboardPage = () => {
   const navigate = useNavigate();
   const { activeSeason } = useSeasonStore();
+  const { tenantStatus } = useTenantStore();
+
+  const isWriteBlocked = Boolean(
+    tenantStatus?.isUnpaid || tenantStatus?.isTrialExpired,
+  );
+
+  const isReportsBlocked = Boolean(
+    tenantStatus?.isUnpaid ||
+    tenantStatus?.isTrialExpired ||
+    tenantStatus?.clientLimitExceeded,
+  );
+
+  const getWriteBlockedReason = () => {
+    if (tenantStatus?.isUnpaid) {
+      return "Acesso suspenso por pendência de pagamento.";
+    }
+    if (tenantStatus?.isTrialExpired) {
+      return "Período de teste gratuito expirado.";
+    }
+    return "";
+  };
+
+  const getReportsBlockedReason = () => {
+    if (tenantStatus?.isUnpaid) {
+      return "Acesso suspenso por pendência de pagamento.";
+    }
+    if (tenantStatus?.isTrialExpired) {
+      return "Período de teste gratuito expirado.";
+    }
+    if (tenantStatus?.clientLimitExceeded) {
+      return "Limite de clientes cadastrados no plano atual excedido.";
+    }
+    return "";
+  };
 
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<SeasonClient[]>([]);
@@ -422,32 +458,36 @@ export const DashboardPage = () => {
                 }}
               />
             )}
-            <Button
-              variant="outlined"
-              startIcon={
-                exportingReport ? (
-                  <CircularProgress size={16} color="inherit" />
-                ) : (
-                  <AssessmentIcon />
-                )
-              }
-              endIcon={<ExpandMoreIcon />}
-              onClick={(e) => setReportMenuAnchor(e.currentTarget)}
-              disabled={exportingReport}
-              sx={{
-                borderColor: "rgba(255,255,255,0.4)",
-                color: "white",
-                "&:hover": {
-                  borderColor: "white",
-                  bgcolor: "rgba(255,255,255,0.08)",
-                },
-                borderRadius: 2,
-                textTransform: "none",
-                fontWeight: 600,
-              }}
-            >
-              {exportingReport ? "Gerando..." : "Relatórios"}
-            </Button>
+            <Tooltip title={isReportsBlocked ? getReportsBlockedReason() : ""}>
+              <span>
+                <Button
+                  variant="outlined"
+                  startIcon={
+                    exportingReport ? (
+                      <CircularProgress size={16} color="inherit" />
+                    ) : (
+                      <AssessmentIcon />
+                    )
+                  }
+                  endIcon={<ExpandMoreIcon />}
+                  onClick={(e) => setReportMenuAnchor(e.currentTarget)}
+                  disabled={exportingReport || isReportsBlocked}
+                  sx={{
+                    borderColor: "rgba(255,255,255,0.4)",
+                    color: "white",
+                    "&:hover": {
+                      borderColor: "white",
+                      bgcolor: "rgba(255,255,255,0.08)",
+                    },
+                    borderRadius: 2,
+                    textTransform: "none",
+                    fontWeight: 600,
+                  }}
+                >
+                  {exportingReport ? "Gerando..." : "Relatórios"}
+                </Button>
+              </span>
+            </Tooltip>
             <Menu
               anchorEl={reportMenuAnchor}
               open={Boolean(reportMenuAnchor)}
@@ -768,37 +808,46 @@ export const DashboardPage = () => {
                   },
                 }}
               />
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setLinkModalOpen(true)}
-                disabled={!activeSeason}
-                sx={{
-                  bgcolor: "primary.main",
-                  "&:hover": { bgcolor: "primary.dark" },
-                  borderRadius: 2,
-                  textTransform: "none",
-                  fontWeight: 700,
-                  px: 2,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Vincular Cliente
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<PersonAddAlt1Icon />}
-                onClick={() => setNewPersonOpen(true)}
-                sx={{
-                  borderRadius: 2,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  px: 2,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Nova Pessoa
-              </Button>
+              <Tooltip title={isWriteBlocked ? getWriteBlockedReason() : ""}>
+                <span>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setLinkModalOpen(true)}
+                    disabled={!activeSeason || isWriteBlocked}
+                    sx={{
+                      bgcolor: "primary.main",
+                      "&:hover": { bgcolor: "primary.dark" },
+                      borderRadius: 2,
+                      textTransform: "none",
+                      fontWeight: 700,
+                      px: 2,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Vincular Cliente
+                  </Button>
+                </span>
+              </Tooltip>
+              <Tooltip title={isWriteBlocked ? getWriteBlockedReason() : ""}>
+                <span>
+                  <Button
+                    variant="outlined"
+                    startIcon={<PersonAddAlt1Icon />}
+                    onClick={() => setNewPersonOpen(true)}
+                    disabled={isWriteBlocked}
+                    sx={{
+                      borderRadius: 2,
+                      textTransform: "none",
+                      fontWeight: 600,
+                      px: 2,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Nova Pessoa
+                  </Button>
+                </span>
+              </Tooltip>
             </Box>
           </Box>
 

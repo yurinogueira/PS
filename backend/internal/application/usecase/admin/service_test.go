@@ -40,6 +40,14 @@ func (m *mockTenantRepo) List(ctx context.Context) ([]domaintenant.Tenant, error
 	return res, nil
 }
 
+func (m *mockTenantRepo) Update(ctx context.Context, t domaintenant.Tenant) (domaintenant.Tenant, error) {
+	if _, ok := m.items[t.Name]; !ok {
+		return domaintenant.Tenant{}, adminusecase.ErrTenantNotFound
+	}
+	m.items[t.Name] = t
+	return t, nil
+}
+
 func TestAdminService(t *testing.T) {
 	userRepo := usermemory.NewRepository()
 	tenantRepo := newMockTenantRepo()

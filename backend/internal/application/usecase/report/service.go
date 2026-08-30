@@ -20,6 +20,7 @@ import (
 	personport "ps/internal/application/ports/person"
 	photographerport "ps/internal/application/ports/photographer"
 	storageport "ps/internal/application/ports/storage"
+	tenantport "ps/internal/application/ports/tenant"
 	clientdomain "ps/internal/domain/client"
 	persondomain "ps/internal/domain/person"
 )
@@ -35,6 +36,7 @@ type Service struct {
 	photographerRepo photographerport.Repository
 	storageProvider  storageport.Provider
 	emailSender      emailport.Sender
+	tenantValidator  tenantport.Validator
 	appBaseURL       string
 }
 
@@ -45,9 +47,14 @@ func NewService(
 	storageProvider storageport.Provider,
 	emailSender emailport.Sender,
 	appBaseURL string,
+	validator ...tenantport.Validator,
 ) *Service {
 	if appBaseURL == "" {
 		appBaseURL = "http://localhost:8080"
+	}
+	var tv tenantport.Validator
+	if len(validator) > 0 {
+		tv = validator[0]
 	}
 	return &Service{
 		clientRepo:       clientRepo,
@@ -55,6 +62,7 @@ func NewService(
 		photographerRepo: photographerRepo,
 		storageProvider:  storageProvider,
 		emailSender:      emailSender,
+		tenantValidator:  tv,
 		appBaseURL:       strings.TrimRight(appBaseURL, "/"),
 	}
 }
@@ -166,6 +174,12 @@ func formatPhotoDate(photo *clientdomain.Photo, clientCreatedAt time.Time) strin
 func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, seasonID, userEmail, userName string) (string, error) {
 	if tenantID == "" {
 		return "", errors.New("tenant ID cannot be empty")
+	}
+
+	if s.tenantValidator != nil {
+		if err := s.tenantValidator.ValidateCanExportReport(ctx, tenantID, seasonID); err != nil {
+			return "", err
+		}
 	}
 
 	// 1. Fetch photographers to map IDs to names
@@ -373,6 +387,12 @@ func (s *Service) GenerateUnpaidClientsCSV(ctx context.Context, tenantID, season
 		return "", errors.New("tenant ID cannot be empty")
 	}
 
+	if s.tenantValidator != nil {
+		if err := s.tenantValidator.ValidateCanExportReport(ctx, tenantID, seasonID); err != nil {
+			return "", err
+		}
+	}
+
 	// 1. Fetch photographers to map IDs to names
 	photographersList, err := s.photographerRepo.List(ctx, tenantID)
 	if err != nil {
@@ -512,6 +532,12 @@ func (s *Service) GenerateUnpaidClientsCSV(ctx context.Context, tenantID, season
 func (s *Service) GeneratePaidClientsCSV(ctx context.Context, tenantID, seasonID, userEmail, userName string) (string, error) {
 	if tenantID == "" {
 		return "", errors.New("tenant ID cannot be empty")
+	}
+
+	if s.tenantValidator != nil {
+		if err := s.tenantValidator.ValidateCanExportReport(ctx, tenantID, seasonID); err != nil {
+			return "", err
+		}
 	}
 
 	// 1. Fetch photographers to map IDs to names
@@ -751,6 +777,12 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string
 		return nil, errors.New("tenant ID cannot be empty")
 	}
 
+	if s.tenantValidator != nil {
+		if err := s.tenantValidator.ValidateCanExportReport(ctx, tenantID, seasonID); err != nil {
+			return nil, err
+		}
+	}
+
 	// Fetch photographers
 	photographersList, err := s.photographerRepo.List(ctx, tenantID)
 	if err != nil {
@@ -969,11 +1001,24 @@ func (s *Service) GenerateClientsPDF(ctx context.Context, tenantID, seasonID, us
 	return relativePath, nil
 }
 
+func (s *Service) ValidateAccess(ctx context.Context, tenantID, seasonID string) error {
+	if s.tenantValidator != nil {
+		return s.tenantValidator.ValidateCanExportReport(ctx, tenantID, seasonID)
+	}
+	return nil
+}
+
 func (s *Service) GenerateDirectClientsPDF(ctx context.Context, tenantID, seasonID string) ([]byte, error) {
 	return s.buildClientsPDF(ctx, tenantID, seasonID)
 }
 
 func (s *Service) GetReportFile(ctx context.Context, tenantID, relativePath string) ([]byte, error) {
+	if s.tenantValidator != nil {
+		if err := s.tenantValidator.ValidateCanExportReport(ctx, tenantID, ""); err != nil {
+			return nil, err
+		}
+	}
+
 	cleanPath := filepath.Clean(strings.TrimPrefix(relativePath, "/"))
 	if strings.Contains(cleanPath, "..") {
 		return nil, ErrInvalidReportPath

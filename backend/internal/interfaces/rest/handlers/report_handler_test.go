@@ -49,6 +49,30 @@ func (m *mockReportClientRepo) Update(ctx context.Context, client *clientdomain.
 func (m *mockReportClientRepo) Delete(ctx context.Context, id, tenantID string) error {
 	return nil
 }
+func (m *mockReportClientRepo) CountBySeason(ctx context.Context, tenantID, seasonID string) (int64, error) {
+	var count int64
+	for _, c := range m.clients {
+		if c.TenantID == tenantID && (seasonID == "" || c.SeasonID == seasonID) {
+			count++
+		}
+	}
+	return count, nil
+}
+func (m *mockReportClientRepo) MaxClientsPerSeason(ctx context.Context, tenantID string) (int64, error) {
+	counts := make(map[string]int64)
+	for _, c := range m.clients {
+		if c.TenantID == tenantID {
+			counts[c.SeasonID]++
+		}
+	}
+	var maxCount int64
+	for _, cnt := range counts {
+		if cnt > maxCount {
+			maxCount = cnt
+		}
+	}
+	return maxCount, nil
+}
 func (m *mockReportClientRepo) DeleteBySeasonID(ctx context.Context, seasonID, tenantID string) error {
 	return nil
 }

@@ -8,6 +8,8 @@ vi.mock("../services/admin.service", () => ({
   adminService: {
     getTenants: vi.fn(),
     createTenant: vi.fn(),
+    updateTenantPlan: vi.fn(),
+    updateTenantPaymentStatus: vi.fn(),
   },
 }));
 
@@ -16,10 +18,20 @@ describe("AdminTenantsPage", () => {
     vi.clearAllMocks();
   });
 
-  it("renders tenants list successfully", async () => {
+  it("renders tenants list with plan and payment status successfully", async () => {
     vi.mocked(adminService.getTenants).mockResolvedValueOnce([
-      { name: "tenant-alpha", createdAt: "2026-08-28T00:00:00Z" },
-      { name: "tenant-beta", createdAt: "2026-08-28T01:00:00Z" },
+      {
+        name: "tenant-alpha",
+        plan: "free",
+        paymentStatus: "paid",
+        createdAt: "2026-08-28T00:00:00Z",
+      },
+      {
+        name: "tenant-beta",
+        plan: "standard",
+        paymentStatus: "unpaid",
+        createdAt: "2026-08-28T01:00:00Z",
+      },
     ]);
 
     render(
@@ -33,6 +45,10 @@ describe("AdminTenantsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("tenant-alpha")).toBeInTheDocument();
       expect(screen.getByText("tenant-beta")).toBeInTheDocument();
+      expect(screen.getByText("Gratuito (Trial)")).toBeInTheDocument();
+      expect(screen.getByText("Padrão")).toBeInTheDocument();
+      expect(screen.getByText("Em dia")).toBeInTheDocument();
+      expect(screen.getByText("Inadimplente")).toBeInTheDocument();
     });
   });
 

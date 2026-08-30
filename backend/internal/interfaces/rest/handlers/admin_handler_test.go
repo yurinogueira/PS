@@ -46,6 +46,14 @@ func (m *mockTenantRepo) List(ctx context.Context) ([]domaintenant.Tenant, error
 	return res, nil
 }
 
+func (m *mockTenantRepo) Update(ctx context.Context, t domaintenant.Tenant) (domaintenant.Tenant, error) {
+	if _, ok := m.items[t.Name]; !ok {
+		return domaintenant.Tenant{}, tenantusecase.ErrNotFound
+	}
+	m.items[t.Name] = t
+	return t, nil
+}
+
 func TestAdminHandler_Tenants(t *testing.T) {
 	tenantRepo := newMockTenantRepo()
 	userRepo := usermemory.NewRepository()
@@ -54,7 +62,7 @@ func TestAdminHandler_Tenants(t *testing.T) {
 	handler := handlers.NewAdminHandler(tenantSvc, adminSvc)
 
 	// 1. Create Tenant
-	body, _ := json.Marshal(map[string]string{"name": "alpha-tenant"})
+	body, _ := json.Marshal(map[string]string{"name": "alpha-tenant", "plan": "free", "paymentStatus": "paid"})
 	req := httptest.NewRequest("POST", "/api/v1/admin/tenants", bytes.NewReader(body))
 	rec := httptest.NewRecorder()
 	handler.CreateTenant(rec, req)
@@ -70,6 +78,28 @@ func TestAdminHandler_Tenants(t *testing.T) {
 
 	if recList.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", recList.Code)
+	}
+
+	// 3. Update Plan to Standard
+	planBody, _ := json.Marshal(map[string]string{"plan": "standard"})
+	reqPlan := httptest.NewRequest("PUT", "/api/v1/admin/tenants/alpha-tenant/plan", bytes.NewReader(planBody))
+	reqPlan.SetPathValue("name", "alpha-tenant")
+	recPlan := httptest.NewRecorder()
+	handler.UpdateTenantPlan(recPlan, reqPlan)
+
+	if recPlan.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d: %s", recPlan.Code, recPlan.Body.String())
+	}
+
+	// 4. Update Payment Status to Unpaid
+	payBody, _ := json.Marshal(map[string]string{"paymentStatus": "unpaid"})
+	reqPay := httptest.NewRequest("PUT", "/api/v1/admin/tenants/alpha-tenant/payment-status", bytes.NewReader(payBody))
+	reqPay.SetPathValue("name", "alpha-tenant")
+	recPay := httptest.NewRecorder()
+	handler.UpdateTenantPaymentStatus(recPay, reqPay)
+
+	if recPay.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d: %s", recPay.Code, recPay.Body.String())
 	}
 }
 

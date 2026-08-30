@@ -21,11 +21,19 @@ import {
   CircularProgress,
   Card,
   CardContent,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import PaymentRoundedIcon from "@mui/icons-material/PaymentRounded";
 import { adminService } from "../services/admin.service";
 import { Tenant } from "../types/admin.types";
 import { useDocumentTitle } from "../../shared/hooks/useDocumentTitle";
@@ -36,8 +44,26 @@ export const AdminTenantsPage = () => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Create Modal
   const [openCreate, setOpenCreate] = useState(false);
   const [tenantName, setTenantName] = useState("");
+  const [createPlan, setCreatePlan] = useState<"free" | "standard">("free");
+  const [createPaymentStatus, setCreatePaymentStatus] = useState<
+    "paid" | "unpaid"
+  >("paid");
+
+  // Plan Edit Modal
+  const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [newPlan, setNewPlan] = useState<"free" | "standard">("free");
+
+  // Payment Status Edit Modal
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [newPaymentStatus, setNewPaymentStatus] = useState<"paid" | "unpaid">(
+    "paid",
+  );
+
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -61,6 +87,8 @@ export const AdminTenantsPage = () => {
 
   const handleOpenCreate = () => {
     setTenantName("");
+    setCreatePlan("free");
+    setCreatePaymentStatus("paid");
     setErrorMessage(null);
     setSuccessMessage(null);
     setOpenCreate(true);
@@ -82,7 +110,11 @@ export const AdminTenantsPage = () => {
     setErrorMessage(null);
 
     try {
-      await adminService.createTenant({ name: clean });
+      await adminService.createTenant({
+        name: clean,
+        plan: createPlan,
+        paymentStatus: createPaymentStatus,
+      });
       setSuccessMessage(`Organização "${clean}" criada com sucesso.`);
       setOpenCreate(false);
       setTenantName("");
@@ -100,6 +132,73 @@ export const AdminTenantsPage = () => {
       setSubmitting(false);
     }
   };
+
+  const handleOpenPlanModal = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setNewPlan(tenant.plan || "free");
+    setPlanModalOpen(true);
+  };
+
+  const handleUpdatePlan = async () => {
+    if (!selectedTenant) return;
+    setSubmitting(true);
+    setErrorMessage(null);
+    try {
+      await adminService.updateTenantPlan(selectedTenant.name, {
+        plan: newPlan,
+      });
+      setSuccessMessage(
+        `Plano da organização "${selectedTenant.name}" atualizado para "${newPlan === "free" ? "Gratuito (Trial)" : "Padrão"}" com sucesso.`,
+      );
+      setPlanModalOpen(false);
+      await loadTenants();
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      setErrorMessage(
+        error.response?.data?.message || "Erro ao atualizar plano do tenant.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleOpenPaymentModal = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setNewPaymentStatus(tenant.paymentStatus || "paid");
+    setPaymentModalOpen(true);
+  };
+
+  const handleUpdatePaymentStatus = async () => {
+    if (!selectedTenant) return;
+    setSubmitting(true);
+    setErrorMessage(null);
+    try {
+      await adminService.updateTenantPaymentStatus(selectedTenant.name, {
+        paymentStatus: newPaymentStatus,
+      });
+      setSuccessMessage(
+        `Status de pagamento da organização "${selectedTenant.name}" atualizado para "${newPaymentStatus === "paid" ? "Em dia" : "Inadimplente"}".`,
+      );
+      setPaymentModalOpen(false);
+      await loadTenants();
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Erro ao atualizar status de pagamento.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const [now] = useState(() => Date.now());
 
   const filteredTenants = tenants.filter((t) =>
     t.name.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -129,8 +228,8 @@ export const AdminTenantsPage = () => {
             Organizações
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Gerencie e provisione as organizações para isolamento multi-tenant
-            da plataforma.
+            Gerencie organizações, planos de assinatura (Gratuito/Padrão),
+            expirações de trial e status financeiro.
           </Typography>
         </Box>
         <Button
@@ -223,20 +322,25 @@ export const AdminTenantsPage = () => {
           overflowX: "auto",
         }}
       >
-        <Table sx={{ minWidth: 500 }}>
+        <Table sx={{ minWidth: 700 }}>
           <TableHead sx={{ bgcolor: "grey.50" }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>
                 Nome da Organização
               </TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Plano</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Pagamento</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Expiração Trial</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Data de Criação</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+              <TableCell sx={{ fontWeight: 600, textAlign: "right" }}>
+                Ações
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={3} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                   <CircularProgress size={32} />
                   <Typography
                     variant="body2"
@@ -249,7 +353,7 @@ export const AdminTenantsPage = () => {
               </TableRow>
             ) : filteredTenants.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
                   <BusinessRoundedIcon
                     sx={{ fontSize: 48, color: "text.disabled", mb: 1 }}
                   />
@@ -264,46 +368,105 @@ export const AdminTenantsPage = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTenants.map((t) => (
-                <TableRow key={t.name} hover>
-                  <TableCell>
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
-                    >
+              filteredTenants.map((t) => {
+                const isFree = (t.plan || "free") === "free";
+                const isPaid = (t.paymentStatus || "paid") === "paid";
+                const expiresAt = t.planExpiresAt
+                  ? new Date(t.planExpiresAt)
+                  : null;
+                const isExpired =
+                  isFree && expiresAt && expiresAt.getTime() < now;
+
+                return (
+                  <TableRow key={t.name} hover>
+                    <TableCell>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                      >
+                        <Box
+                          sx={{
+                            bgcolor: "primary.50",
+                            color: "primary.main",
+                            p: 0.8,
+                            borderRadius: 1,
+                            display: "inline-flex",
+                          }}
+                        >
+                          <BusinessRoundedIcon fontSize="small" />
+                        </Box>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: 600 }}
+                        >
+                          {t.name}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={isFree ? "Gratuito (Trial)" : "Padrão"}
+                        size="small"
+                        color={isFree ? "default" : "primary"}
+                        variant={isFree ? "outlined" : "filled"}
+                        sx={{ fontWeight: 600 }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={isPaid ? "Em dia" : "Inadimplente"}
+                        size="small"
+                        color={isPaid ? "success" : "error"}
+                        variant="filled"
+                        sx={{ fontWeight: 600 }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {isFree
+                          ? expiresAt
+                            ? `${expiresAt.toLocaleDateString("pt-BR")} ${isExpired ? "(Expirado)" : ""}`
+                            : "14 dias (Trial)"
+                          : "Sem expiração"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {t.createdAt
+                          ? new Date(t.createdAt).toLocaleDateString("pt-BR")
+                          : "-"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
                       <Box
                         sx={{
-                          bgcolor: "primary.50",
-                          color: "primary.main",
-                          p: 0.8,
-                          borderRadius: 1,
-                          display: "inline-flex",
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: 1,
                         }}
                       >
-                        <BusinessRoundedIcon fontSize="small" />
+                        <Tooltip title="Alterar Plano">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleOpenPlanModal(t)}
+                          >
+                            <EditRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Alterar Status de Pagamento">
+                          <IconButton
+                            size="small"
+                            color={isPaid ? "default" : "error"}
+                            onClick={() => handleOpenPaymentModal(t)}
+                          >
+                            <PaymentRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                       </Box>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        {t.name}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {t.createdAt
-                        ? new Date(t.createdAt).toLocaleString("pt-BR")
-                        : "-"}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label="Ativo (Imutável)"
-                      size="small"
-                      color="success"
-                      variant="outlined"
-                      sx={{ fontWeight: 500 }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -345,6 +508,38 @@ export const AdminTenantsPage = () => {
               onChange={(e) => setTenantName(e.target.value.toLowerCase())}
               helperText="Apenas letras, números, hífens (-) e underscores (_)."
             />
+
+            <FormControl fullWidth size="small">
+              <InputLabel>Plano Inicial</InputLabel>
+              <Select
+                value={createPlan}
+                label="Plano Inicial"
+                onChange={(e) =>
+                  setCreatePlan(e.target.value as "free" | "standard")
+                }
+                disabled={submitting}
+              >
+                <MenuItem value="free">Gratuito (Trial de 14 dias)</MenuItem>
+                <MenuItem value="standard">
+                  Padrão (Ilimitado / Limite 300 clientes por evento)
+                </MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth size="small">
+              <InputLabel>Status de Pagamento</InputLabel>
+              <Select
+                value={createPaymentStatus}
+                label="Status de Pagamento"
+                onChange={(e) =>
+                  setCreatePaymentStatus(e.target.value as "paid" | "unpaid")
+                }
+                disabled={submitting}
+              >
+                <MenuItem value="paid">Em dia (Pago)</MenuItem>
+                <MenuItem value="unpaid">Inadimplente (Não pago)</MenuItem>
+              </Select>
+            </FormControl>
           </DialogContent>
           <DialogActions sx={{ p: 2.5 }}>
             <Button
@@ -367,6 +562,120 @@ export const AdminTenantsPage = () => {
             </Button>
           </DialogActions>
         </form>
+      </Dialog>
+
+      {/* Dialog Alterar Plano */}
+      <Dialog
+        open={planModalOpen}
+        onClose={() => !submitting && setPlanModalOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Alterar Plano</DialogTitle>
+        <DialogContent
+          sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Organização: <strong>{selectedTenant?.name}</strong>
+          </Typography>
+
+          <FormControl fullWidth size="small">
+            <InputLabel>Plano</InputLabel>
+            <Select
+              value={newPlan}
+              label="Plano"
+              onChange={(e) =>
+                setNewPlan(e.target.value as "free" | "standard")
+              }
+              disabled={submitting}
+            >
+              <MenuItem value="free">
+                Gratuito (Reinicia trial de 14 dias)
+              </MenuItem>
+              <MenuItem value="standard">Padrão</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button
+            onClick={() => setPlanModalOpen(false)}
+            disabled={submitting}
+            color="inherit"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleUpdatePlan}
+            variant="contained"
+            disabled={submitting}
+            startIcon={
+              submitting ? <CircularProgress size={16} /> : <EditRoundedIcon />
+            }
+            sx={{ fontWeight: 600 }}
+          >
+            {submitting ? "Salvando..." : "Salvar Plano"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog Alterar Status de Pagamento */}
+      <Dialog
+        open={paymentModalOpen}
+        onClose={() => !submitting && setPaymentModalOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          Alterar Status de Pagamento
+        </DialogTitle>
+        <DialogContent
+          sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Organização: <strong>{selectedTenant?.name}</strong>
+          </Typography>
+
+          <FormControl fullWidth size="small">
+            <InputLabel>Status de Pagamento</InputLabel>
+            <Select
+              value={newPaymentStatus}
+              label="Status de Pagamento"
+              onChange={(e) =>
+                setNewPaymentStatus(e.target.value as "paid" | "unpaid")
+              }
+              disabled={submitting}
+            >
+              <MenuItem value="paid">Em dia (Acesso Liberado)</MenuItem>
+              <MenuItem value="unpaid">
+                Inadimplente (Acesso e Escritas Bloqueados)
+              </MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button
+            onClick={() => setPaymentModalOpen(false)}
+            disabled={submitting}
+            color="inherit"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleUpdatePaymentStatus}
+            variant="contained"
+            disabled={submitting}
+            startIcon={
+              submitting ? (
+                <CircularProgress size={16} />
+              ) : (
+                <PaymentRoundedIcon />
+              )
+            }
+            sx={{ fontWeight: 600 }}
+          >
+            {submitting ? "Salvando..." : "Salvar Status"}
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

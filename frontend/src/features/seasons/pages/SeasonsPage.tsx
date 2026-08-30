@@ -34,9 +34,12 @@ import {
   Photographer,
 } from "../../../services/api/photographer.service";
 import { useSeasonStore } from "../../../store/seasonStore";
+import { useTenantStore } from "../../../store/tenantStore";
 
 export const SeasonsPage = () => {
   const { activeSeason, setActiveSeason } = useSeasonStore();
+  const { tenantStatus } = useTenantStore();
+
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
   const [open, setOpen] = useState(false);
@@ -50,6 +53,29 @@ export const SeasonsPage = () => {
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingSeason, setDeletingSeason] = useState<Season | null>(null);
+
+  const isCreateBlocked = Boolean(
+    tenantStatus?.isUnpaid ||
+    tenantStatus?.isTrialExpired ||
+    tenantStatus?.clientLimitExceeded,
+  );
+
+  const isWriteBlocked = Boolean(
+    tenantStatus?.isUnpaid || tenantStatus?.isTrialExpired,
+  );
+
+  const getCreateBlockedReason = () => {
+    if (tenantStatus?.isUnpaid) {
+      return "Acesso suspenso por pendência de pagamento.";
+    }
+    if (tenantStatus?.isTrialExpired) {
+      return "Período de teste gratuito expirado.";
+    }
+    if (tenantStatus?.clientLimitExceeded) {
+      return "Limite de clientes cadastrados no plano atual excedido.";
+    }
+    return "";
+  };
 
   const load = async () => {
     try {
@@ -69,6 +95,7 @@ export const SeasonsPage = () => {
   }, []);
 
   const handleOpenCreate = () => {
+    if (isCreateBlocked) return;
     setEditingId(null);
     setName("");
     setSelectedPhotographers([]);
@@ -78,6 +105,7 @@ export const SeasonsPage = () => {
   };
 
   const handleOpenEdit = (s: Season) => {
+    if (isWriteBlocked) return;
     setEditingId(s.id);
     setName(s.name);
     setSelectedPhotographers(s.photographer_ids || []);
@@ -126,6 +154,7 @@ export const SeasonsPage = () => {
   };
 
   const handleOpenDelete = (s: Season) => {
+    if (isWriteBlocked) return;
     setDeletingSeason(s);
     setDeleteConfirmOpen(true);
   };
@@ -167,14 +196,19 @@ export const SeasonsPage = () => {
         >
           Eventos
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleOpenCreate}
-          sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
-        >
-          Novo Evento
-        </Button>
+        <Tooltip title={isCreateBlocked ? getCreateBlockedReason() : ""}>
+          <span>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleOpenCreate}
+              disabled={isCreateBlocked}
+              sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
+            >
+              Novo Evento
+            </Button>
+          </span>
+        </Tooltip>
       </Box>
 
       <TableContainer
@@ -247,24 +281,44 @@ export const SeasonsPage = () => {
                       )}
                     </TableCell>
                     <TableCell align="right">
-                      <Tooltip title="Editar">
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          onClick={() => handleOpenEdit(s)}
-                          sx={{ mr: 1 }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
+                      <Tooltip
+                        title={
+                          isWriteBlocked
+                            ? "Ação bloqueada pelo status do plano/pagamento."
+                            : "Editar"
+                        }
+                      >
+                        <span>
+                          <IconButton
+                            aria-label="Editar"
+                            color="primary"
+                            size="small"
+                            onClick={() => handleOpenEdit(s)}
+                            disabled={isWriteBlocked}
+                            sx={{ mr: 1 }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </span>
                       </Tooltip>
-                      <Tooltip title="Excluir">
-                        <IconButton
-                          color="error"
-                          size="small"
-                          onClick={() => handleOpenDelete(s)}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                      <Tooltip
+                        title={
+                          isWriteBlocked
+                            ? "Ação bloqueada pelo status do plano/pagamento."
+                            : "Excluir"
+                        }
+                      >
+                        <span>
+                          <IconButton
+                            aria-label="Excluir"
+                            color="error"
+                            size="small"
+                            onClick={() => handleOpenDelete(s)}
+                            disabled={isWriteBlocked}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </span>
                       </Tooltip>
                     </TableCell>
                   </TableRow>
