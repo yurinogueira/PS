@@ -129,14 +129,11 @@ func sanitizeRow(row []string) []string {
 	return sanitized
 }
 
-func formatJudges(dog clientdomain.Dog, photo *clientdomain.Photo) string {
-	if photo != nil && len(photo.Judges) > 0 {
-		return strings.Join(photo.Judges, ", ")
+func formatJudges(photo *clientdomain.Photo) string {
+	if photo == nil || len(photo.Judges) == 0 {
+		return ""
 	}
-	if len(dog.Judges) > 0 {
-		return strings.Join(dog.Judges, ", ")
-	}
-	return dog.Judge
+	return strings.Join(photo.Judges, ", ")
 }
 
 func formatIsOwner(isOwner *bool) string {
@@ -254,7 +251,7 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, u
 					formattedPhone,
 					isOwnerStr,
 					dog.Breed,
-					formatJudges(dog, nil),
+					"",
 					"",
 					"",
 					"",
@@ -269,8 +266,7 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, u
 			}
 
 			for i := 0; i < totalLinhas; i++ {
-				var fileNumber, photographerName, paymentMethod, amountPaid, photoDate string
-				var currentPhoto *clientdomain.Photo
+				var fileNumber, photographerName, paymentMethod, amountPaid, photoDate, judgeStr string
 				if numPhotos > 0 {
 					var photo clientdomain.Photo
 					if i < numPhotos {
@@ -278,7 +274,6 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, u
 					} else {
 						photo = dog.Photos[numPhotos-1]
 					}
-					currentPhoto = &photo
 					fileNumber = photo.FileNumber
 					if name, exists := photogMap[photo.PhotographerID]; exists && name != "" {
 						photographerName = name
@@ -290,6 +285,9 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, u
 						amountPaid = fmt.Sprintf("%.2f", *photo.AmountPaid)
 					}
 					photoDate = formatPhotoDate(&photo, c.CreatedAt)
+					if i < numPhotos {
+						judgeStr = formatJudges(&photo)
+					}
 				}
 
 				var competitionWon string
@@ -310,7 +308,7 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, userEmail, u
 					formattedPhone,
 					isOwnerStr,
 					dog.Breed,
-					formatJudges(dog, currentPhoto),
+					judgeStr,
 					competitionWon,
 					fileNumber,
 					photographerName,
@@ -444,7 +442,7 @@ func (s *Service) GenerateUnpaidClientsCSV(ctx context.Context, tenantID, userEm
 					amount = fmt.Sprintf("%.2f", *photo.AmountPaid)
 				}
 
-				judgeStr := formatJudges(dog, &photo)
+				judgeStr := formatJudges(&photo)
 
 				row := []string{
 					personObj.Name,
@@ -638,7 +636,6 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID string) ([]byte,
 		} else {
 			for dIdx, dog := range client.Dogs {
 				isOwnerStr := formatIsOwner(dog.IsOwner)
-				judgeStr := formatJudges(dog, nil)
 				wonComps := dog.WonCompetitions
 				if len(wonComps) == 0 && dog.CompetitionsWon > 0 {
 					wonComps = []string{"Sim"}
@@ -663,7 +660,6 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID string) ([]byte,
 					if rIdx == 0 {
 						colBreed = dog.Breed
 						colOwner = isOwnerStr
-						colJudge = judgeStr
 					}
 
 					// Won competition on current row index
@@ -680,9 +676,7 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID string) ([]byte,
 							colAmount = fmt.Sprintf("R$ %.2f", *photo.AmountPaid)
 						}
 						colDate = formatPhotoDate(&photo, client.CreatedAt)
-						if len(photo.Judges) > 0 && rIdx > 0 {
-							colJudge = strings.Join(photo.Judges, ", ")
-						}
+						colJudge = formatJudges(&photo)
 					}
 
 					pdf.SetTextColor(30, 41, 59)

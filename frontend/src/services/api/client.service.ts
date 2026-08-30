@@ -11,7 +11,7 @@ export interface Photo {
 
 export interface Dog {
   breed: string;
-  judge: string;
+  judge?: string;
   judges?: string[];
   is_owner?: boolean;
   competitions_won: number;

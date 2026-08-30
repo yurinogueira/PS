@@ -157,7 +157,6 @@ func TestGenerateClientsCSV_FullExpansionAndRules(t *testing.T) {
 				Dogs: []clientdomain.Dog{
 					{
 						Breed:           "Border Collie",
-						Judge:           "Juiz Silva",
 						WonCompetitions: []string{"Melhor da Raça", "Campeão Adulto"}, // 2 won comps, 2 photos -> total lines = 2
 						Photos: []clientdomain.Photo{
 							{
@@ -165,18 +164,19 @@ func TestGenerateClientsCSV_FullExpansionAndRules(t *testing.T) {
 								PhotographerID: "photog-1",
 								PaymentMethod:  "Pix",
 								AmountPaid:     &amount100,
+								Judges:         []string{"Juiz Silva"},
 							},
 							{
 								FileNumber:     "IMG_002",
 								PhotographerID: "photog-2",
 								PaymentMethod:  "Credit Card",
 								AmountPaid:     &amount200,
+								Judges:         []string{"Juiz Silva"},
 							},
 						},
 					},
 					{
 						Breed:           "Golden Retriever",
-						Judge:           "Juiz Santos",
 						CompetitionsWon: 3, // 3 competitions won, 2 photos -> total lines = 3 (photo 2 repeated)
 						Photos: []clientdomain.Photo{
 							{
@@ -184,12 +184,14 @@ func TestGenerateClientsCSV_FullExpansionAndRules(t *testing.T) {
 								PhotographerID: "photog-1",
 								PaymentMethod:  "Cash",
 								AmountPaid:     nil,
+								Judges:         []string{"Juiz Santos"},
 							},
 							{
 								FileNumber:     "+SUM(A1:A2)",
 								PhotographerID: "photog-2",
 								PaymentMethod:  "Pix",
 								AmountPaid:     &amount100,
+								Judges:         []string{"Juiz Santos"},
 							},
 						},
 					},
@@ -494,31 +496,32 @@ func TestGenerateUnpaidClientsCSV(t *testing.T) {
 				Dogs: []clientdomain.Dog{
 					{
 						Breed: "Golden",
-						Judge: "Juiz A",
 						Photos: []clientdomain.Photo{
 							{
 								FileNumber:     "IMG_101",
 								PhotographerID: "photog-1",
 								PaymentMethod:  "Pix",
 								AmountPaid:     &amount50,
+								Judges:         []string{"Juiz A"},
 							},
 							{
 								FileNumber:     "=CMD_INJECTION",
 								PhotographerID: "photog-2",
 								PaymentMethod:  "Não pago",
 								AmountPaid:     &amount150,
+								Judges:         []string{"Juiz A"},
 							},
 						},
 					},
 					{
 						Breed: "Poodle",
-						Judge: "Juiz B",
 						Photos: []clientdomain.Photo{
 							{
 								FileNumber:     "IMG_103",
 								PhotographerID: "photog-1",
 								PaymentMethod:  "pendente",
 								AmountPaid:     nil,
+								Judges:         []string{"Juiz B"},
 							},
 						},
 					},
@@ -531,13 +534,13 @@ func TestGenerateUnpaidClientsCSV(t *testing.T) {
 				Dogs: []clientdomain.Dog{
 					{
 						Breed: "Bulldog",
-						Judge: "Juiz C",
 						Photos: []clientdomain.Photo{
 							{
 								FileNumber:     "IMG_201",
 								PhotographerID: "photog-1",
 								PaymentMethod:  "Cartão de Crédito",
 								AmountPaid:     &amount200,
+								Judges:         []string{"Juiz C"},
 							},
 						},
 					},
@@ -550,13 +553,13 @@ func TestGenerateUnpaidClientsCSV(t *testing.T) {
 				Dogs: []clientdomain.Dog{
 					{
 						Breed: "Shih Tzu",
-						Judge: "Juiz D",
 						Photos: []clientdomain.Photo{
 							{
 								FileNumber:     "IMG_301",
 								PhotographerID: "photog-unknown",
 								PaymentMethod:  "",
 								AmountPaid:     nil,
+								Judges:         []string{"Juiz D"},
 							},
 						},
 					},
