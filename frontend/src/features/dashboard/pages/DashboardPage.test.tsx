@@ -269,6 +269,35 @@ describe("DashboardPage", () => {
     });
   });
 
+  it("triggers export of paid clients csv report from report menu", async () => {
+    useSeasonStore.setState({
+      activeSeason: { id: "season-1", name: "Temporada 2026" },
+    });
+
+    const exportSpy = vi
+      .spyOn(reportService, "exportPaidClientsCsv")
+      .mockResolvedValue({ message: "Exportação de pagos iniciada!" });
+
+    render(
+      <BrowserRouter>
+        <DashboardPage />
+      </BrowserRouter>,
+    );
+
+    const reportBtn = screen.getByRole("button", { name: /Relatórios/i });
+    fireEvent.click(reportBtn);
+
+    const exportOption = await screen.findByText("Exportar Pagos (.csv)");
+    fireEvent.click(exportOption);
+
+    await waitFor(() => {
+      expect(exportSpy).toHaveBeenCalled();
+      expect(
+        screen.getByText("Exportação de pagos iniciada!"),
+      ).toBeInTheDocument();
+    });
+  });
+
   it("opens quick create person modal when clicking Nova Pessoa", async () => {
     useSeasonStore.setState({
       activeSeason: { id: "season-1", name: "Temporada 2026" },

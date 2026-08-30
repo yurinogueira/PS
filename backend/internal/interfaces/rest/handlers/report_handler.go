@@ -118,6 +118,51 @@ func (h *ReportHandler) ExportUnpaidClientsCSV(w http.ResponseWriter, r *http.Re
 	})
 }
 
+// ExportPaidClientsCSV godoc
+// @Summary      Exportar relatório CSV de clientes com pagamentos confirmados
+// @Description  Inicia a extração assíncrona do relatório de clientes e fotos com pagamentos confirmados (pagos) do tenant autenticado e envia o link para o e-mail cadastrado
+// @Tags         Reports
+// @Param        season_id query string false "ID do evento para filtrar o relatório"
+// @Produce      json
+// @Success      202  {object}  httpx.SuccessEnvelope
+// @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
+// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado"
+// @Failure      500  {object}  httpx.ErrorEnvelope "Erro interno"
+// @Router       /api/v1/reports/paid-clients-csv [post]
+func (h *ReportHandler) ExportPaidClientsCSV(w http.ResponseWriter, r *http.Request) {
+	tenantID := middleware.GetTenantID(r.Context())
+	if tenantID == "" {
+		httpx.Error(w, http.StatusForbidden, "Tenant is required", nil)
+		return
+	}
+
+	seasonID := r.URL.Query().Get("season_id")
+
+	userID := middleware.GetUserID(r.Context())
+	var userEmail, userName string
+	if userID != "" && h.userRepo != nil {
+		user, err := h.userRepo.FindByID(r.Context(), userID)
+		if err == nil && user.Email != "" {
+			userEmail = user.Email
+			userName = user.Name
+		}
+	}
+
+	// Launch async extraction job in background goroutine with detached context
+	go func(tID, sID, uEmail, uName string) {
+		jobCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
+
+		if _, err := h.service.GeneratePaidClientsCSV(jobCtx, tID, sID, uEmail, uName); err != nil {
+			log.Printf("[REPORT-JOB-ERROR] Failed to generate paid clients CSV for tenant %s: %v", tID, err)
+		}
+	}(tenantID, seasonID, userEmail, userName)
+
+	httpx.Accepted(w, map[string]string{
+		"message": "Geração do relatório iniciada com sucesso. O arquivo CSV será enviado para o seu e-mail em instantes.",
+	})
+}
+
 // ExportClientsPDF godoc
 // @Summary      Exportar relatório PDF de clientes
 // @Description  Inicia a extração assíncrona do relatório consolidado em PDF de clientes, cães e fotos para o tenant autenticado e envia o link para o e-mail cadastrado

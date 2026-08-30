@@ -27,6 +27,17 @@ export const reportService = {
     return data;
   },
 
+  exportPaidClientsCsv: async (
+    seasonId?: string,
+  ): Promise<ReportExportResponse> => {
+    const { data } = await apiClient.post<ReportExportResponse>(
+      "/reports/paid-clients-csv",
+      null,
+      { params: seasonId ? { season_id: seasonId } : undefined },
+    );
+    return data;
+  },
+
   exportClientsPdf: async (
     seasonId?: string,
   ): Promise<ReportExportResponse> => {

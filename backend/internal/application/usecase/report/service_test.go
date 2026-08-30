@@ -808,3 +808,187 @@ func TestGenerateClientsPDF_MultiLineJudgesAndAccents(t *testing.T) {
 		t.Fatalf("expected PDF magic header %%PDF-")
 	}
 }
+
+func TestGeneratePaidClientsCSV(t *testing.T) {
+	tenantID := "tenant-paid-123"
+	amount100 := 100.00
+	amount250 := 250.50
+	amount50 := 50.00
+	isOwnerTrue := true
+	isOwnerFalse := false
+
+	clientRepo := &mockClientRepo{
+		clients: []*clientdomain.SeasonClient{
+			{
+				ID:       "client-1",
+				TenantID: tenantID,
+				PersonID: "person-1",
+				Dogs: []clientdomain.Dog{
+					{
+						Breed:           "Golden Retriever",
+						IsOwner:         &isOwnerTrue,
+						WonCompetitions: []string{"Campeão Jovem", "Melhor da Raça"},
+						Photos: []clientdomain.Photo{
+							{
+								FileNumber:     "IMG_100",
+								PhotographerID: "photog-1",
+								PaymentMethod:  "Pix",
+								AmountPaid:     &amount100,
+								Judges:         []string{"Juiz Santos"},
+							},
+							{
+								FileNumber:     "IMG_101",
+								PhotographerID: "photog-2",
+								PaymentMethod:  "Cartão de Crédito",
+								AmountPaid:     &amount250,
+								Judges:         []string{"Juiz Santos", "Juiz Oliveira"},
+							},
+							{
+								FileNumber:     "IMG_102",
+								PhotographerID: "photog-1",
+								PaymentMethod:  "Não pago",
+								AmountPaid:     nil,
+							},
+						},
+					},
+					{
+						Breed:           "Border Collie",
+						IsOwner:         &isOwnerFalse,
+						CompetitionsWon: 2,
+						Photos: []clientdomain.Photo{
+							{
+								FileNumber:     "=MALICIOUS_CMD",
+								PhotographerID: "photog-1",
+								PaymentMethod:  "Dinheiro",
+								AmountPaid:     &amount50,
+							},
+						},
+					},
+				},
+			},
+			{
+				ID:       "client-2",
+				TenantID: tenantID,
+				PersonID: "person-2",
+				Dogs: []clientdomain.Dog{
+					{
+						Breed: "Poodle",
+						Photos: []clientdomain.Photo{
+							{
+								FileNumber:    "IMG_200",
+								PaymentMethod: "Não pago",
+							},
+							{
+								FileNumber:    "IMG_201",
+								PaymentMethod: "",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	personRepo := &mockPersonRepo{
+		people: map[string]*persondomain.Person{
+			"person-1": {
+				ID:               "person-1",
+				Name:             "Carlos Albuquerque",
+				Email:            "carlos@exemplo.com",
+				AlternativeEmail: "carlos.alt@exemplo.com",
+				Phone:            "11988889999",
+			},
+			"person-2": {
+				ID:    "person-2",
+				Name:  "João Inadimplente",
+				Email: "joao@exemplo.com",
+			},
+		},
+	}
+
+	photographerRepo := &mockPhotographerRepo{
+		photographers: []*photographerdomain.Photographer{
+			{ID: "photog-1", Name: "Fotógrafo Principal"},
+			{ID: "photog-2", Name: "Fotógrafo Secundário"},
+		},
+	}
+
+	storage := &mockStorageProvider{}
+	emailSender := &mockEmailSender{}
+
+	svc := NewService(clientRepo, personRepo, photographerRepo, storage, emailSender, "http://localhost:8080")
+
+	// 1. Error on empty tenant
+	_, err := svc.GeneratePaidClientsCSV(context.Background(), "", "", "admin@test.com", "Admin")
+	if err == nil {
+		t.Fatalf("expected error on empty tenant ID")
+	}
+
+	// 2. Generate paid clients report
+	filePath, err := svc.GeneratePaidClientsCSV(context.Background(), tenantID, "", "admin@test.com", "Admin")
+	if err != nil {
+		t.Fatalf("unexpected error generating paid clients CSV: %v", err)
+	}
+
+	if !strings.HasPrefix(filePath, "reports/tenant_tenant-paid-123/clientes_pagos_") {
+		t.Fatalf("unexpected file path: %s", filePath)
+	}
+
+	csvData, ok := storage.files[filePath]
+	if !ok || len(csvData) == 0 {
+		t.Fatalf("CSV data not found in storage")
+	}
+
+	if !bytes.HasPrefix(csvData, []byte("\xEF\xBB\xBF")) {
+		t.Fatalf("expected UTF-8 BOM at start of CSV")
+	}
+
+	reader := csv.NewReader(bytes.NewReader(bytes.TrimPrefix(csvData, []byte("\xEF\xBB\xBF"))))
+	records, err := reader.ReadAll()
+	if err != nil {
+		t.Fatalf("failed to parse CSV records: %v", err)
+	}
+
+	// Header + 2 paid photos (dog 1) + 1 paid photo (dog 2) = 4 rows
+	if len(records) != 4 {
+		t.Fatalf("expected 4 rows in paid clients CSV, got %d", len(records))
+	}
+
+	// Verify headers: Nome, E-mail, E-mail alternativo, Telefone, Dono, Raça, Juiz, Competições Vencidas, Número do Arquivo da Foto, Fotografo, Forma de Pagamento, Valor Pago, Data da Foto
+	headers := records[0]
+	expectedHeaders := []string{
+		"Nome", "E-mail", "E-mail alternativo", "Telefone", "Dono", "Raça", "Juiz",
+		"Competições Vencidas", "Número do Arquivo da Foto", "Fotografo", "Forma de Pagamento", "Valor Pago", "Data da Foto",
+	}
+	for i, h := range expectedHeaders {
+		if headers[i] != h {
+			t.Fatalf("header[%d] expected %q, got %q", i, h, headers[i])
+		}
+	}
+
+	// Row 1 (IMG_100): Pix
+	row1 := records[1]
+	if row1[0] != "Carlos Albuquerque" || row1[3] != "(11) 98888-9999" || row1[4] != "Sim" || row1[5] != "Golden Retriever" || row1[6] != "Juiz Santos" || row1[7] != "Campeão Jovem, Melhor da Raça" || row1[8] != "IMG_100" || row1[9] != "Fotógrafo Principal" || row1[10] != "Pix" || row1[11] != "100.00" {
+		t.Fatalf("unexpected row 1: %v", row1)
+	}
+
+	// Row 2 (IMG_101): Cartão de Crédito
+	row2 := records[2]
+	if row2[8] != "IMG_101" || row2[9] != "Fotógrafo Secundário" || row2[10] != "Cartão de Crédito" || row2[11] != "250.50" || row2[6] != "Juiz Santos, Juiz Oliveira" {
+		t.Fatalf("unexpected row 2: %v", row2)
+	}
+
+	// Row 3 (Malicious formula sanitized): Dinheiro
+	row3 := records[3]
+	if row3[4] != "Não" || row3[5] != "Border Collie" || row3[7] != "Sim" || row3[8] != "'=MALICIOUS_CMD" || row3[10] != "Dinheiro" || row3[11] != "50.00" {
+		t.Fatalf("unexpected row 3: %v", row3)
+	}
+
+	// Verify email sent with proper subject
+	if len(emailSender.sentReports) != 1 {
+		t.Fatalf("expected 1 report email sent, got %d", len(emailSender.sentReports))
+	}
+	if emailSender.sentReports[0].ReportName != "Relatório de Clientes Pagos" {
+		t.Fatalf("expected report name 'Relatório de Clientes Pagos', got %q", emailSender.sentReports[0].ReportName)
+	}
+}

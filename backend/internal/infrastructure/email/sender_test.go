@@ -116,6 +116,12 @@ func TestEmailTemplatesRender(t *testing.T) {
 	if !strings.Contains(reportStr, "#0F52BA") {
 		t.Fatalf("report ready template missing brand color")
 	}
+	if !strings.Contains(reportStr, "Baixar Relatório") || !strings.Contains(reportStr, "fazer o download do arquivo:") {
+		t.Fatalf("report ready template should have format-neutral text and button")
+	}
+	if strings.Contains(reportStr, "Baixar Relatório (.csv)") {
+		t.Fatalf("report ready template should not have hardcoded (.csv) in button")
+	}
 }
 
 func TestEmailSenderRejectsInvalidAddress(t *testing.T) {
