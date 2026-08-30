@@ -1,12 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { useAuthStore } from "../features/auth/state/auth.store";
+import { useTenantStore } from "../store/tenantStore";
+import { TenantStatusBanner } from "../features/shared";
 
 export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const drawerWidth = 280;
+
+  const { user } = useAuthStore();
+  const { fetchTenantStatus } = useTenantStore();
+
+  useEffect(() => {
+    if (user?.tenantId) {
+      fetchTenantStatus();
+    }
+  }, [user?.tenantId, fetchTenantStatus]);
 
   const handleDrawerToggle = () => {
     setMobileOpen((prev) => !prev);
@@ -51,6 +63,7 @@ export function AppLayout() {
             maxWidth: "100%",
           }}
         >
+          <TenantStatusBanner />
           <Outlet />
         </Box>
       </Box>

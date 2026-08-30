@@ -13,14 +13,42 @@ import (
 )
 
 type tenantDoc struct {
-	Name      string    `bson:"_id"`
-	CreatedAt time.Time `bson:"createdAt"`
+	Name          string     `bson:"_id"`
+	Plan          string     `bson:"plan"`
+	PaymentStatus string     `bson:"paymentStatus"`
+	PlanStartedAt *time.Time `bson:"planStartedAt,omitempty"`
+	PlanExpiresAt *time.Time `bson:"planExpiresAt,omitempty"`
+	CreatedAt     time.Time  `bson:"createdAt"`
+	UpdatedAt     time.Time  `bson:"updatedAt,omitempty"`
 }
 
 func (d tenantDoc) toDomain() domaintenant.Tenant {
+	plan := d.Plan
+	if plan == "" {
+		plan = domaintenant.PlanFree
+	}
+	paymentStatus := d.PaymentStatus
+	if paymentStatus == "" {
+		paymentStatus = domaintenant.PaymentStatusPaid
+	}
+	startedAt := d.PlanStartedAt
+	if startedAt == nil && !d.CreatedAt.IsZero() {
+		startedAt = &d.CreatedAt
+	}
+	expiresAt := d.PlanExpiresAt
+	if expiresAt == nil && plan == domaintenant.PlanFree && startedAt != nil {
+		exp := startedAt.Add(domaintenant.TrialDurationDays * 24 * time.Hour)
+		expiresAt = &exp
+	}
+
 	return domaintenant.Tenant{
-		Name:      d.Name,
-		CreatedAt: d.CreatedAt,
+		Name:          d.Name,
+		Plan:          plan,
+		PaymentStatus: paymentStatus,
+		PlanStartedAt: startedAt,
+		PlanExpiresAt: expiresAt,
+		CreatedAt:     d.CreatedAt,
+		UpdatedAt:     d.UpdatedAt,
 	}
 }
 
@@ -41,13 +69,35 @@ func (r *Repository) Create(ctx context.Context, tenant domaintenant.Tenant) (do
 	}
 	tenant.Name = cleanName
 
+	now := time.Now().UTC()
 	if tenant.CreatedAt.IsZero() {
-		tenant.CreatedAt = time.Now().UTC()
+		tenant.CreatedAt = now
+	}
+	if tenant.UpdatedAt.IsZero() {
+		tenant.UpdatedAt = now
+	}
+	if tenant.Plan == "" {
+		tenant.Plan = domaintenant.PlanFree
+	}
+	if tenant.PaymentStatus == "" {
+		tenant.PaymentStatus = domaintenant.PaymentStatusPaid
+	}
+	if tenant.PlanStartedAt == nil {
+		tenant.PlanStartedAt = &now
+	}
+	if tenant.Plan == domaintenant.PlanFree && tenant.PlanExpiresAt == nil {
+		exp := tenant.PlanStartedAt.Add(domaintenant.TrialDurationDays * 24 * time.Hour)
+		tenant.PlanExpiresAt = &exp
 	}
 
 	doc := tenantDoc{
-		Name:      tenant.Name,
-		CreatedAt: tenant.CreatedAt,
+		Name:          tenant.Name,
+		Plan:          tenant.Plan,
+		PaymentStatus: tenant.PaymentStatus,
+		PlanStartedAt: tenant.PlanStartedAt,
+		PlanExpiresAt: tenant.PlanExpiresAt,
+		CreatedAt:     tenant.CreatedAt,
+		UpdatedAt:     tenant.UpdatedAt,
 	}
 
 	_, err = r.coll.InsertOne(ctx, doc)
@@ -56,6 +106,36 @@ func (r *Repository) Create(ctx context.Context, tenant domaintenant.Tenant) (do
 			return domaintenant.Tenant{}, tenantport.ErrAlreadyExists
 		}
 		return domaintenant.Tenant{}, err
+	}
+
+	return tenant, nil
+}
+
+func (r *Repository) Update(ctx context.Context, tenant domaintenant.Tenant) (domaintenant.Tenant, error) {
+	cleanName, err := mongoinfra.SanitizeID(tenant.Name)
+	if err != nil {
+		return domaintenant.Tenant{}, err
+	}
+	tenant.Name = cleanName
+	tenant.UpdatedAt = time.Now().UTC()
+
+	filter := bson.D{{Key: "_id", Value: cleanName}}
+	updateDoc := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "plan", Value: tenant.Plan},
+			{Key: "paymentStatus", Value: tenant.PaymentStatus},
+			{Key: "planStartedAt", Value: tenant.PlanStartedAt},
+			{Key: "planExpiresAt", Value: tenant.PlanExpiresAt},
+			{Key: "updatedAt", Value: tenant.UpdatedAt},
+		}},
+	}
+
+	res, err := r.coll.UpdateOne(ctx, filter, updateDoc)
+	if err != nil {
+		return domaintenant.Tenant{}, err
+	}
+	if res.MatchedCount == 0 {
+		return domaintenant.Tenant{}, tenantport.ErrNotFound
 	}
 
 	return tenant, nil

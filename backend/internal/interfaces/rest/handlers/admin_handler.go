@@ -23,7 +23,17 @@ func NewAdminHandler(tenantService *tenantusecase.Service, adminService *adminus
 }
 
 type CreateTenantRequest struct {
-	Name string `json:"name" example:"acme-corp"`
+	Name          string `json:"name" example:"acme-corp"`
+	Plan          string `json:"plan,omitempty" example:"free"`
+	PaymentStatus string `json:"paymentStatus,omitempty" example:"paid"`
+}
+
+type UpdateTenantPlanRequest struct {
+	Plan string `json:"plan" example:"standard"`
+}
+
+type UpdateTenantPaymentStatusRequest struct {
+	PaymentStatus string `json:"paymentStatus" example:"paid"`
 }
 
 type AssignTenantRequest struct {
@@ -53,7 +63,7 @@ func (h *AdminHandler) ListTenants(w http.ResponseWriter, r *http.Request) {
 
 // CreateTenant godoc
 // @Summary      Criar novo tenant
-// @Description  Cria uma nova organização (tenant) imutável no sistema
+// @Description  Cria uma nova organização (tenant) no sistema com plano e status inicial
 // @Tags         Admin
 // @Accept       json
 // @Produce      json
@@ -72,11 +82,19 @@ func (h *AdminHandler) CreateTenant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	created, err := h.tenantService.Create(r.Context(), input.Name)
+	created, err := h.tenantService.Create(r.Context(), tenantusecase.CreateTenantInput{
+		Name:          input.Name,
+		Plan:          input.Plan,
+		PaymentStatus: input.PaymentStatus,
+	})
 	if err != nil {
 		switch {
 		case errors.Is(err, tenantusecase.ErrInvalidName):
 			httpx.Error(w, http.StatusBadRequest, "Invalid tenant name. Only alphanumeric characters, dashes and underscores are allowed (max 128 chars).", nil)
+		case errors.Is(err, tenantusecase.ErrInvalidPlan):
+			httpx.Error(w, http.StatusBadRequest, "Invalid plan. Must be 'free' or 'standard'.", nil)
+		case errors.Is(err, tenantusecase.ErrInvalidPaymentStatus):
+			httpx.Error(w, http.StatusBadRequest, "Invalid payment status. Must be 'paid' or 'unpaid'.", nil)
 		case errors.Is(err, tenantusecase.ErrAlreadyExists):
 			httpx.Error(w, http.StatusConflict, "Tenant already exists", nil)
 		default:
@@ -87,6 +105,98 @@ func (h *AdminHandler) CreateTenant(w http.ResponseWriter, r *http.Request) {
 
 	httpx.Created(w, map[string]any{
 		"tenant": created,
+	})
+}
+
+// UpdateTenantPlan godoc
+// @Summary      Atualizar plano da organização
+// @Description  Atualiza o plano da organização (free ou standard) e renova 14 dias de teste se free
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        name path string true "Nome do Tenant"
+// @Param        payload body UpdateTenantPlanRequest true "Novo plano"
+// @Security     BearerAuth
+// @Success      200 {object} httpx.SuccessEnvelope
+// @Failure      400 {object} httpx.ErrorEnvelope
+// @Failure      401 {object} httpx.ErrorEnvelope
+// @Failure      403 {object} httpx.ErrorEnvelope
+// @Failure      404 {object} httpx.ErrorEnvelope
+// @Router       /api/v1/admin/tenants/{name}/plan [put]
+func (h *AdminHandler) UpdateTenantPlan(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	if name == "" {
+		httpx.Error(w, http.StatusBadRequest, "Tenant name is required", nil)
+		return
+	}
+
+	var input UpdateTenantPlanRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		httpx.Error(w, http.StatusBadRequest, "Invalid request payload", nil)
+		return
+	}
+
+	updated, err := h.tenantService.UpdatePlan(r.Context(), name, input.Plan)
+	if err != nil {
+		switch {
+		case errors.Is(err, tenantusecase.ErrNotFound):
+			httpx.Error(w, http.StatusNotFound, "Tenant not found", nil)
+		case errors.Is(err, tenantusecase.ErrInvalidPlan), errors.Is(err, tenantusecase.ErrInvalidName):
+			httpx.Error(w, http.StatusBadRequest, "Invalid plan. Must be 'free' or 'standard'.", nil)
+		default:
+			httpx.Error(w, http.StatusInternalServerError, "Failed to update tenant plan", nil)
+		}
+		return
+	}
+
+	httpx.Success(w, map[string]any{
+		"tenant": updated,
+	})
+}
+
+// UpdateTenantPaymentStatus godoc
+// @Summary      Atualizar status de pagamento da organização
+// @Description  Atualiza o status financeiro da organização (paid ou unpaid)
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        name path string true "Nome do Tenant"
+// @Param        payload body UpdateTenantPaymentStatusRequest true "Novo status financeiro"
+// @Security     BearerAuth
+// @Success      200 {object} httpx.SuccessEnvelope
+// @Failure      400 {object} httpx.ErrorEnvelope
+// @Failure      401 {object} httpx.ErrorEnvelope
+// @Failure      403 {object} httpx.ErrorEnvelope
+// @Failure      404 {object} httpx.ErrorEnvelope
+// @Router       /api/v1/admin/tenants/{name}/payment-status [put]
+func (h *AdminHandler) UpdateTenantPaymentStatus(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	if name == "" {
+		httpx.Error(w, http.StatusBadRequest, "Tenant name is required", nil)
+		return
+	}
+
+	var input UpdateTenantPaymentStatusRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		httpx.Error(w, http.StatusBadRequest, "Invalid request payload", nil)
+		return
+	}
+
+	updated, err := h.tenantService.UpdatePaymentStatus(r.Context(), name, input.PaymentStatus)
+	if err != nil {
+		switch {
+		case errors.Is(err, tenantusecase.ErrNotFound):
+			httpx.Error(w, http.StatusNotFound, "Tenant not found", nil)
+		case errors.Is(err, tenantusecase.ErrInvalidPaymentStatus), errors.Is(err, tenantusecase.ErrInvalidName):
+			httpx.Error(w, http.StatusBadRequest, "Invalid payment status. Must be 'paid' or 'unpaid'.", nil)
+		default:
+			httpx.Error(w, http.StatusInternalServerError, "Failed to update tenant payment status", nil)
+		}
+		return
+	}
+
+	httpx.Success(w, map[string]any{
+		"tenant": updated,
 	})
 }
 

@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"ps/internal/application/usecase/person"
 	domain "ps/internal/domain/person"
+	domaintenant "ps/internal/domain/tenant"
 	"ps/internal/shared/middleware"
 )
 
@@ -26,6 +28,7 @@ func NewPersonHandler(service *person.Service) *PersonHandler {
 // @Success      201    {object}  person.Person
 // @Failure      400    {string}  string "Requisição inválida"
 // @Failure      401    {string}  string "Não autenticado"
+// @Failure      403    {string}  string "Tenant bloqueado ou expirado"
 // @Failure      500    {string}  string "Erro interno"
 // @Router       /api/v1/people [post]
 func (h *PersonHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -37,6 +40,10 @@ func (h *PersonHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.Create(r.Context(), &req, tenantID); err != nil {
+		if errors.Is(err, domaintenant.ErrLimitExceeded) || errors.Is(err, domaintenant.ErrPaymentUnpaid) || errors.Is(err, domaintenant.ErrTrialExpired) {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -112,6 +119,7 @@ func (h *PersonHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // @Success      200     {object}  person.Person
 // @Failure      400     {string}  string "Requisição inválida"
 // @Failure      401     {string}  string "Não autenticado"
+// @Failure      403     {string}  string "Tenant bloqueado ou expirado"
 // @Failure      500     {string}  string "Erro interno"
 // @Router       /api/v1/people/{id} [put]
 func (h *PersonHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -130,6 +138,10 @@ func (h *PersonHandler) Update(w http.ResponseWriter, r *http.Request) {
 	req.ID = id
 
 	if err := h.service.Update(r.Context(), &req, tenantID); err != nil {
+		if errors.Is(err, domaintenant.ErrLimitExceeded) || errors.Is(err, domaintenant.ErrPaymentUnpaid) || errors.Is(err, domaintenant.ErrTrialExpired) {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -147,6 +159,7 @@ func (h *PersonHandler) Update(w http.ResponseWriter, r *http.Request) {
 // @Success      204  {string}  string "Excluído com sucesso"
 // @Failure      400  {string}  string "ID obrigatório"
 // @Failure      401  {string}  string "Não autenticado"
+// @Failure      403  {string}  string "Tenant bloqueado ou expirado"
 // @Failure      500  {string}  string "Erro interno"
 // @Router       /api/v1/people/{id} [delete]
 func (h *PersonHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -158,6 +171,10 @@ func (h *PersonHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.Delete(r.Context(), id, tenantID); err != nil {
+		if errors.Is(err, domaintenant.ErrLimitExceeded) || errors.Is(err, domaintenant.ErrPaymentUnpaid) || errors.Is(err, domaintenant.ErrTrialExpired) {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

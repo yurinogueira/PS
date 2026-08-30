@@ -256,6 +256,60 @@ func (r *repository) StreamByTenant(ctx context.Context, tenantID, seasonID stri
 	return cursor.Err()
 }
 
+func (r *repository) CountBySeason(ctx context.Context, tenantID, seasonID string) (int64, error) {
+	cleanTenantID, err := mongoinfra.SanitizeID(tenantID)
+	if err != nil {
+		return 0, err
+	}
+
+	filter := bson.D{{Key: "tenant_id", Value: cleanTenantID}}
+	if strings.TrimSpace(seasonID) != "" {
+		cleanSeasonID, err := mongoinfra.SanitizeID(seasonID)
+		if err != nil {
+			return 0, err
+		}
+		filter = append(filter, bson.E{Key: "season_id", Value: cleanSeasonID})
+	}
+
+	return r.collection.CountDocuments(ctx, filter)
+}
+
+func (r *repository) MaxClientsPerSeason(ctx context.Context, tenantID string) (int64, error) {
+	cleanTenantID, err := mongoinfra.SanitizeID(tenantID)
+	if err != nil {
+		return 0, err
+	}
+
+	pipeline := mongo.Pipeline{
+		bson.D{{Key: "$match", Value: bson.D{{Key: "tenant_id", Value: cleanTenantID}}}},
+		bson.D{{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: "$season_id"},
+			{Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}},
+		}}},
+		bson.D{{Key: "$sort", Value: bson.D{{Key: "count", Value: -1}}}},
+		bson.D{{Key: "$limit", Value: 1}},
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []struct {
+		Count int64 `bson:"count"`
+	}
+	if err := cursor.All(ctx, &results); err != nil {
+		return 0, err
+	}
+
+	if len(results) == 0 {
+		return 0, nil
+	}
+
+	return results[0].Count, nil
+}
+
 func (r *repository) Update(ctx context.Context, client *domain.SeasonClient) error {
 	cleanID, err := mongoinfra.SanitizeID(client.ID)
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 
 	"ps/internal/application/usecase/client"
 	domain "ps/internal/domain/client"
+	domaintenant "ps/internal/domain/tenant"
 	"ps/internal/shared/middleware"
 )
 
@@ -29,6 +30,7 @@ func NewSeasonClientHandler(service *client.Service) *SeasonClientHandler {
 // @Success      201    {object}  client.SeasonClient
 // @Failure      400    {string}  string "Requisição inválida ou referência não pertencente ao tenant"
 // @Failure      401    {string}  string "Não autenticado"
+// @Failure      403    {string}  string "Tenant bloqueado ou expirado"
 // @Failure      500    {string}  string "Erro interno"
 // @Router       /api/v1/clients [post]
 func (h *SeasonClientHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -41,6 +43,10 @@ func (h *SeasonClientHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.service.Create(r.Context(), &req, tenantID); err != nil {
 		switch {
+		case errors.Is(err, domaintenant.ErrLimitExceeded),
+			errors.Is(err, domaintenant.ErrPaymentUnpaid),
+			errors.Is(err, domaintenant.ErrTrialExpired):
+			http.Error(w, err.Error(), http.StatusForbidden)
 		case errors.Is(err, client.ErrPersonNotFound),
 			errors.Is(err, client.ErrSeasonNotFound),
 			errors.Is(err, client.ErrPhotographerNotFound):
@@ -144,6 +150,7 @@ func (h *SeasonClientHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // @Success      200     {object}  client.SeasonClient
 // @Failure      400     {string}  string "Requisição inválida ou referência não pertencente ao tenant"
 // @Failure      401     {string}  string "Não autenticado"
+// @Failure      403     {string}  string "Tenant bloqueado ou expirado"
 // @Failure      404     {string}  string "Cliente não encontrado"
 // @Failure      500     {string}  string "Erro interno"
 // @Router       /api/v1/clients/{id} [put]
@@ -164,6 +171,10 @@ func (h *SeasonClientHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.service.Update(r.Context(), &req, tenantID); err != nil {
 		switch {
+		case errors.Is(err, domaintenant.ErrLimitExceeded),
+			errors.Is(err, domaintenant.ErrPaymentUnpaid),
+			errors.Is(err, domaintenant.ErrTrialExpired):
+			http.Error(w, err.Error(), http.StatusForbidden)
 		case errors.Is(err, client.ErrClientNotFound):
 			http.Error(w, err.Error(), http.StatusNotFound)
 		case errors.Is(err, client.ErrPersonNotFound),
@@ -189,6 +200,7 @@ func (h *SeasonClientHandler) Update(w http.ResponseWriter, r *http.Request) {
 // @Success      204  {string}  string "Excluído com sucesso"
 // @Failure      400  {string}  string "ID obrigatório"
 // @Failure      401  {string}  string "Não autenticado"
+// @Failure      403  {string}  string "Tenant bloqueado ou expirado"
 // @Failure      500  {string}  string "Erro interno"
 // @Router       /api/v1/clients/{id} [delete]
 func (h *SeasonClientHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -200,6 +212,10 @@ func (h *SeasonClientHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.Delete(r.Context(), id, tenantID); err != nil {
+		if errors.Is(err, domaintenant.ErrLimitExceeded) || errors.Is(err, domaintenant.ErrPaymentUnpaid) || errors.Is(err, domaintenant.ErrTrialExpired) {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -8,6 +8,7 @@ import (
 	personport "ps/internal/application/ports/person"
 	photographerport "ps/internal/application/ports/photographer"
 	seasonport "ps/internal/application/ports/season"
+	tenantport "ps/internal/application/ports/tenant"
 	domain "ps/internal/domain/client"
 )
 
@@ -23,6 +24,7 @@ type Service struct {
 	personRepo       personport.Repository
 	seasonRepo       seasonport.Repository
 	photographerRepo photographerport.Repository
+	tenantValidator  tenantport.Validator
 }
 
 func NewService(
@@ -30,12 +32,18 @@ func NewService(
 	personRepo personport.Repository,
 	seasonRepo seasonport.Repository,
 	photographerRepo photographerport.Repository,
+	validator ...tenantport.Validator,
 ) *Service {
+	var tv tenantport.Validator
+	if len(validator) > 0 {
+		tv = validator[0]
+	}
 	return &Service{
 		repo:             repo,
 		personRepo:       personRepo,
 		seasonRepo:       seasonRepo,
 		photographerRepo: photographerRepo,
+		tenantValidator:  tv,
 	}
 }
 
@@ -82,6 +90,11 @@ func (s *Service) validateReferences(ctx context.Context, c *domain.SeasonClient
 }
 
 func (s *Service) Create(ctx context.Context, client *domain.SeasonClient, tenantID string) error {
+	if s.tenantValidator != nil {
+		if err := s.tenantValidator.ValidateCanWriteClients(ctx, tenantID); err != nil {
+			return err
+		}
+	}
 	client.TenantID = tenantID
 	if err := s.validateReferences(ctx, client, tenantID); err != nil {
 		return err
@@ -107,6 +120,11 @@ func (s *Service) List(ctx context.Context, tenantID string, filter domain.ListF
 }
 
 func (s *Service) Update(ctx context.Context, client *domain.SeasonClient, tenantID string) error {
+	if s.tenantValidator != nil {
+		if err := s.tenantValidator.ValidateCanWriteClients(ctx, tenantID); err != nil {
+			return err
+		}
+	}
 	client.TenantID = tenantID
 	if _, err := s.repo.GetByID(ctx, client.ID, tenantID); err != nil {
 		return ErrClientNotFound
@@ -118,5 +136,10 @@ func (s *Service) Update(ctx context.Context, client *domain.SeasonClient, tenan
 }
 
 func (s *Service) Delete(ctx context.Context, id, tenantID string) error {
+	if s.tenantValidator != nil {
+		if err := s.tenantValidator.ValidateCanWriteClients(ctx, tenantID); err != nil {
+			return err
+		}
+	}
 	return s.repo.Delete(ctx, id, tenantID)
 }

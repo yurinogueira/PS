@@ -5,6 +5,8 @@ import {
   AssignTenantPayload,
   CreateTenantPayload,
   Tenant,
+  UpdateTenantPaymentStatusPayload,
+  UpdateTenantPlanPayload,
 } from "../types/admin.types";
 
 export const adminService = {
@@ -17,6 +19,28 @@ export const adminService = {
   async createTenant(payload: CreateTenantPayload): Promise<Tenant> {
     const response = await apiClient.post<ApiEnvelope<{ tenant: Tenant }>>(
       "/admin/tenants",
+      payload,
+    );
+    return response.data.data.tenant;
+  },
+
+  async updateTenantPlan(
+    name: string,
+    payload: UpdateTenantPlanPayload,
+  ): Promise<Tenant> {
+    const response = await apiClient.put<ApiEnvelope<{ tenant: Tenant }>>(
+      `/admin/tenants/${encodeURIComponent(name)}/plan`,
+      payload,
+    );
+    return response.data.data.tenant;
+  },
+
+  async updateTenantPaymentStatus(
+    name: string,
+    payload: UpdateTenantPaymentStatusPayload,
+  ): Promise<Tenant> {
+    const response = await apiClient.put<ApiEnvelope<{ tenant: Tenant }>>(
+      `/admin/tenants/${encodeURIComponent(name)}/payment-status`,
       payload,
     );
     return response.data.data.tenant;

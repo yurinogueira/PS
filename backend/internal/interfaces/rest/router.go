@@ -51,15 +51,16 @@ func NewRouter(
 	authHandler := handlers.NewAuthHandler(users, hasher, tokens, emailSender, cfg.CookieDomain, cfg.CookieSecure)
 	userHandler := handlers.NewUserHandler(users, nil, hasher, tokens)
 
-	tenantSvc := tenantusecase.NewService(tenants)
+	tenantSvc := tenantusecase.NewService(tenants, clients)
 	adminSvc := adminusecase.NewService(users, tenants)
 	adminHandler := handlers.NewAdminHandler(tenantSvc, adminSvc)
+	tenantHandler := handlers.NewTenantHandler(tenantSvc)
 
-	seasonSvc := seasonusecase.NewService(seasons, clients)
-	photographerSvc := photographerusecase.NewService(photographers)
-	personSvc := personusecase.NewService(persons)
-	clientSvc := clientusecase.NewService(clients, persons, seasons, photographers)
-	reportSvc := reportusecase.NewService(clients, persons, photographers, storageProvider, emailSender, cfg.AppBaseURL)
+	seasonSvc := seasonusecase.NewService(seasons, clients, tenantSvc)
+	photographerSvc := photographerusecase.NewService(photographers, tenantSvc)
+	personSvc := personusecase.NewService(persons, tenantSvc)
+	clientSvc := clientusecase.NewService(clients, persons, seasons, photographers, tenantSvc)
+	reportSvc := reportusecase.NewService(clients, persons, photographers, storageProvider, emailSender, cfg.AppBaseURL, tenantSvc)
 
 	seasonHandler := handlers.NewSeasonHandler(seasonSvc)
 	photographerHandler := handlers.NewPhotographerHandler(photographerSvc)
@@ -115,8 +116,13 @@ func NewRouter(
 	// Admin routes
 	mux.Handle("GET /api/v1/admin/tenants", adminChain(adminHandler.ListTenants))
 	mux.Handle("POST /api/v1/admin/tenants", adminChain(adminHandler.CreateTenant))
+	mux.Handle("PUT /api/v1/admin/tenants/{name}/plan", adminChain(adminHandler.UpdateTenantPlan))
+	mux.Handle("PUT /api/v1/admin/tenants/{name}/payment-status", adminChain(adminHandler.UpdateTenantPaymentStatus))
 	mux.Handle("GET /api/v1/admin/users", adminChain(adminHandler.ListUsers))
 	mux.Handle("PUT /api/v1/admin/users/{id}/tenant", adminChain(adminHandler.AssignTenant))
+
+	// Tenant info route (current authenticated organization)
+	mux.Handle("GET /api/v1/tenant", businessChain(tenantHandler.GetCurrentTenant))
 
 	// User routes
 	mux.Handle("GET /api/v1/user/profile", protectedChain(userHandler.GetProfile))

@@ -65,7 +65,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Cria uma nova organização (tenant) imutável no sistema",
+                "description": "Cria uma nova organização (tenant) no sistema com plano e status inicial",
                 "consumes": [
                     "application/json"
                 ],
@@ -114,6 +114,146 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/tenants/{name}/payment-status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Atualiza o status financeiro da organização (paid ou unpaid)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Atualizar status de pagamento da organização",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Nome do Tenant",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Novo status financeiro",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateTenantPaymentStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.SuccessEnvelope"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/tenants/{name}/plan": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Atualiza o plano da organização (free ou standard) e renova 14 dias de teste se free",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Atualizar plano da organização",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Nome do Tenant",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Novo plano",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateTenantPlanRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.SuccessEnvelope"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/httpx.ErrorEnvelope"
                         }
@@ -665,6 +805,12 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "403": {
+                        "description": "Tenant bloqueado ou expirado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "500": {
                         "description": "Erro interno",
                         "schema": {
@@ -775,6 +921,12 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "403": {
+                        "description": "Tenant bloqueado ou expirado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "404": {
                         "description": "Cliente não encontrado",
                         "schema": {
@@ -819,6 +971,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Não autenticado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant bloqueado ou expirado",
                         "schema": {
                             "type": "string"
                         }
@@ -904,6 +1062,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Não autenticado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant bloqueado ou expirado",
                         "schema": {
                             "type": "string"
                         }
@@ -1018,6 +1182,12 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "403": {
+                        "description": "Tenant bloqueado ou expirado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "500": {
                         "description": "Erro interno",
                         "schema": {
@@ -1056,6 +1226,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Não autenticado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant bloqueado ou expirado",
                         "schema": {
                             "type": "string"
                         }
@@ -1141,6 +1317,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Não autenticado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant bloqueado ou expirado",
                         "schema": {
                             "type": "string"
                         }
@@ -1255,6 +1437,12 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "403": {
+                        "description": "Tenant bloqueado ou expirado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "500": {
                         "description": "Erro interno",
                         "schema": {
@@ -1293,6 +1481,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Não autenticado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant bloqueado ou expirado",
                         "schema": {
                             "type": "string"
                         }
@@ -1338,7 +1532,7 @@ const docTemplate = `{
                         }
                     },
                     "403": {
-                        "description": "Tenant não associado",
+                        "description": "Tenant não associado ou bloqueado",
                         "schema": {
                             "$ref": "#/definitions/httpx.ErrorEnvelope"
                         }
@@ -1384,7 +1578,7 @@ const docTemplate = `{
                         }
                     },
                     "403": {
-                        "description": "Tenant não associado",
+                        "description": "Tenant não associado ou bloqueado",
                         "schema": {
                             "$ref": "#/definitions/httpx.ErrorEnvelope"
                         }
@@ -1428,7 +1622,7 @@ const docTemplate = `{
                         }
                     },
                     "403": {
-                        "description": "Tenant não associado",
+                        "description": "Tenant não associado ou bloqueado",
                         "schema": {
                             "$ref": "#/definitions/httpx.ErrorEnvelope"
                         }
@@ -1534,7 +1728,7 @@ const docTemplate = `{
                         }
                     },
                     "403": {
-                        "description": "Tenant não associado",
+                        "description": "Tenant não associado ou bloqueado",
                         "schema": {
                             "$ref": "#/definitions/httpx.ErrorEnvelope"
                         }
@@ -1580,7 +1774,7 @@ const docTemplate = `{
                         }
                     },
                     "403": {
-                        "description": "Tenant não associado",
+                        "description": "Tenant não associado ou bloqueado",
                         "schema": {
                             "$ref": "#/definitions/httpx.ErrorEnvelope"
                         }
@@ -1666,6 +1860,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Não autenticado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant bloqueado ou limite excedido",
                         "schema": {
                             "type": "string"
                         }
@@ -1780,6 +1980,12 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "403": {
+                        "description": "Tenant bloqueado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "500": {
                         "description": "Erro interno",
                         "schema": {
@@ -1822,10 +2028,59 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "403": {
+                        "description": "Tenant bloqueado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "500": {
                         "description": "Erro interno",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenant": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retorna o status, plano, período de teste e limites da organização associada ao usuário autenticado",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tenant"
+                ],
+                "summary": "Dados do tenant atual",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.SuccessEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
                         }
                     }
                 }
@@ -2019,6 +2274,14 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "acme-corp"
+                },
+                "paymentStatus": {
+                    "type": "string",
+                    "example": "paid"
+                },
+                "plan": {
+                    "type": "string",
+                    "example": "free"
                 }
             }
         },
@@ -2071,6 +2334,24 @@ const docTemplate = `{
                 "token": {
                     "type": "string",
                     "example": "a1b2c3d4e5f6..."
+                }
+            }
+        },
+        "handlers.UpdateTenantPaymentStatusRequest": {
+            "type": "object",
+            "properties": {
+                "paymentStatus": {
+                    "type": "string",
+                    "example": "paid"
+                }
+            }
+        },
+        "handlers.UpdateTenantPlanRequest": {
+            "type": "object",
+            "properties": {
+                "plan": {
+                    "type": "string",
+                    "example": "standard"
                 }
             }
         },

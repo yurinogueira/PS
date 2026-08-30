@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"ps/internal/application/usecase/season"
 	domain "ps/internal/domain/season"
+	domaintenant "ps/internal/domain/tenant"
 	"ps/internal/shared/middleware"
 )
 
@@ -26,6 +28,7 @@ func NewSeasonHandler(service *season.Service) *SeasonHandler {
 // @Success      201  {object}  season.Season
 // @Failure      400  {string}  string "Requisição inválida"
 // @Failure      401  {string}  string "Não autenticado"
+// @Failure      403  {string}  string "Tenant bloqueado ou limite excedido"
 // @Failure      500  {string}  string "Erro interno"
 // @Router       /api/v1/seasons [post]
 func (h *SeasonHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -37,6 +40,10 @@ func (h *SeasonHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.Create(r.Context(), &req, tenantID); err != nil {
+		if errors.Is(err, domaintenant.ErrLimitExceeded) || errors.Is(err, domaintenant.ErrPaymentUnpaid) || errors.Is(err, domaintenant.ErrTrialExpired) {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -112,6 +119,7 @@ func (h *SeasonHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // @Success      200     {object}  season.Season
 // @Failure      400     {string}  string "Requisição inválida"
 // @Failure      401     {string}  string "Não autenticado"
+// @Failure      403     {string}  string "Tenant bloqueado"
 // @Failure      500     {string}  string "Erro interno"
 // @Router       /api/v1/seasons/{id} [put]
 func (h *SeasonHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -130,6 +138,10 @@ func (h *SeasonHandler) Update(w http.ResponseWriter, r *http.Request) {
 	req.ID = id
 
 	if err := h.service.Update(r.Context(), &req, tenantID); err != nil {
+		if errors.Is(err, domaintenant.ErrLimitExceeded) || errors.Is(err, domaintenant.ErrPaymentUnpaid) || errors.Is(err, domaintenant.ErrTrialExpired) {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -147,6 +159,7 @@ func (h *SeasonHandler) Update(w http.ResponseWriter, r *http.Request) {
 // @Success      204  {string}  string "Excluído com sucesso"
 // @Failure      400  {string}  string "ID obrigatório"
 // @Failure      401  {string}  string "Não autenticado"
+// @Failure      403  {string}  string "Tenant bloqueado"
 // @Failure      500  {string}  string "Erro interno"
 // @Router       /api/v1/seasons/{id} [delete]
 func (h *SeasonHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -158,6 +171,10 @@ func (h *SeasonHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.Delete(r.Context(), id, tenantID); err != nil {
+		if errors.Is(err, domaintenant.ErrLimitExceeded) || errors.Is(err, domaintenant.ErrPaymentUnpaid) || errors.Is(err, domaintenant.ErrTrialExpired) {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

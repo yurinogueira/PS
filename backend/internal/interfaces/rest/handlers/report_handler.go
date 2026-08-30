@@ -12,6 +12,7 @@ import (
 
 	userport "ps/internal/application/ports/user"
 	reportusecase "ps/internal/application/usecase/report"
+	domaintenant "ps/internal/domain/tenant"
 	"ps/internal/shared/httpx"
 	"ps/internal/shared/middleware"
 )
@@ -28,6 +29,16 @@ func NewReportHandler(service *reportusecase.Service, userRepo userport.Reposito
 	}
 }
 
+func handleReportTenantError(w http.ResponseWriter, err error) bool {
+	if errors.Is(err, domaintenant.ErrLimitExceeded) ||
+		errors.Is(err, domaintenant.ErrPaymentUnpaid) ||
+		errors.Is(err, domaintenant.ErrTrialExpired) {
+		httpx.Error(w, http.StatusForbidden, err.Error(), nil)
+		return true
+	}
+	return false
+}
+
 // ExportClientsCSV godoc
 // @Summary      Exportar relatório CSV de clientes
 // @Description  Inicia a extração assíncrona do relatório consolidado de clientes, cães, fotos e pagamentos do tenant autenticado e envia o link para o e-mail cadastrado
@@ -36,7 +47,7 @@ func NewReportHandler(service *reportusecase.Service, userRepo userport.Reposito
 // @Produce      json
 // @Success      202  {object}  httpx.SuccessEnvelope
 // @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
-// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado"
+// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado ou bloqueado"
 // @Failure      500  {object}  httpx.ErrorEnvelope "Erro interno"
 // @Router       /api/v1/reports/clients-csv [post]
 func (h *ReportHandler) ExportClientsCSV(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +58,14 @@ func (h *ReportHandler) ExportClientsCSV(w http.ResponseWriter, r *http.Request)
 	}
 
 	seasonID := r.URL.Query().Get("season_id")
+
+	if err := h.service.ValidateAccess(r.Context(), tenantID, seasonID); err != nil {
+		if handleReportTenantError(w, err) {
+			return
+		}
+		httpx.Error(w, http.StatusInternalServerError, "Failed to validate report access", nil)
+		return
+	}
 
 	userID := middleware.GetUserID(r.Context())
 	var userEmail, userName string
@@ -81,7 +100,7 @@ func (h *ReportHandler) ExportClientsCSV(w http.ResponseWriter, r *http.Request)
 // @Produce      json
 // @Success      202  {object}  httpx.SuccessEnvelope
 // @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
-// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado"
+// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado ou bloqueado"
 // @Failure      500  {object}  httpx.ErrorEnvelope "Erro interno"
 // @Router       /api/v1/reports/unpaid-clients-csv [post]
 func (h *ReportHandler) ExportUnpaidClientsCSV(w http.ResponseWriter, r *http.Request) {
@@ -92,6 +111,14 @@ func (h *ReportHandler) ExportUnpaidClientsCSV(w http.ResponseWriter, r *http.Re
 	}
 
 	seasonID := r.URL.Query().Get("season_id")
+
+	if err := h.service.ValidateAccess(r.Context(), tenantID, seasonID); err != nil {
+		if handleReportTenantError(w, err) {
+			return
+		}
+		httpx.Error(w, http.StatusInternalServerError, "Failed to validate report access", nil)
+		return
+	}
 
 	userID := middleware.GetUserID(r.Context())
 	var userEmail, userName string
@@ -126,7 +153,7 @@ func (h *ReportHandler) ExportUnpaidClientsCSV(w http.ResponseWriter, r *http.Re
 // @Produce      json
 // @Success      202  {object}  httpx.SuccessEnvelope
 // @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
-// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado"
+// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado ou bloqueado"
 // @Failure      500  {object}  httpx.ErrorEnvelope "Erro interno"
 // @Router       /api/v1/reports/paid-clients-csv [post]
 func (h *ReportHandler) ExportPaidClientsCSV(w http.ResponseWriter, r *http.Request) {
@@ -137,6 +164,14 @@ func (h *ReportHandler) ExportPaidClientsCSV(w http.ResponseWriter, r *http.Requ
 	}
 
 	seasonID := r.URL.Query().Get("season_id")
+
+	if err := h.service.ValidateAccess(r.Context(), tenantID, seasonID); err != nil {
+		if handleReportTenantError(w, err) {
+			return
+		}
+		httpx.Error(w, http.StatusInternalServerError, "Failed to validate report access", nil)
+		return
+	}
 
 	userID := middleware.GetUserID(r.Context())
 	var userEmail, userName string
@@ -171,7 +206,7 @@ func (h *ReportHandler) ExportPaidClientsCSV(w http.ResponseWriter, r *http.Requ
 // @Produce      json
 // @Success      202  {object}  httpx.SuccessEnvelope
 // @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
-// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado"
+// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado ou bloqueado"
 // @Failure      500  {object}  httpx.ErrorEnvelope "Erro interno"
 // @Router       /api/v1/reports/clients-pdf [post]
 func (h *ReportHandler) ExportClientsPDF(w http.ResponseWriter, r *http.Request) {
@@ -182,6 +217,14 @@ func (h *ReportHandler) ExportClientsPDF(w http.ResponseWriter, r *http.Request)
 	}
 
 	seasonID := r.URL.Query().Get("season_id")
+
+	if err := h.service.ValidateAccess(r.Context(), tenantID, seasonID); err != nil {
+		if handleReportTenantError(w, err) {
+			return
+		}
+		httpx.Error(w, http.StatusInternalServerError, "Failed to validate report access", nil)
+		return
+	}
 
 	userID := middleware.GetUserID(r.Context())
 	var userEmail, userName string
@@ -216,7 +259,7 @@ func (h *ReportHandler) ExportClientsPDF(w http.ResponseWriter, r *http.Request)
 // @Produce      application/pdf
 // @Success      200  {string}  string "Arquivo PDF"
 // @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
-// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado"
+// @Failure      403  {object}  httpx.ErrorEnvelope "Tenant não associado ou bloqueado"
 // @Failure      500  {object}  httpx.ErrorEnvelope "Erro interno"
 // @Router       /api/v1/reports/clients-pdf [get]
 func (h *ReportHandler) DownloadDirectClientsPDF(w http.ResponseWriter, r *http.Request) {
@@ -230,6 +273,9 @@ func (h *ReportHandler) DownloadDirectClientsPDF(w http.ResponseWriter, r *http.
 
 	pdfData, err := h.service.GenerateDirectClientsPDF(r.Context(), tenantID, seasonID)
 	if err != nil {
+		if handleReportTenantError(w, err) {
+			return
+		}
 		httpx.Error(w, http.StatusInternalServerError, "Falha ao gerar relatório PDF", nil)
 		return
 	}
@@ -269,6 +315,9 @@ func (h *ReportHandler) DownloadReport(w http.ResponseWriter, r *http.Request) {
 
 	data, err := h.service.GetReportFile(r.Context(), tenantID, filePath)
 	if err != nil {
+		if handleReportTenantError(w, err) {
+			return
+		}
 		if errors.Is(err, reportusecase.ErrUnauthorizedTenant) || errors.Is(err, reportusecase.ErrInvalidReportPath) {
 			httpx.Error(w, http.StatusForbidden, "Acesso não autorizado a este relatório", nil)
 			return
