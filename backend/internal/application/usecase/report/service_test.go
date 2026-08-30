@@ -279,32 +279,33 @@ func TestGenerateClientsCSV_FullExpansionAndRules(t *testing.T) {
 
 	// Check Header
 	headers := records[0]
-	if headers[0] != "Nome" || headers[4] != "Número do Arquivo da Foto" || headers[5] != "Fotografo" {
+	if headers[0] != "Nome" || headers[4] != "Dono do Cachorro" || headers[5] != "Raça" || headers[6] != "Juiz" || headers[8] != "Número do Arquivo da Foto" {
 		t.Fatalf("headers mismatch: %v", headers)
 	}
 
 	// Check dog-1 rows (2 rows)
+	// Headers: Nome[0], Email[1], AltEmail[2], Phone[3], Dono[4], Raca[5], Juiz[6], Comp[7], Arquivo[8], Fotografo[9], Pagamento[10], Valor[11], Data[12]
 	row1 := records[1]
-	if row1[0] != "Maria Souza" || row1[3] != "(11) 99999-8888" || row1[4] != "IMG_001" || row1[5] != "Fotógrafo Alpha" || row1[6] != "Melhor da Raça" || row1[8] != "Pix" || row1[10] != "100.50" {
+	if row1[0] != "Maria Souza" || row1[3] != "(11) 99999-8888" || row1[4] != "Sim" || row1[5] != "Border Collie" || row1[6] != "Juiz Silva" || row1[7] != "Melhor da Raça" || row1[8] != "IMG_001" || row1[9] != "Fotógrafo Alpha" || row1[10] != "Pix" || row1[11] != "100.50" {
 		t.Fatalf("row 1 mismatch: %v", row1)
 	}
 	row2 := records[2]
-	if row2[3] != "(11) 99999-8888" || row2[4] != "IMG_002" || row2[5] != "Fotógrafo Beta" || row2[6] != "Campeão Adulto" || row2[8] != "Cartão de Crédito" || row2[10] != "200.00" {
+	if row2[3] != "(11) 99999-8888" || row2[7] != "Campeão Adulto" || row2[8] != "IMG_002" || row2[9] != "Fotógrafo Beta" || row2[10] != "Cartão de Crédito" || row2[11] != "200.00" {
 		t.Fatalf("row 2 mismatch: %v", row2)
 	}
 
 	// Check dog-2 rows (3 rows, CSV injection sanitized with single quote, photo repeated on 3rd row)
 	row3 := records[3]
-	if row3[4] != "'=MALICIOUS_CMD" || row3[6] != "Sim" || row3[8] != "Dinheiro" {
+	if row3[8] != "'=MALICIOUS_CMD" || row3[7] != "Sim" || row3[10] != "Dinheiro" {
 		t.Fatalf("expected sanitized CSV injection and Dinheiro payment, got: %v", row3)
 	}
 	row4 := records[4]
-	if row4[4] != "'+SUM(A1:A2)" || row4[6] != "Sim" || row4[8] != "Pix" {
-		t.Fatalf("expected sanitized CSV injection field, got: %s", row4[4])
+	if row4[8] != "'+SUM(A1:A2)" || row4[7] != "Sim" || row4[10] != "Pix" {
+		t.Fatalf("expected sanitized CSV injection field, got: %s", row4[8])
 	}
 	row5 := records[5]
-	if row5[4] != "'+SUM(A1:A2)" || row5[6] != "Sim" {
-		t.Fatalf("expected repeated photo on row 5, got: %s", row5[4])
+	if row5[8] != "'+SUM(A1:A2)" || row5[7] != "Sim" {
+		t.Fatalf("expected repeated photo on row 5, got: %s", row5[8])
 	}
 
 	// Check email sent
@@ -325,6 +326,86 @@ func TestGenerateClientsCSV_FullExpansionAndRules(t *testing.T) {
 	_, err = svc.GetReportFile(context.Background(), "other-tenant", filePath)
 	if !errors.Is(err, ErrUnauthorizedTenant) {
 		t.Fatalf("expected ErrUnauthorizedTenant when accessing other tenant's report, got: %v", err)
+	}
+}
+
+func TestGenerateClientsPDF_Success(t *testing.T) {
+	tenantID := "tenant-456"
+	amount150 := 150.0
+	isTrue := true
+	isFalse := false
+
+	clientRepo := &mockClientRepo{
+		clients: []*clientdomain.SeasonClient{
+			{
+				ID:       "client-1",
+				TenantID: tenantID,
+				PersonID: "person-1",
+				Dogs: []clientdomain.Dog{
+					{
+						Breed:           "Dachshund",
+						Judges:          []string{"Tamas Jakkel", "Jorge jose"},
+						IsOwner:         &isTrue,
+						WonCompetitions: []string{"Melhor Filhote Américas e Caribe", "Cachorro Maluco"},
+						Photos: []clientdomain.Photo{
+							{FileNumber: "4124", PaymentMethod: "Pix", AmountPaid: &amount150},
+							{FileNumber: "4128", PaymentMethod: "Pix", AmountPaid: &amount150},
+						},
+					},
+					{
+						Breed:           "Basset Hund",
+						Judge:           "José Maurício Medeiros",
+						IsOwner:         &isFalse,
+						WonCompetitions: []string{"Melhor Raça"},
+						Photos: []clientdomain.Photo{
+							{FileNumber: "4125", PaymentMethod: "Não pago"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	personRepo := &mockPersonRepo{
+		people: map[string]*persondomain.Person{
+			"person-1": {
+				ID:    "person-1",
+				Name:  "Alex Itaboray",
+				Email: "alexitaboray@gmail.com",
+				Phone: "62996578137",
+			},
+		},
+	}
+
+	photographerRepo := &mockPhotographerRepo{}
+	storage := &mockStorageProvider{}
+	emailSender := &mockEmailSender{}
+
+	svc := NewService(clientRepo, personRepo, photographerRepo, storage, emailSender, "http://localhost:8080")
+
+	// Direct PDF test
+	pdfBytes, err := svc.GenerateDirectClientsPDF(context.Background(), tenantID)
+	if err != nil {
+		t.Fatalf("unexpected error generating direct PDF: %v", err)
+	}
+	if len(pdfBytes) < 500 {
+		t.Fatalf("generated PDF too small (%d bytes)", len(pdfBytes))
+	}
+	// Check PDF magic bytes '%PDF-'
+	if !bytes.HasPrefix(pdfBytes, []byte("%PDF-")) {
+		t.Fatalf("file content does not start with PDF magic header %%PDF-")
+	}
+
+	// Async PDF test with email
+	pdfPath, err := svc.GenerateClientsPDF(context.Background(), tenantID, "user@example.com", "User")
+	if err != nil {
+		t.Fatalf("unexpected error generating PDF with email: %v", err)
+	}
+	if !strings.HasSuffix(pdfPath, ".pdf") {
+		t.Fatalf("expected .pdf extension in path, got: %s", pdfPath)
+	}
+	if len(emailSender.sentReports) != 1 {
+		t.Fatalf("expected 1 email sent, got %d", len(emailSender.sentReports))
 	}
 }
 
@@ -582,4 +663,3 @@ func TestGenerateUnpaidClientsCSV(t *testing.T) {
 		t.Fatalf("unexpected email details: %v", emailSender.sentReports[0])
 	}
 }
-

@@ -134,6 +134,8 @@ func (r *repository) List(ctx context.Context, tenantID string, filter domain.Li
 			bson.D{{Key: "person_doc.phone", Value: regexDoc}},
 			bson.D{{Key: "dogs.breed", Value: regexDoc}},
 			bson.D{{Key: "dogs.judge", Value: regexDoc}},
+			bson.D{{Key: "dogs.judges", Value: regexDoc}},
+			bson.D{{Key: "dogs.photos.judges", Value: regexDoc}},
 			bson.D{{Key: "dogs.won_competitions", Value: regexDoc}},
 			bson.D{{Key: "dogs.photos.file_number", Value: regexDoc}},
 		}

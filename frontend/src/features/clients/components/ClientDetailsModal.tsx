@@ -22,6 +22,7 @@ import {
   Alert,
   CircularProgress,
   Chip,
+  Autocomplete,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
@@ -36,6 +37,7 @@ import {
   photographerService,
   Photographer,
 } from "../../../services/api/photographer.service";
+import { useSeasonStore } from "../../../store/seasonStore";
 import { formatPhone } from "../../../utils/phone";
 
 const PAYMENT_METHODS = [
@@ -59,6 +61,7 @@ export const ClientDetailsModal = ({
   onClose,
   onSuccess,
 }: ClientDetailsModalProps) => {
+  const { activeSeason } = useSeasonStore();
   const [client, setClient] = useState<SeasonClient | null>(null);
   const [person, setPerson] = useState<Person | null>(null);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
@@ -355,14 +358,37 @@ export const ClientDetailsModal = ({
                         }
                         sx={{ flex: 1, minWidth: 150 }}
                       />
-                      <TextField
-                        label="Juiz"
+                      <Autocomplete
+                        multiple
+                        freeSolo
                         size="small"
-                        value={dog.judge}
-                        onChange={(e) =>
-                          updateDog(dIdx, "judge", e.target.value)
+                        options={activeSeason?.judges || []}
+                        value={
+                          dog.judges ||
+                          (dog.judge
+                            ? dog.judge
+                                .split(",")
+                                .map((j) => j.trim())
+                                .filter(Boolean)
+                            : [])
                         }
-                        sx={{ flex: 1, minWidth: 150 }}
+                        onChange={(_, val) => {
+                          const cleaned = val
+                            .map((v) => v.trim())
+                            .filter(Boolean);
+                          updateDog(dIdx, "judges", cleaned);
+                          updateDog(dIdx, "judge", cleaned.join(", "));
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Juiz"
+                            placeholder={
+                              dog.judges?.length ? "" : "Selecione ou digite"
+                            }
+                          />
+                        )}
+                        sx={{ flex: 1, minWidth: 180 }}
                       />
                       <TextField
                         type="number"
@@ -642,8 +668,8 @@ export const ClientDetailsModal = ({
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
           <Typography>
-            Tem certeza que deseja excluir o cadastro deste cliente na
-            temporada?
+            Tem certeza que deseja excluir o cadastro deste cliente neste
+            evento?
           </Typography>
         </DialogContent>
         <DialogActions>

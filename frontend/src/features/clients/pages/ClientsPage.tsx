@@ -29,12 +29,14 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  Autocomplete,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   clientService,
@@ -220,7 +222,38 @@ export const ClientsPage = () => {
         open: true,
         message:
           err?.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório.",
+          "Erro ao solicitar exportação do relatório CSV.",
+        severity: "error",
+      });
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
+  const handleExportClientsPdf = async () => {
+    setReportMenuAnchor(null);
+    setExportingReport(true);
+    try {
+      const blob = await reportService.downloadClientsPdfDirect();
+      const fileName = `clientes_${Math.floor(Date.now() / 1000)}.pdf`;
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+
+      setSnackbar({
+        open: true,
+        message: "Relatório PDF gerado e baixado com sucesso!",
+        severity: "success",
+      });
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message: err?.response?.data?.message || "Erro ao gerar relatório PDF.",
         severity: "error",
       });
     } finally {
@@ -256,7 +289,7 @@ export const ClientsPage = () => {
   if (!activeSeason) {
     return (
       <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
-        <Typography>Selecione uma Temporada no topo.</Typography>
+        <Typography>Selecione um Evento no topo.</Typography>
       </Box>
     );
   }
@@ -280,7 +313,7 @@ export const ClientsPage = () => {
             fontWeight: 700,
           }}
         >
-          Clientes da Temporada Atual
+          Clientes do Evento Atual
         </Typography>
         <Box
           sx={{
@@ -312,6 +345,12 @@ export const ClientsPage = () => {
             open={Boolean(reportMenuAnchor)}
             onClose={() => setReportMenuAnchor(null)}
           >
+            <MenuItem onClick={handleExportClientsPdf}>
+              <ListItemIcon>
+                <PictureAsPdfIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              Exportar Relatório (.pdf)
+            </MenuItem>
             <MenuItem onClick={handleExportClientsCsv}>
               <ListItemIcon>
                 <FileDownloadIcon fontSize="small" />
@@ -393,7 +432,7 @@ export const ClientsPage = () => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Vincular Cliente na Temporada</DialogTitle>
+        <DialogTitle>Vincular Cliente no Evento</DialogTitle>
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}
         >
@@ -445,13 +484,36 @@ export const ClientsPage = () => {
                     minWidth: "160px",
                   }}
                 />
-                <TextField
-                  label="Juiz (Opcional)"
-                  value={dog.judge}
-                  onChange={(e) => updateDog(dIdx, "judge", e.target.value)}
+                <Autocomplete
+                  multiple
+                  freeSolo
+                  options={activeSeason?.judges || []}
+                  value={
+                    dog.judges ||
+                    (dog.judge
+                      ? dog.judge
+                          .split(",")
+                          .map((j) => j.trim())
+                          .filter(Boolean)
+                      : [])
+                  }
+                  onChange={(_, val) => {
+                    const cleaned = val.map((v) => v.trim()).filter(Boolean);
+                    updateDog(dIdx, "judges", cleaned);
+                    updateDog(dIdx, "judge", cleaned.join(", "));
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Juiz (Opcional)"
+                      placeholder={
+                        dog.judges?.length ? "" : "Selecione ou digite"
+                      }
+                    />
+                  )}
                   sx={{
-                    flex: { xs: "1 1 100%", sm: "1 1 200px" },
-                    minWidth: "160px",
+                    flex: { xs: "1 1 100%", sm: "1 1 240px" },
+                    minWidth: "200px",
                   }}
                 />
                 <TextField

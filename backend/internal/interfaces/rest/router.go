@@ -150,6 +150,8 @@ func NewRouter(
 
 	mux.Handle("POST /api/v1/reports/clients-csv", businessChain(reportHandler.ExportClientsCSV))
 	mux.Handle("POST /api/v1/reports/unpaid-clients-csv", businessChain(reportHandler.ExportUnpaidClientsCSV))
+	mux.Handle("POST /api/v1/reports/clients-pdf", businessChain(reportHandler.ExportClientsPDF))
+	mux.Handle("GET /api/v1/reports/clients-pdf", businessChain(reportHandler.DownloadDirectClientsPDF))
 	mux.Handle("GET /api/v1/reports/download", businessChain(reportHandler.DownloadReport))
 
 	handler := middleware.SecurityHeaders(

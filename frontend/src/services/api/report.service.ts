@@ -19,6 +19,20 @@ export const reportService = {
     return data;
   },
 
+  exportClientsPdf: async (): Promise<ReportExportResponse> => {
+    const { data } = await apiClient.post<ReportExportResponse>(
+      "/reports/clients-pdf",
+    );
+    return data;
+  },
+
+  downloadClientsPdfDirect: async (): Promise<Blob> => {
+    const { data } = await apiClient.get<Blob>("/reports/clients-pdf", {
+      responseType: "blob",
+    });
+    return data;
+  },
+
   downloadReport: async (filePath: string): Promise<Blob> => {
     const { data } = await apiClient.get<Blob>("/reports/download", {
       params: { file: filePath },

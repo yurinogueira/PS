@@ -4,6 +4,8 @@ import { safeStorage } from "../services/storage/storage";
 export interface Season {
   id: string;
   name: string;
+  photographer_ids?: string[];
+  judges?: string[];
 }
 
 interface SeasonState {
