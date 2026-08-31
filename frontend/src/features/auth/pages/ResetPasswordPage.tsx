@@ -23,13 +23,16 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
+import { useTranslation } from "react-i18next";
 import { AuthHeroBanner } from "../components/AuthHeroBanner";
 import { authService } from "../services/auth.service";
 import { useDocumentTitle } from "../../shared";
 import { brandColors } from "../../../styles/theme";
+import { LanguageSelector } from "../../../components/LanguageSelector";
 
 export function ResetPasswordPage() {
-  useDocumentTitle("Redefinir Senha");
+  const { t } = useTranslation();
+  useDocumentTitle(t("auth.resetPassword.title"));
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get("token") || "";
@@ -46,19 +49,17 @@ export function ResetPasswordPage() {
     setErrorMsg(null);
 
     if (!token.trim()) {
-      setErrorMsg(
-        "Token de recuperação inválido ou ausente. Solicite um novo link.",
-      );
+      setErrorMsg(t("auth.resetPassword.tokenMissing"));
       return;
     }
 
     if (password.length < 8 || password.length > 72) {
-      setErrorMsg("A nova senha deve ter entre 8 e 72 caracteres.");
+      setErrorMsg(t("auth.resetPassword.errorDefault"));
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMsg("As senhas informadas não coincidem.");
+      setErrorMsg(t("auth.resetPassword.errorPasswordMismatch"));
       return;
     }
 
@@ -73,7 +74,7 @@ export function ResetPasswordPage() {
       const errorObj = err as { response?: { data?: { message?: string } } };
       setErrorMsg(
         errorObj.response?.data?.message ||
-          "Não foi possível redefinir a senha. O token pode ter expirado.",
+          t("auth.resetPassword.errorDefault"),
       );
     } finally {
       setLoading(false);
@@ -120,31 +121,42 @@ export function ResetPasswordPage() {
           }}
         >
           <CardContent sx={{ p: { xs: 1, sm: 3 } }}>
-            {/* Mobile Header / Brand */}
+            {/* Header / Brand & Language Selector */}
             <Box
               sx={{
-                display: { xs: "flex", md: "none" },
+                display: "flex",
                 alignItems: "center",
+                justifyContent: "space-between",
                 mb: 3,
-                gap: 1,
               }}
             >
               <Box
                 sx={{
-                  bgcolor: brandColors.primary,
-                  borderRadius: 1.5,
-                  p: 0.75,
-                  display: "flex",
+                  display: { xs: "flex", md: "none" },
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 1,
                 }}
-              ></Box>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 800, color: "primary.main" }}
               >
-                PS
-              </Typography>
+                <Box
+                  sx={{
+                    bgcolor: brandColors.primary,
+                    borderRadius: 1.5,
+                    p: 0.75,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 800, color: "primary.main" }}
+                >
+                  PS
+                </Typography>
+              </Box>
+              <Box sx={{ ml: "auto" }}>
+                <LanguageSelector variant="auth" />
+              </Box>
             </Box>
 
             <Box sx={{ mb: 3.5 }}>
@@ -153,17 +165,16 @@ export function ResetPasswordPage() {
                 variant="h4"
                 sx={{ fontWeight: 700, mb: 1, color: "text.primary" }}
               >
-                Nova Senha
+                {t("auth.resetPassword.title")}
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Defina uma nova senha de acesso para sua conta.
+                {t("auth.resetPassword.subtitle")}
               </Typography>
             </Box>
 
             {!token && (
               <Alert severity="warning" sx={{ mb: 3, borderRadius: 1.5 }}>
-                Token de recuperação não identificado na URL. Solicite um novo
-                link através da página de recuperação.
+                {t("auth.resetPassword.tokenMissing")}
               </Alert>
             )}
 
@@ -179,20 +190,20 @@ export function ResetPasswordPage() {
                   sx={{ fontSize: 48, color: "success.main", mb: 2 }}
                 />
                 <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>
-                  Senha alterada com sucesso!
+                  {t("auth.resetPassword.successTitle")}
                 </Typography>
                 <Typography
                   variant="body2"
                   sx={{ color: "text.secondary", mb: 3 }}
                 >
-                  Você já pode realizar o login com suas novas credenciais.
+                  {t("auth.resetPassword.successMessage")}
                 </Typography>
                 <Button
                   onClick={() => navigate("/login", { replace: true })}
                   variant="contained"
                   fullWidth
                 >
-                  Acessar Minha Conta
+                  {t("auth.resetPassword.goToLogin")}
                 </Button>
               </Box>
             ) : (
@@ -200,14 +211,14 @@ export function ResetPasswordPage() {
                 <Stack spacing={2.5}>
                   <TextField
                     fullWidth
-                    label="Nova Senha"
+                    label={t("auth.resetPassword.newPassword")}
                     type={showPassword ? "text" : "password"}
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder={t("auth.resetPassword.newPasswordPlaceholder")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading || !token}
                     required
-                    helperText="Entre 8 e 72 caracteres"
+                    helperText={t("auth.resetPassword.newPasswordHelper")}
                     slotProps={{
                       htmlInput: { maxLength: 72 },
                       input: {
@@ -240,7 +251,7 @@ export function ResetPasswordPage() {
 
                   <TextField
                     fullWidth
-                    label="Confirmar Nova Senha"
+                    label={t("auth.resetPassword.confirmPassword")}
                     type={showPassword ? "text" : "password"}
                     placeholder="Repita a nova senha"
                     value={confirmPassword}
@@ -276,7 +287,7 @@ export function ResetPasswordPage() {
                     {loading ? (
                       <CircularProgress size={24} sx={{ color: "#FFFFFF" }} />
                     ) : (
-                      "Salvar Nova Senha"
+                      t("auth.resetPassword.submit")
                     )}
                   </Button>
                 </Stack>
@@ -300,7 +311,7 @@ export function ResetPasswordPage() {
                   }}
                 >
                   <ArrowBackRoundedIcon fontSize="small" />
-                  Voltar para o Login
+                  {t("auth.resetPassword.backToLogin")}
                 </Link>
               </Box>
             )}

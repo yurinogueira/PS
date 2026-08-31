@@ -38,6 +38,7 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useTranslation } from "react-i18next";
 import {
   clientService,
   SeasonClient,
@@ -62,6 +63,7 @@ const PAYMENT_METHODS = [
 ];
 
 export const ClientsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { activeSeason } = useSeasonStore();
   const [clients, setClients] = useState<SeasonClient[]>([]);
@@ -159,10 +161,10 @@ export const ClientsPage = () => {
     setDogs(newDogs);
   };
 
-  const updateDog = <K extends keyof Dog>(
+  const updateDog = (
     index: number,
-    field: K,
-    value: Dog[K],
+    field: string,
+    value: string | number | boolean,
   ) => {
     const newDogs = [...dogs];
     newDogs[index] = { ...newDogs[index], [field]: value };
@@ -186,7 +188,7 @@ export const ClientsPage = () => {
       payment_method: "Pix",
       currency: "BRL",
       amount_paid: 0,
-    } as Photo);
+    });
     newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setDogs(newDogs);
   };
@@ -194,74 +196,59 @@ export const ClientsPage = () => {
   const updatePhoto = (
     dogIndex: number,
     photoIndex: number,
-    fieldOrObj: keyof Photo | Partial<Photo>,
+    fieldOrObj: string | Partial<Photo>,
     value?: unknown,
   ) => {
     const newDogs = [...dogs];
+    const photos = [...newDogs[dogIndex].photos];
     if (typeof fieldOrObj === "string") {
-      newDogs[dogIndex].photos[photoIndex] = {
-        ...newDogs[dogIndex].photos[photoIndex],
+      photos[photoIndex] = {
+        ...photos[photoIndex],
         [fieldOrObj]: value,
       };
     } else {
-      newDogs[dogIndex].photos[photoIndex] = {
-        ...newDogs[dogIndex].photos[photoIndex],
+      photos[photoIndex] = {
+        ...photos[photoIndex],
         ...fieldOrObj,
       };
     }
+    newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setDogs(newDogs);
   };
 
   const removePhoto = (dogIndex: number, photoIndex: number) => {
     const newDogs = [...dogs];
-    newDogs[dogIndex].photos.splice(photoIndex, 1);
+    const photos = [...newDogs[dogIndex].photos];
+    photos.splice(photoIndex, 1);
+    newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setDogs(newDogs);
   };
 
-  const handleExportClientsCsv = async () => {
-    setReportMenuAnchor(null);
-    setExportingReport(true);
-    try {
-      const resp = await reportService.exportClientsCsv(activeSeason?.id);
-      setSnackbar({
-        open: true,
-        message:
-          resp?.message ||
-          "Processamento do relatório iniciado! O link do arquivo CSV será enviado para o seu e-mail cadastrado.",
-        severity: "success",
-      });
-    } catch (err: unknown) {
-      const errorObj = err as { response?: { data?: { message?: string } } };
-      setSnackbar({
-        open: true,
-        message:
-          errorObj?.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório CSV.",
-        severity: "error",
-      });
-    } finally {
-      setExportingReport(false);
-    }
+  const getPersonName = (pId: string) => {
+    const p = people.find((item) => item.id === pId);
+    return p ? p.name : "Desconhecido";
   };
 
-  const handleExportClientsPdf = async () => {
+  const handleExportPdfReport = async () => {
+    if (!activeSeason) return;
     setReportMenuAnchor(null);
     setExportingReport(true);
     try {
-      const resp = await reportService.exportClientsPdf(activeSeason?.id);
+      const res = await reportService.exportClientsPdf(activeSeason.id);
       setSnackbar({
         open: true,
         message:
-          resp?.message ||
-          "Processamento do relatório em PDF iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
+          res.message ||
+          "Processamento do relatório em PDF iniciado! O link para download será enviado por e-mail quando o arquivo estiver pronto.",
         severity: "success",
       });
     } catch (err: unknown) {
+      console.error("Erro ao solicitar relatório PDF:", err);
       const errorObj = err as { response?: { data?: { message?: string } } };
       setSnackbar({
         open: true,
         message:
-          errorObj?.response?.data?.message ||
+          errorObj.response?.data?.message ||
           "Erro ao solicitar exportação do relatório PDF.",
         severity: "error",
       });
@@ -270,24 +257,54 @@ export const ClientsPage = () => {
     }
   };
 
-  const handleExportUnpaidClientsCsv = async () => {
+  const handleExportClientsCsvReport = async () => {
+    if (!activeSeason) return;
     setReportMenuAnchor(null);
     setExportingReport(true);
     try {
-      const resp = await reportService.exportUnpaidClientsCsv(activeSeason?.id);
+      const res = await reportService.exportClientsCsv(activeSeason.id);
       setSnackbar({
         open: true,
         message:
-          resp?.message ||
-          "Processamento do relatório iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
+          res.message ||
+          "Processamento do relatório iniciado! O link para download do CSV será enviado por e-mail quando o arquivo estiver pronto.",
         severity: "success",
       });
     } catch (err: unknown) {
+      console.error("Erro ao solicitar relatório CSV de clientes:", err);
       const errorObj = err as { response?: { data?: { message?: string } } };
       setSnackbar({
         open: true,
         message:
-          errorObj?.response?.data?.message ||
+          errorObj.response?.data?.message ||
+          "Erro ao solicitar exportação do relatório CSV.",
+        severity: "error",
+      });
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
+  const handleExportUnpaidClientsCsvReport = async () => {
+    if (!activeSeason) return;
+    setReportMenuAnchor(null);
+    setExportingReport(true);
+    try {
+      const res = await reportService.exportUnpaidClientsCsv(activeSeason.id);
+      setSnackbar({
+        open: true,
+        message:
+          res.message ||
+          "Processamento do relatório iniciado! O link para download do CSV de não pagos será enviado por e-mail.",
+        severity: "success",
+      });
+    } catch (err: unknown) {
+      console.error("Erro ao exportar CSV de não pagos:", err);
+      const errorObj = err as { response?: { data?: { message?: string } } };
+      setSnackbar({
+        open: true,
+        message:
+          errorObj.response?.data?.message ||
           "Erro ao solicitar exportação do relatório.",
         severity: "error",
       });
@@ -296,24 +313,26 @@ export const ClientsPage = () => {
     }
   };
 
-  const handleExportPaidClientsCsv = async () => {
+  const handleExportPaidClientsCsvReport = async () => {
+    if (!activeSeason) return;
     setReportMenuAnchor(null);
     setExportingReport(true);
     try {
-      const resp = await reportService.exportPaidClientsCsv(activeSeason?.id);
+      const res = await reportService.exportPaidClientsCsv(activeSeason.id);
       setSnackbar({
         open: true,
         message:
-          resp?.message ||
-          "Processamento do relatório iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
+          res.message ||
+          "Processamento do relatório iniciado! O link para download do CSV de clientes pagos será enviado por e-mail.",
         severity: "success",
       });
     } catch (err: unknown) {
+      console.error("Erro ao exportar CSV de clientes pagos:", err);
       const errorObj = err as { response?: { data?: { message?: string } } };
       setSnackbar({
         open: true,
         message:
-          errorObj?.response?.data?.message ||
+          errorObj.response?.data?.message ||
           "Erro ao solicitar exportação do relatório de clientes pagos.",
         severity: "error",
       });
@@ -324,8 +343,8 @@ export const ClientsPage = () => {
 
   if (!activeSeason) {
     return (
-      <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
-        <Typography>Selecione um Evento no topo.</Typography>
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h6">Selecione um Evento no topo.</Typography>
       </Box>
     );
   }
@@ -349,22 +368,22 @@ export const ClientsPage = () => {
             fontWeight: 700,
           }}
         >
-          Clientes do Evento Atual
+          {t("clients.title")}
         </Typography>
         <Box
           sx={{
             display: "flex",
-            flexWrap: "wrap",
+            flexDirection: { xs: "column", sm: "row" },
             gap: 1.5,
-            alignItems: "center",
             width: { xs: "100%", sm: "auto" },
           }}
         >
           <Button
             variant="outlined"
+            color="primary"
             startIcon={
               exportingReport ? (
-                <CircularProgress size={16} color="inherit" />
+                <CircularProgress size={18} color="inherit" />
               ) : (
                 <AssessmentIcon />
               )
@@ -372,36 +391,43 @@ export const ClientsPage = () => {
             endIcon={<ExpandMoreIcon />}
             onClick={(e) => setReportMenuAnchor(e.currentTarget)}
             disabled={exportingReport}
-            sx={{ flex: { xs: 1, sm: "initial" }, whiteSpace: "nowrap" }}
+            sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
           >
             {exportingReport ? "Gerando..." : "Relatórios"}
           </Button>
+
           <Menu
             anchorEl={reportMenuAnchor}
             open={Boolean(reportMenuAnchor)}
             onClose={() => setReportMenuAnchor(null)}
+            slotProps={{
+              paper: {
+                elevation: 3,
+                sx: { minWidth: 240, borderRadius: 2, mt: 1 },
+              },
+            }}
           >
-            <MenuItem onClick={handleExportClientsPdf}>
+            <MenuItem onClick={handleExportPdfReport}>
               <ListItemIcon>
                 <PictureAsPdfIcon fontSize="small" color="error" />
               </ListItemIcon>
               Exportar Relatório (.pdf)
             </MenuItem>
-            <MenuItem onClick={handleExportClientsCsv}>
+            <MenuItem onClick={handleExportClientsCsvReport}>
               <ListItemIcon>
-                <FileDownloadIcon fontSize="small" />
+                <FileDownloadIcon fontSize="small" color="primary" />
               </ListItemIcon>
               Exportar Clientes (.csv)
             </MenuItem>
-            <MenuItem onClick={handleExportPaidClientsCsv}>
+            <MenuItem onClick={handleExportPaidClientsCsvReport}>
               <ListItemIcon>
-                <FileDownloadIcon fontSize="small" />
+                <FileDownloadIcon fontSize="small" color="success" />
               </ListItemIcon>
               Exportar Pagos (.csv)
             </MenuItem>
-            <MenuItem onClick={handleExportUnpaidClientsCsv}>
+            <MenuItem onClick={handleExportUnpaidClientsCsvReport}>
               <ListItemIcon>
-                <FileDownloadIcon fontSize="small" />
+                <FileDownloadIcon fontSize="small" color="warning" />
               </ListItemIcon>
               Exportar Não Pagos (.csv)
             </MenuItem>
@@ -409,80 +435,91 @@ export const ClientsPage = () => {
 
           <Button
             variant="contained"
+            startIcon={<AddIcon />}
             onClick={() => setOpen(true)}
-            sx={{ flex: { xs: 1, sm: "initial" }, whiteSpace: "nowrap" }}
+            sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
           >
-            Vincular Cliente
+            {t("clients.add")}
           </Button>
         </Box>
       </Box>
 
-      <Paper
+      <TableContainer
+        component={Paper}
+        elevation={0}
         sx={{
-          width: "100%",
-          overflow: "hidden",
           border: "1px solid #E2E8F0",
           borderRadius: 2,
+          width: "100%",
+          overflowX: "auto",
         }}
-        elevation={0}
       >
-        <TableContainer sx={{ width: "100%", overflowX: "auto" }}>
-          <Table sx={{ minWidth: 600 }}>
-            <TableHead sx={{ bgcolor: "grey.50" }}>
+        <Table sx={{ minWidth: 550 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 600 }}>Pessoa</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("clientDetails.dogs")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Total de Fotos</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>
+                Ações
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {clients.length === 0 ? (
               <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>Pessoa</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Cachorros</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Total de Fotos</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600 }}>
-                  Ações
+                <TableCell colSpan={4} align="center">
+                  {t("clients.noData")}
                 </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {clients.map((c) => {
-                const person = people.find((p) => p.id === c.person_id);
-                const totalPhotos =
-                  c.dogs?.reduce(
-                    (acc, dog) => acc + (dog.photos?.length || 0),
-                    0,
-                  ) || 0;
+            ) : (
+              clients.map((c) => {
+                const totalPhotos = (c.dogs || []).reduce(
+                  (acc, d) => acc + (d.photos?.length || 0),
+                  0,
+                );
                 return (
-                  <TableRow key={c.id}>
-                    <TableCell>{person?.name || "Desconhecido"}</TableCell>
+                  <TableRow key={c.id} hover>
+                    <TableCell>{getPersonName(c.person_id)}</TableCell>
                     <TableCell>{c.dogs?.length || 0}</TableCell>
                     <TableCell>{totalPhotos}</TableCell>
                     <TableCell align="right">
                       <Button
-                        variant="outlined"
                         size="small"
                         onClick={() => navigate(`/clients/${c.id}`)}
                       >
-                        Detalhes
+                        {t("clients.actions.details")}
                       </Button>
                     </TableCell>
                   </TableRow>
                 );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+              })
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
+      {/* Dialog Criar Cliente */}
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Vincular Cliente no Evento</DialogTitle>
+        <DialogTitle>{t("linkClient.title")}</DialogTitle>
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}
         >
-          <FormControl fullWidth required>
-            <InputLabel required>Selecione a Pessoa</InputLabel>
+          <FormControl fullWidth sx={{ mt: 1 }}>
+            <InputLabel id="select-person-label">
+              {t("linkClient.fields.person")}
+            </InputLabel>
             <Select
+              labelId="select-person-label"
               value={personId}
-              label="Selecione a Pessoa *"
+              label={t("linkClient.fields.person")}
               onChange={(e) => setPersonId(e.target.value)}
             >
               {people.map((p) => (
@@ -493,9 +530,7 @@ export const ClientsPage = () => {
             </Select>
           </FormControl>
 
-          <Typography variant="h6" sx={{ mt: 2 }}>
-            Cachorros
-          </Typography>
+          <Typography variant="h6">{t("clientDetails.dogs")}</Typography>
           {dogs.map((dog, dIdx) => (
             <Paper
               key={dIdx}
@@ -505,43 +540,36 @@ export const ClientsPage = () => {
                 flexDirection: "column",
                 gap: 2,
                 bgcolor: "#fafafa",
-                border: "1px solid #E2E8F0",
-                borderRadius: 2,
               }}
             >
               <Box
                 sx={{
                   display: "flex",
-                  flexWrap: "wrap",
                   gap: 2,
                   alignItems: "center",
+                  flexWrap: "wrap",
                 }}
               >
                 <TextField
-                  label="Raça (Opcional)"
+                  size="small"
+                  label={t("linkClient.fields.dogName")}
                   value={dog.breed}
                   onChange={(e) => updateDog(dIdx, "breed", e.target.value)}
-                  sx={{
-                    flex: { xs: "1 1 100%", sm: "1 1 200px" },
-                    minWidth: "160px",
-                  }}
+                  sx={{ flex: { xs: "1 1 100%", sm: 2 } }}
                 />
                 <TextField
+                  size="small"
                   type="number"
-                  label="Competições Ganhas"
-                  required
+                  label={t("linkClient.fields.competitions")}
                   value={dog.competitions_won}
                   onChange={(e) =>
                     updateDog(
                       dIdx,
                       "competitions_won",
-                      parseInt(e.target.value) || 0,
+                      parseInt(e.target.value, 10) || 0,
                     )
                   }
-                  sx={{
-                    flex: { xs: "1 1 100%", sm: "1 1 180px" },
-                    minWidth: "160px",
-                  }}
+                  sx={{ flex: { xs: "1 1 100%", sm: 1.5 } }}
                 />
                 <FormControlLabel
                   control={
@@ -553,13 +581,13 @@ export const ClientsPage = () => {
                     />
                   }
                   label="Dono do Cachorro (Opcional)"
-                  sx={{ minWidth: "200px" }}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
                 />
                 <IconButton
                   color="error"
                   onClick={() => removeDog(dIdx)}
                   title="Excluir Cachorro"
-                  sx={{ ml: "auto" }}
+                  sx={{ ml: { xs: "auto", sm: 0 } }}
                 >
                   <DeleteIcon />
                 </IconButton>
@@ -568,19 +596,18 @@ export const ClientsPage = () => {
               {dog.competitions_won > 0 && (
                 <Box
                   sx={{
-                    p: 2,
-                    mb: 2,
+                    p: 1.5,
                     bgcolor: "#ffffff",
                     borderRadius: 2,
                     border: "1px solid",
                     borderColor: "divider",
                     display: "flex",
                     flexDirection: "column",
-                    gap: 1.5,
+                    gap: 1,
                   }}
                 >
                   <Typography
-                    variant="subtitle2"
+                    variant="caption"
                     sx={{
                       fontWeight: 700,
                       color: "text.primary",
@@ -589,14 +616,15 @@ export const ClientsPage = () => {
                       gap: 0.5,
                     }}
                   >
-                    <EmojiEventsIcon fontSize="small" color="warning" />
-                    Competições Vencidas ({dog.won_competitions?.length || 0})
+                    <EmojiEventsIcon fontSize="inherit" color="warning" />
+                    {t("linkClient.fields.competitions")} (
+                    {dog.won_competitions?.length || 0})
                   </Typography>
                   <Box sx={{ display: "flex", gap: 1 }}>
                     <TextField
                       size="small"
                       fullWidth
-                      placeholder="Nome da competição vencida..."
+                      placeholder={t("linkClient.fields.addCompetition")}
                       value={compInputs[dIdx] || ""}
                       onChange={(e) =>
                         setCompInputs({
@@ -619,7 +647,7 @@ export const ClientsPage = () => {
                       startIcon={<AddIcon />}
                       sx={{ textTransform: "none", whiteSpace: "nowrap" }}
                     >
-                      Adicionar
+                      {t("shared.add")}
                     </Button>
                   </Box>
                   {dog.won_competitions && dog.won_competitions.length > 0 && (
@@ -657,38 +685,33 @@ export const ClientsPage = () => {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  mt: 1,
                 }}
               >
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Fotos
+                <Typography variant="subtitle2">
+                  {t("clientDetails.photos")}
                 </Typography>
                 <Button
                   size="small"
                   startIcon={<AddIcon />}
                   onClick={() => addPhoto(dIdx)}
                 >
-                  Adicionar Foto
+                  {t("clientDetails.addPhoto")}
                 </Button>
               </Box>
 
-              {dog.photos.map((photo, pIdx) => (
+              {dog.photos?.map((photo, pIdx) => (
                 <Box
                   key={pIdx}
                   sx={{
                     display: "flex",
-                    flexWrap: "wrap",
                     gap: 2,
                     alignItems: "center",
-                    p: 2,
-                    bgcolor: "#ffffff",
-                    borderRadius: 1.5,
-                    border: "1px solid #E2E8F0",
+                    flexWrap: "wrap",
                   }}
                 >
                   <TextField
                     size="small"
-                    label="Número do Arquivo"
+                    label={t("linkClient.fields.fileNumber")}
                     required
                     value={photo.file_number}
                     onChange={(e) =>
@@ -707,10 +730,12 @@ export const ClientsPage = () => {
                       minWidth: "180px",
                     }}
                   >
-                    <InputLabel required>Fotógrafo</InputLabel>
+                    <InputLabel required>
+                      {t("linkClient.fields.photographer")}
+                    </InputLabel>
                     <Select
                       value={photo.photographer_id}
-                      label="Fotógrafo *"
+                      label={t("linkClient.fields.photographer")}
                       onChange={(e) =>
                         updatePhoto(
                           dIdx,
@@ -738,13 +763,13 @@ export const ClientsPage = () => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Juízes"
+                        label={t("linkClient.fields.judges")}
                         placeholder={
                           photo.judges?.length
                             ? ""
                             : activeSeason?.judges?.length
-                              ? "Selecione juízes"
-                              : "Nenhum juiz no evento"
+                              ? t("linkClient.fields.judgesPlaceholder")
+                              : t("linkClient.fields.noJudgesEvent")
                         }
                       />
                     )}
@@ -761,10 +786,12 @@ export const ClientsPage = () => {
                       minWidth: "160px",
                     }}
                   >
-                    <InputLabel required>Forma de Pagamento</InputLabel>
+                    <InputLabel required>
+                      {t("linkClient.fields.paymentMethod")}
+                    </InputLabel>
                     <Select
                       value={photo.payment_method}
-                      label="Forma de Pagamento *"
+                      label={t("linkClient.fields.paymentMethod")}
                       onChange={(e) => {
                         const newMethod = e.target.value;
                         if (newMethod === "Não pago") {
@@ -815,7 +842,7 @@ export const ClientsPage = () => {
                       <TextField
                         size="small"
                         type="number"
-                        label="Valor Pago (Opcional)"
+                        label={t("linkClient.fields.amountPaid")}
                         slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
                         value={
                           photo.amount_paid === undefined ||
@@ -853,13 +880,13 @@ export const ClientsPage = () => {
             </Paper>
           ))}
           <Button variant="outlined" startIcon={<AddIcon />} onClick={addDog}>
-            Adicionar Cachorro
+            {t("clientDetails.addDog")}
           </Button>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setOpen(false)}>{t("shared.cancel")}</Button>
           <Button onClick={handleSave} variant="contained" disabled={!personId}>
-            Salvar Cadastro
+            {t("profile.saveChanges")}
           </Button>
         </DialogActions>
       </Dialog>

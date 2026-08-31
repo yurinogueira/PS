@@ -1,0 +1,555 @@
+{
+  "layout": {
+    "adminPanel": "Admin Panel",
+    "activeSeason": "Active Event",
+    "noSeason": "No event",
+    "user": "User",
+    "myProfile": "My Profile",
+    "logout": "Logout",
+    "openMenu": "Open menu",
+    "admin": "Administration",
+    "nav": {
+      "overview": "Overview",
+      "seasons": "Events",
+      "photographers": "Photographers",
+      "people": "People",
+      "clientsPhotos": "Clients & Photos",
+      "organizations": "Organizations",
+      "usersAccess": "User Management"
+    }
+  },
+  "language": {
+    "select": "Language",
+    "ptBR": "PT-BR",
+    "enUS": "EN-US"
+  },
+  "auth": {
+    "brand": "PS",
+    "brandTagline": "Photo Storage • Competition Photo Management",
+    "heroCopy": "Total control of your event in one place.",
+    "heroDescription": "Track photographers, clients, winning dogs, and photo sales history with clarity and precision.",
+    "heroFeature1": "Organized photo registration by dog and client",
+    "heroFeature2": "Quick control of payment methods and received amounts",
+    "heroFeature3": "Global filter by event for financial organization",
+    "heroCopyright": "© {{year}} PS. All rights reserved.",
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Enter your credentials to access the panel.",
+      "email": "Email",
+      "password": "Password",
+      "forgotPassword": "Forgot your password?",
+      "submit": "Sign in to PS",
+      "loading": "Signing in...",
+      "noAccount": "Don't have an account yet?",
+      "register": "Create free account",
+      "errorInvalid": "Invalid email or password.",
+      "errorDefault": "Could not connect to the server. Please try again later."
+    },
+    "register": {
+      "title": "Create an account",
+      "subtitle": "Start managing your competition photos and clients in minutes.",
+      "name": "Full name",
+      "email": "Email",
+      "password": "Password",
+      "passwordHelper": "Between 8 and 72 characters",
+      "confirmPassword": "Confirm Password",
+      "submit": "Complete Registration",
+      "loading": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "login": "Sign in",
+      "successTitle": "Account created successfully!",
+      "successMessage": "We sent a confirmation email to {{email}}. Check your inbox and follow the instructions to activate your account.",
+      "goToLogin": "Go to Login",
+      "passwordTooShort": "Password must contain at least 8 characters.",
+      "errorPasswordMismatch": "Passwords do not match. Please verify and try again.",
+      "errorDefault": "Could not create account. Please try again."
+    },
+    "forgotPassword": {
+      "title": "Recover Password",
+      "subtitle": "Enter your registered email and we will send you a link to reset your password.",
+      "email": "Registered email",
+      "submit": "Send Recovery Link",
+      "loading": "Sending...",
+      "backToLogin": "Back to Login",
+      "successTitle": "Email sent!",
+      "successMessage": "If the address {{email}} is registered, you will receive a recovery link shortly.",
+      "errorDefault": "Could not send email. Please try again."
+    },
+    "resetPassword": {
+      "title": "New Password",
+      "subtitle": "Choose a new secure password for your account.",
+      "newPassword": "New Password",
+      "newPasswordHelper": "Minimum 8 characters",
+      "newPasswordPlaceholder": "Minimum 8 characters",
+      "confirmPassword": "Confirm New Password",
+      "submit": "Save New Password",
+      "loading": "Saving...",
+      "backToLogin": "Back to Login",
+      "successTitle": "Password reset successfully!",
+      "successMessage": "Your password has been updated. Sign in with your new password.",
+      "goToLogin": "Go to Login",
+      "tokenMissing": "Recovery token not identified. Use the link sent by email.",
+      "errorPasswordMismatch": "Passwords do not match.",
+      "errorDefault": "Could not reset password. The link may have expired."
+    },
+    "verifyEmail": {
+      "title": "Email Confirmation",
+      "validating": "Validating your email...",
+      "validatingDescription": "Please wait while we confirm your email address.",
+      "successTitle": "Email Validated Successfully!",
+      "successMessage": "Your email has been confirmed successfully. You can now register and manage your event photos in PS.",
+      "goToDashboard": "Go to Dashboard",
+      "goToLogin": "Sign In",
+      "failTitle": "Validation Failed",
+      "failButton": "Go to My Profile",
+      "tokenMissing": "Missing validation token. Use the link sent to your email.",
+      "errorDefault": "Could not validate your email. The link may have expired or already been used."
+    },
+    "pendingApproval": {
+      "title": "Restricted Access",
+      "message": "Your account was created successfully, but we are waiting for an administrator to approve and link your access to the organization. Please try again later or contact support.",
+      "logout": "Logout"
+    }
+  },
+  "dashboard": {
+    "title": "Overview",
+    "eventPanel": "Event Panel",
+    "subtitle": "Summary of active event and general metrics.",
+    "noSeason": "No event selected",
+    "noActiveSeason": "No active event",
+    "noSeasonDescription": "Please select an event in the top menu to view the list of clients, dogs, and photos.",
+    "searchPlaceholder": "Search by person, dog or photo number...",
+    "noClientsFound": "No clients found",
+    "noClientsLinked": "No clients linked to this event",
+    "noClientsDescription": "This event has no registered clients yet. Start by linking a person and their dogs.",
+    "kpi": {
+      "totalClients": "Total People",
+      "dogs": "Dogs in Event",
+      "totalPhotos": "Registered Photos",
+      "totalRevenue": "Total Revenue",
+      "photographers": "Photographers",
+      "paidClients": "Paid Clients",
+      "unpaidClients": "Open Clients"
+    },
+    "sections": {
+      "quickActions": "Quick Actions",
+      "recentActivity": "Recent Activity",
+      "paymentMethods": "Payment Methods",
+      "topPhotographers": "Top Photographers"
+    },
+    "actions": {
+      "addClient": "Link Client",
+      "addPerson": "New Person",
+      "linkFirstClient": "Link First Client",
+      "dogsAndPhotos": "Dogs & Photos",
+      "editData": "Edit Data",
+      "downloadReport": "Download Report",
+      "manageSeasons": "Manage Events"
+    },
+    "quickPerson": {
+      "title": "Register New Person",
+      "submit": "Save and Edit Data"
+    },
+    "loading": "Loading metrics...",
+    "hidden": "Overview hidden by organization settings."
+  },
+  "seasons": {
+    "title": "Events",
+    "add": "New Event",
+    "edit": "Edit Event",
+    "delete": "Delete",
+    "confirmDelete": "Confirm Deletion",
+    "confirmDeleteDescription": "Are you sure you want to delete this event? All associated data will be lost.",
+    "fields": {
+      "name": "Event Name",
+      "year": "Year",
+      "judges": "Judges",
+      "judgesPlaceholder": "Add judge...",
+      "addJudge": "Add"
+    },
+    "noData": "No events registered.",
+    "noDataDescription": "Create the first event to get started.",
+    "loading": "Loading events...",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "active": "Active",
+    "setActive": "Set as Active",
+    "successCreate": "Event created successfully.",
+    "successUpdate": "Event updated successfully.",
+    "successDelete": "Event deleted successfully.",
+    "errorCreate": "Could not create event.",
+    "errorUpdate": "Could not update event.",
+    "errorDelete": "Could not delete event."
+  },
+  "photographers": {
+    "title": "Photographers",
+    "add": "New Photographer",
+    "edit": "Edit Photographer",
+    "delete": "Delete Photographer",
+    "confirmDelete": "Are you sure you want to delete this photographer?",
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "noData": "No photographers registered.",
+    "noDataDescription": "Register photographers to associate them with photos.",
+    "loading": "Loading photographers...",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "successCreate": "Photographer created successfully.",
+    "successUpdate": "Photographer updated successfully.",
+    "successDelete": "Photographer deleted successfully.",
+    "errorCreate": "Could not create photographer.",
+    "errorUpdate": "Could not update photographer.",
+    "errorDelete": "Could not delete photographer."
+  },
+  "people": {
+    "title": "People (Unified Registry)",
+    "add": "New Person",
+    "edit": "Edit Person",
+    "delete": "Delete",
+    "confirmDelete": "Confirm Deletion",
+    "search": "Search by name...",
+    "fields": {
+      "name": "Name",
+      "phone": "Phone (Optional)",
+      "document": "Document"
+    },
+    "noData": "No people registered.",
+    "noDataDescription": "Add people to associate them as dog owners.",
+    "loading": "Loading people...",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "successCreate": "Person created successfully.",
+    "successUpdate": "Person updated successfully.",
+    "successDelete": "Person deleted successfully.",
+    "errorCreate": "Could not create person.",
+    "errorUpdate": "Could not update person.",
+    "errorDelete": "Could not delete person."
+  },
+  "personDetails": {
+    "title": "Person Details",
+    "dogs": "Dogs",
+    "addDog": "Add Dog",
+    "editDog": "Edit Dog",
+    "deleteDog": "Delete Dog",
+    "confirmDeleteDog": "Are you sure you want to delete this dog and all its associated photos in this event?",
+    "photos": "Photos",
+    "addPhoto": "Add Photo",
+    "editPhoto": "Edit Photo",
+    "deletePhoto": "Delete Photo",
+    "confirmDeletePhoto": "Are you sure you want to remove this photo?",
+    "fields": {
+      "dogName": "Dog Name",
+      "fileNumber": "Photo File Number",
+      "photographer": "Photographer",
+      "judges": "Photo Judges",
+      "judgesPlaceholder": "Select judges",
+      "noJudges": "No judges registered in the event",
+      "judgesHelper": "Select event judges linked to this photo.",
+      "judgesNoEventHelper": "Register judges in the event to select them here.",
+      "paymentMethod": "Payment Method",
+      "amountPaid": "Amount Paid",
+      "noneInformed": "None / Not informed",
+      "competitions": "Won Competitions",
+      "addCompetition": "Add competition..."
+    },
+    "save": "Save Photo",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "back": "Back"
+  },
+  "clients": {
+    "title": "Clients & Photos",
+    "search": "Search by person, dog or photo number...",
+    "add": "Link Client",
+    "noData": "No clients linked to this event",
+    "noDataDescription": "This event has no registered clients yet. Start by linking a person and their dogs.",
+    "loading": "Loading clients...",
+    "columns": {
+      "name": "Name",
+      "dogs": "Dogs",
+      "photos": "Photos",
+      "revenue": "Revenue",
+      "actions": "Actions"
+    },
+    "actions": {
+      "details": "View Details",
+      "unlink": "Unlink",
+      "confirmUnlink": "Are you sure you want to unlink this client from the event?"
+    },
+    "successLink": "Client linked successfully.",
+    "successUnlink": "Client unlinked successfully.",
+    "errorLink": "Could not link client.",
+    "errorUnlink": "Could not unlink client.",
+    "errorLoad": "Could not load clients."
+  },
+  "clientDetails": {
+    "title": "Client Details",
+    "back": "Back",
+    "dogs": "Dogs",
+    "addDog": "Add Dog",
+    "noDogs": "No dogs registered for this client in this event.",
+    "photos": "Photos",
+    "addPhoto": "Add Photo",
+    "noPhotos": "No photos registered.",
+    "loading": "Loading...",
+    "fields": {
+      "dogName": "Dog Name",
+      "fileNumber": "File Number",
+      "photographer": "Photographer",
+      "paymentMethod": "Payment Method",
+      "amountPaid": "Amount Paid",
+      "judges": "Judges",
+      "judgesPlaceholder": "Select judges",
+      "noJudgesEvent": "No judges in the event",
+      "noneInformed": "None / Not informed",
+      "competitions": "Competitions",
+      "addCompetition": "Add"
+    },
+    "addDogModal": {
+      "title": "Add Dog",
+      "addPhoto": "Add Photo",
+      "save": "Save Registration",
+      "saving": "Saving...",
+      "cancel": "Cancel"
+    },
+    "addPhotoModal": {
+      "title": "Add Photos",
+      "bulkTitle": "Batch Photos",
+      "bulkDescription": "Enter file numbers separated by comma or new line.",
+      "bulkPlaceholder": "Ex: 1234, 5678, 9012",
+      "singleTitle": "Single Photo",
+      "save": "Add Photos",
+      "cancel": "Cancel"
+    },
+    "editPhotoModal": {
+      "title": "Edit Photo",
+      "save": "Save Photo",
+      "cancel": "Cancel"
+    },
+    "confirmDeleteDog": {
+      "title": "Confirm Dog Deletion",
+      "message": "Are you sure you want to delete this dog and all its associated photos in this event?",
+      "confirm": "Delete Dog",
+      "cancel": "Cancel"
+    },
+    "confirmDeletePhoto": {
+      "title": "Confirm Photo Deletion",
+      "message": "Are you sure you want to remove this photo?",
+      "confirm": "Delete Photo",
+      "cancel": "Cancel"
+    },
+    "successAddDog": "Dog added successfully.",
+    "successEditPhoto": "Photo updated successfully.",
+    "successDeleteDog": "Dog deleted successfully.",
+    "successDeletePhoto": "Photo deleted successfully.",
+    "successAddPhotos": "Photos added successfully."
+  },
+  "linkClient": {
+    "title": "Link Client to Event",
+    "subtitle": "No dogs added. Click the button above to add.",
+    "search": "Search person...",
+    "noResults": "No people found.",
+    "noData": "No people registered. Register people first.",
+    "loading": "Searching people...",
+    "link": "Save Registration",
+    "linking": "Saving...",
+    "cancel": "Cancel",
+    "fields": {
+      "person": "Select Person",
+      "dogName": "Breed",
+      "fileNumber": "File Number",
+      "photographer": "Photographer",
+      "paymentMethod": "Payment",
+      "amountPaid": "Amount Paid",
+      "judges": "Judges",
+      "judgesPlaceholder": "Select judges",
+      "noJudgesEvent": "No judges in the event",
+      "noneInformed": "None / Not informed",
+      "competitions": "Won Competitions",
+      "addPhoto": "Add Photo",
+      "addCompetition": "Won competition name..."
+    }
+  },
+  "reports": {
+    "title": "Report Download",
+    "loading": "Downloading your report...",
+    "loadingDescription": "Please wait while your CSV file is safely downloaded.",
+    "loginRequired": "You must be logged in to securely download this report.",
+    "loginButton": "Sign In to Download",
+    "successTitle": "Download Complete!",
+    "successMessage": "The client report was generated and downloaded in your browser.",
+    "downloadAgain": "Download Again",
+    "goToDashboard": "Go to Dashboard",
+    "failTitle": "Download Failed",
+    "retry": "Try Again",
+    "errors": {
+      "forbidden": "Access denied: this report belongs to another tenant.",
+      "notFound": "Report not found or link expired.",
+      "default": "Could not download the report. Check if the file still exists and you have permission."
+    }
+  },
+  "profile": {
+    "title": "My Profile & Settings",
+    "personalData": "Personal Data",
+    "changePassword": "Change Password",
+    "fields": {
+      "emailReadonly": "Email (Readonly)",
+      "fullName": "Full Name",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Minimum 8 characters",
+      "newPasswordHelper": "Between 8 and 72 characters",
+      "confirmNewPassword": "Confirm New Password"
+    },
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "changePasswordBtn": "Change Password",
+    "updating": "Updating...",
+    "successName": "Name updated successfully.",
+    "successPassword": "Password changed successfully.",
+    "errorPasswordMismatch": "Passwords do not match.",
+    "errorPasswordTooShort": "New password must be at least 8 characters.",
+    "loading": "Loading profile...",
+    "errorLoad": "Could not load profile."
+  },
+  "admin": {
+    "tenants": {
+      "title": "Organizations",
+      "add": "New Organization",
+      "edit": "Edit",
+      "loading": "Loading organizations...",
+      "noData": "No organizations found",
+      "columns": {
+        "name": "Organization Name",
+        "plan": "Plan",
+        "payment": "Payment",
+        "trial": "Trial Expiration",
+        "clients": "Clients",
+        "actions": "Actions"
+      },
+      "plans": {
+        "free": "Free (Trial)",
+        "standard": "Standard"
+      },
+      "payment": {
+        "paid": "Up to date",
+        "unpaid": "Overdue"
+      },
+      "trial": {
+        "expired": "Expired",
+        "daysRemaining": "{{days}}d remaining"
+      },
+      "createModal": {
+        "title": "New Organization (Tenant)",
+        "name": "Tenant Name / Identifier",
+        "initialPlan": "Initial Plan",
+        "freePlan": "Free (14-day trial)",
+        "standardPlan": "Standard (Unlimited / 300 clients limit per event)",
+        "paymentStatus": "Payment Status",
+        "paid": "Up to date (Paid)",
+        "unpaid": "Overdue (Unpaid)",
+        "hideOverview": "Hide Overview by Default?",
+        "create": "Create Organization",
+        "creating": "Creating...",
+        "cancel": "Cancel"
+      },
+      "planModal": {
+        "title": "Change Plan",
+        "organization": "Organization: ",
+        "plan": "Plan",
+        "freeRestart": "Free (Restarts 14-day trial)",
+        "standard": "Standard",
+        "save": "Save Plan",
+        "saving": "Saving...",
+        "cancel": "Cancel"
+      },
+      "paymentModal": {
+        "title": "Change Payment Status",
+        "organization": "Organization: ",
+        "status": "Payment Status",
+        "paidStatus": "Up to date (Access Granted)",
+        "unpaidStatus": "Overdue (Access and Writes Blocked)",
+        "save": "Save Status",
+        "saving": "Saving...",
+        "cancel": "Cancel"
+      },
+      "settingsModal": {
+        "title": "Organization Settings",
+        "organization": "Organization: ",
+        "info": "Sets default dashboard display behavior for all users of this organization.",
+        "hideOverview": "Hide Overview by Default?",
+        "save": "Save Settings",
+        "saving": "Saving...",
+        "cancel": "Cancel"
+      },
+      "actions": {
+        "changePlan": "Change Plan",
+        "changePayment": "Change Payment Status",
+        "settings": "Organization Settings"
+      },
+      "successCreate": "Organization created successfully.",
+      "errorCreate": "Error creating organization. Check if the name is already in use.",
+      "errorLoad": "Could not load organizations list."
+    },
+    "users": {
+      "title": "User Management",
+      "loading": "Loading users...",
+      "noData": "No users found",
+      "columns": {
+        "name": "User",
+        "email": "Email & Verification",
+        "tenant": "Organization (Tenant)",
+        "superAdmin": "Role",
+        "actions": "Actions"
+      },
+      "pending": "Pending Approval",
+      "yes": "Yes",
+      "no": "No",
+      "assignTenant": "Assign Tenant",
+      "changeTenant": "Change Tenant",
+      "assignModal": {
+        "title": "Assign Organization (Tenant)",
+        "organization": "Organization",
+        "noOrg": "None (Leave pending approval)",
+        "noOrgWarning": "No organizations registered. Create an organization on the Tenants page before linking users.",
+        "save": "Save Assignment",
+        "saving": "Saving...",
+        "cancel": "Cancel"
+      },
+      "errorLoad": "Could not load users and tenants data.",
+      "successAssign": "Organization assigned successfully.",
+      "errorAssign": "Error assigning organization to user."
+    }
+  },
+  "shared": {
+    "loadingPage": "Loading page content",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "add": "Add",
+    "edit": "Edit",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "search": "Search",
+    "loading": "Loading...",
+    "noData": "No data found.",
+    "error": "An error occurred. Please try again.",
+    "tenantBanner": {
+      "unpaid": "Access suspended due to pending subscription payment. Please contact support.",
+      "trialExpired": "Your organization's 14-day free trial has ended. Editing clients and exporting reports are blocked. Please contact support to subscribe to a plan.",
+      "clientLimitExceeded": "Your organization has exceeded the client limit for the current plan. Creating new events and exporting reports are suspended. Please contact support.",
+      "trialActive_one": "Active free trial period: <strong>1 day remaining</strong> of trial.",
+      "trialActive_other": "Active free trial period: <strong>{{count}} days remaining</strong> of trial."
+    }
+  }
+}

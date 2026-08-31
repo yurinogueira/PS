@@ -28,6 +28,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
+import { useTranslation } from "react-i18next";
 import { seasonService, Season } from "../../../services/api/season.service";
 import {
   photographerService,
@@ -37,6 +38,7 @@ import { useSeasonStore } from "../../../store/seasonStore";
 import { useTenantStore } from "../../../store/tenantStore";
 
 export const SeasonsPage = () => {
+  const { t } = useTranslation();
   const { activeSeason, setActiveSeason } = useSeasonStore();
   const { tenantStatus } = useTenantStore();
 
@@ -194,7 +196,7 @@ export const SeasonsPage = () => {
             fontWeight: 700,
           }}
         >
-          Eventos
+          {t("seasons.title")}
         </Typography>
         <Tooltip title={isCreateBlocked ? getCreateBlockedReason() : ""}>
           <span>
@@ -205,7 +207,7 @@ export const SeasonsPage = () => {
               disabled={isCreateBlocked}
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
-              Novo Evento
+              {t("seasons.add")}
             </Button>
           </span>
         </Tooltip>
@@ -225,9 +227,15 @@ export const SeasonsPage = () => {
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Nome do Evento</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Fotógrafos</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Juízes</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("seasons.fields.name")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("photographers.title")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("seasons.fields.judges")}
+              </TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>
                 Ações
               </TableCell>
@@ -237,7 +245,7 @@ export const SeasonsPage = () => {
             {seasons.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} align="center">
-                  Nenhum evento cadastrado.
+                  {t("seasons.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -285,7 +293,7 @@ export const SeasonsPage = () => {
                         title={
                           isWriteBlocked
                             ? "Ação bloqueada pelo status do plano/pagamento."
-                            : "Editar"
+                            : t("seasons.edit")
                         }
                       >
                         <span>
@@ -305,7 +313,7 @@ export const SeasonsPage = () => {
                         title={
                           isWriteBlocked
                             ? "Ação bloqueada pelo status do plano/pagamento."
-                            : "Excluir"
+                            : t("seasons.delete")
                         }
                       >
                         <span>
@@ -336,7 +344,9 @@ export const SeasonsPage = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>{editingId ? "Editar Evento" : "Novo Evento"}</DialogTitle>
+        <DialogTitle>
+          {editingId ? t("seasons.edit") : t("seasons.add")}
+        </DialogTitle>
         <DialogContent
           sx={{
             display: "flex",
@@ -346,7 +356,7 @@ export const SeasonsPage = () => {
           }}
         >
           <TextField
-            label="Nome do Evento"
+            label={t("seasons.fields.name")}
             placeholder="Ex: 2026 - Dog Nikity"
             fullWidth
             required
@@ -418,7 +428,7 @@ export const SeasonsPage = () => {
             <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
               <TextField
                 label="Nome do Juiz"
-                placeholder="Ex: Tamas Jakkel, Dr. Roberto Carlos..."
+                placeholder={t("seasons.fields.judgesPlaceholder")}
                 size="small"
                 fullWidth
                 value={judgeInput}
@@ -437,7 +447,7 @@ export const SeasonsPage = () => {
                 disabled={!judgeInput.trim()}
                 sx={{ whiteSpace: "nowrap", px: 2 }}
               >
-                Adicionar
+                {t("seasons.fields.addJudge")}
               </Button>
             </Box>
             {judges.length > 0 ? (
@@ -462,13 +472,13 @@ export const SeasonsPage = () => {
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setOpen(false)}>{t("seasons.cancel")}</Button>
           <Button
             onClick={handleSave}
             variant="contained"
             disabled={!name.trim()}
           >
-            Salvar
+            {t("seasons.save")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -480,12 +490,9 @@ export const SeasonsPage = () => {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Confirmar Exclusão</DialogTitle>
+        <DialogTitle>{t("seasons.delete")}</DialogTitle>
         <DialogContent>
-          <Typography>
-            Tem certeza que deseja excluir o evento{" "}
-            <strong>{deletingSeason?.name}</strong>?
-          </Typography>
+          <Typography>{t("seasons.confirmDelete")}</Typography>
           <Typography variant="body2" color="error.main" sx={{ mt: 1.5 }}>
             Atenção: Ao excluir este evento, todas as entidades e registros
             vinculados a ele (como vínculos de clientes, cães e fotos
@@ -493,13 +500,15 @@ export const SeasonsPage = () => {
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDeleteConfirmOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>
+            {t("seasons.cancel")}
+          </Button>
           <Button
             onClick={handleConfirmDelete}
             color="error"
             variant="contained"
           >
-            Excluir
+            {t("seasons.delete")}
           </Button>
         </DialogActions>
       </Dialog>

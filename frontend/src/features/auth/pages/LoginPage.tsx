@@ -23,14 +23,17 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import { useTranslation } from "react-i18next";
 import { AuthHeroBanner } from "../components/AuthHeroBanner";
 import { authService } from "../services/auth.service";
 import { useAuthStore } from "../state/auth.store";
 import { useDocumentTitle } from "../../shared";
 import { brandColors } from "../../../styles/theme";
+import { LanguageSelector } from "../../../components/LanguageSelector";
 
 export function LoginPage() {
-  useDocumentTitle("Entrar");
+  const { t } = useTranslation();
+  useDocumentTitle(t("auth.login.title"));
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get("redirect") || "/dashboard";
@@ -47,7 +50,7 @@ export function LoginPage() {
     setErrorMsg(null);
 
     if (!email.trim() || !password) {
-      setErrorMsg("Por favor, preencha todos os campos.");
+      setErrorMsg(t("auth.login.errorDefault"));
       return;
     }
 
@@ -59,8 +62,7 @@ export function LoginPage() {
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } } };
       const message =
-        errorObj.response?.data?.message ||
-        "Não foi possível conectar ao servidor. Verifique suas credenciais ou se o backend está ativo.";
+        errorObj.response?.data?.message || t("auth.login.errorDefault");
       setErrorMsg(message);
     } finally {
       setLoading(false);
@@ -107,33 +109,44 @@ export function LoginPage() {
           }}
         >
           <CardContent sx={{ p: { xs: 1, sm: 3 } }}>
-            {/* Mobile Header / Brand */}
+            {/* Header / Brand & Language Selector */}
             <Box
               sx={{
-                display: { xs: "flex", md: "none" },
+                display: "flex",
                 alignItems: "center",
+                justifyContent: "space-between",
                 mb: 3,
-                gap: 1,
               }}
             >
               <Box
                 sx={{
-                  bgcolor: brandColors.primary,
-                  borderRadius: 1.5,
-                  p: 0.75,
-                  display: "flex",
+                  display: { xs: "flex", md: "none" },
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 1,
                 }}
               >
-                <CameraAltIcon sx={{ fontSize: 24, color: "#FFFFFF" }} />
+                <Box
+                  sx={{
+                    bgcolor: brandColors.primary,
+                    borderRadius: 1.5,
+                    p: 0.75,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <CameraAltIcon sx={{ fontSize: 24, color: "#FFFFFF" }} />
+                </Box>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 800, color: "primary.main" }}
+                >
+                  PS
+                </Typography>
               </Box>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 800, color: "primary.main" }}
-              >
-                PS
-              </Typography>
+              <Box sx={{ ml: "auto" }}>
+                <LanguageSelector variant="auth" />
+              </Box>
             </Box>
 
             <Box sx={{ mb: 3.5 }}>
@@ -142,10 +155,10 @@ export function LoginPage() {
                 variant="h4"
                 sx={{ fontWeight: 700, mb: 1, color: "text.primary" }}
               >
-                Bem-vindo de volta
+                {t("auth.login.title")}
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Digite suas credenciais para acessar o painel.
+                {t("auth.login.subtitle")}
               </Typography>
             </Box>
 
@@ -159,7 +172,7 @@ export function LoginPage() {
               <Stack spacing={2.5}>
                 <TextField
                   fullWidth
-                  label="E-mail"
+                  label={t("auth.login.email")}
                   type="email"
                   placeholder="seu.email@exemplo.com"
                   value={email}
@@ -182,7 +195,7 @@ export function LoginPage() {
 
                 <TextField
                   fullWidth
-                  label="Senha"
+                  label={t("auth.login.password")}
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
@@ -231,7 +244,7 @@ export function LoginPage() {
                       "&:hover": { textDecoration: "underline" },
                     }}
                   >
-                    Esqueceu sua senha?
+                    {t("auth.login.forgotPassword")}
                   </Link>
                 </Box>
 
@@ -251,7 +264,7 @@ export function LoginPage() {
                   {loading ? (
                     <CircularProgress size={24} sx={{ color: "#FFFFFF" }} />
                   ) : (
-                    "Entrar no PS"
+                    t("auth.login.submit")
                   )}
                 </Button>
               </Stack>
@@ -259,7 +272,7 @@ export function LoginPage() {
 
             <Box sx={{ mt: 3.5, textAlign: "center" }}>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Ainda não possui uma conta?{" "}
+                {t("auth.login.noAccount")}{" "}
                 <Link
                   component={RouterLink}
                   to="/register"
@@ -270,7 +283,7 @@ export function LoginPage() {
                     "&:hover": { textDecoration: "underline" },
                   }}
                 >
-                  Criar conta gratuita
+                  {t("auth.login.register")}
                 </Link>
               </Typography>
             </Box>

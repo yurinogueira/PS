@@ -21,12 +21,14 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import { useTranslation } from "react-i18next";
 import {
   photographerService,
   Photographer,
 } from "../../../services/api/photographer.service";
 
 export const PhotographersPage = () => {
+  const { t } = useTranslation();
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -113,7 +115,7 @@ export const PhotographersPage = () => {
             fontWeight: 700,
           }}
         >
-          Fotógrafos
+          {t("photographers.title")}
         </Typography>
         <Button
           variant="contained"
@@ -121,7 +123,7 @@ export const PhotographersPage = () => {
           onClick={handleOpenCreate}
           sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
         >
-          Novo Fotógrafo
+          {t("photographers.add")}
         </Button>
       </Box>
 
@@ -139,7 +141,9 @@ export const PhotographersPage = () => {
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Nome</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("photographers.fields.name")}
+              </TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>
                 Ações
               </TableCell>
@@ -149,7 +153,7 @@ export const PhotographersPage = () => {
             {photographers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} align="center">
-                  Nenhum fotógrafo cadastrado.
+                  {t("photographers.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -158,7 +162,7 @@ export const PhotographersPage = () => {
                   <TableCell>{p.id}</TableCell>
                   <TableCell>{p.name}</TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Editar">
+                    <Tooltip title={t("photographers.edit")}>
                       <IconButton
                         color="primary"
                         size="small"
@@ -168,7 +172,7 @@ export const PhotographersPage = () => {
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Excluir">
+                    <Tooltip title={t("photographers.delete")}>
                       <IconButton
                         color="error"
                         size="small"
@@ -193,13 +197,13 @@ export const PhotographersPage = () => {
         fullWidth
       >
         <DialogTitle>
-          {editingId ? "Editar Fotógrafo" : "Novo Fotógrafo"}
+          {editingId ? t("photographers.edit") : t("photographers.add")}
         </DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
           <TextField
             autoFocus
             margin="dense"
-            label="Nome"
+            label={t("photographers.fields.name")}
             fullWidth
             required
             value={name}
@@ -207,13 +211,15 @@ export const PhotographersPage = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setOpen(false)}>
+            {t("photographers.cancel")}
+          </Button>
           <Button
             onClick={handleSave}
             variant="contained"
             disabled={!name.trim()}
           >
-            Salvar
+            {t("photographers.save")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -223,21 +229,23 @@ export const PhotographersPage = () => {
         open={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
       >
-        <DialogTitle>Confirmar Exclusão</DialogTitle>
+        <DialogTitle>{t("photographers.confirmDelete")}</DialogTitle>
         <DialogContent>
           <Typography>
-            Tem certeza que deseja excluir o fotógrafo{" "}
+            {t("photographers.confirmDelete")}{" "}
             <strong>{deletingPhotographer?.name}</strong>?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteConfirmOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>
+            {t("photographers.cancel")}
+          </Button>
           <Button
             onClick={handleConfirmDelete}
             color="error"
             variant="contained"
           >
-            Excluir
+            {t("photographers.delete")}
           </Button>
         </DialogActions>
       </Dialog>

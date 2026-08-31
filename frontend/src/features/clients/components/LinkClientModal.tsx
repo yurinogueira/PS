@@ -23,6 +23,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import { useTranslation } from "react-i18next";
 import {
   clientService,
   Dog,
@@ -57,6 +58,7 @@ export const LinkClientModal = ({
   seasonId,
   onSuccess,
 }: LinkClientModalProps) => {
+  const { t } = useTranslation();
   const { activeSeason } = useSeasonStore();
   const [people, setPeople] = useState<Person[]>([]);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
@@ -79,10 +81,10 @@ export const LinkClientModal = ({
         })
         .catch((err) => {
           console.error("Erro ao carregar dados auxiliares:", err);
-          setError("Erro ao carregar lista de pessoas e fotógrafos.");
+          setError(t("clients.errorLoad"));
         });
     }
-  }, [open]);
+  }, [open, t]);
 
   const handleSave = async () => {
     if (!personId || !seasonId) return;
@@ -98,7 +100,7 @@ export const LinkClientModal = ({
       onClose();
     } catch (err) {
       console.error("Erro ao vincular cliente:", err);
-      setError("Erro ao vincular cliente. Tente novamente.");
+      setError(t("clients.errorLink"));
     } finally {
       setSaving(false);
     }
@@ -207,18 +209,20 @@ export const LinkClientModal = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Vincular Cliente no Evento</DialogTitle>
+      <DialogTitle>{t("linkClient.title")}</DialogTitle>
       <DialogContent
         sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}
       >
         {error && <Alert severity="error">{error}</Alert>}
 
         <FormControl fullWidth sx={{ mt: 1 }}>
-          <InputLabel id="select-person-label">Selecione a Pessoa</InputLabel>
+          <InputLabel id="select-person-label">
+            {t("linkClient.fields.person")}
+          </InputLabel>
           <Select
             labelId="select-person-label"
             value={personId}
-            label="Selecione a Pessoa"
+            label={t("linkClient.fields.person")}
             onChange={(e) => setPersonId(e.target.value)}
           >
             {people.map((p) => (
@@ -236,20 +240,20 @@ export const LinkClientModal = ({
             alignItems: "center",
           }}
         >
-          <Typography variant="h6">Cachorros</Typography>
+          <Typography variant="h6">{t("clientDetails.dogs")}</Typography>
           <Button
             variant="outlined"
             size="small"
             startIcon={<AddIcon />}
             onClick={addDog}
           >
-            Adicionar Cachorro
+            {t("clientDetails.addDog")}
           </Button>
         </Box>
 
         {dogs.length === 0 && (
           <Typography variant="body2" color="text.secondary">
-            Nenhum cachorro adicionado. Clique no botão acima para adicionar.
+            {t("linkClient.subtitle")}
           </Typography>
         )}
 
@@ -273,7 +277,7 @@ export const LinkClientModal = ({
               }}
             >
               <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                Cachorro #{dIdx + 1}
+                {t("linkClient.fields.dogName")} #{dIdx + 1}
               </Typography>
               <IconButton
                 size="small"
@@ -286,7 +290,7 @@ export const LinkClientModal = ({
 
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
               <TextField
-                label="Raça"
+                label={t("linkClient.fields.dogName")}
                 size="small"
                 value={dog.breed}
                 onChange={(e) => updateDog(dIdx, "breed", e.target.value)}
@@ -294,7 +298,7 @@ export const LinkClientModal = ({
               />
               <TextField
                 type="number"
-                label="Competições Ganhas"
+                label={t("linkClient.fields.competitions")}
                 size="small"
                 value={dog.competitions_won}
                 onChange={(e) =>
@@ -344,13 +348,14 @@ export const LinkClientModal = ({
                   }}
                 >
                   <EmojiEventsIcon fontSize="inherit" color="warning" />
-                  Competições Vencidas ({dog.won_competitions?.length || 0})
+                  {t("linkClient.fields.competitions")} (
+                  {dog.won_competitions?.length || 0})
                 </Typography>
                 <Box sx={{ display: "flex", gap: 1 }}>
                   <TextField
                     size="small"
                     fullWidth
-                    placeholder="Nome da competição vencida..."
+                    placeholder={t("linkClient.fields.addCompetition")}
                     value={compInputs[dIdx] || ""}
                     onChange={(e) =>
                       setCompInputs({
@@ -373,7 +378,7 @@ export const LinkClientModal = ({
                     startIcon={<AddIcon />}
                     sx={{ textTransform: "none", whiteSpace: "nowrap" }}
                   >
-                    Adicionar
+                    {t("shared.add")}
                   </Button>
                 </Box>
                 {dog.won_competitions && dog.won_competitions.length > 0 && (
@@ -414,13 +419,15 @@ export const LinkClientModal = ({
                 mt: 1,
               }}
             >
-              <Typography variant="subtitle2">Fotos</Typography>
+              <Typography variant="subtitle2">
+                {t("clientDetails.photos")}
+              </Typography>
               <Button
                 size="small"
                 startIcon={<AddIcon />}
                 onClick={() => addPhoto(dIdx)}
               >
-                Adicionar Foto
+                {t("clientDetails.addPhoto")}
               </Button>
             </Box>
 
@@ -440,7 +447,7 @@ export const LinkClientModal = ({
               >
                 <TextField
                   size="small"
-                  label="Número do Arquivo"
+                  label={t("linkClient.fields.fileNumber")}
                   value={photo.file_number}
                   onChange={(e) =>
                     updatePhoto(dIdx, pIdx, "file_number", e.target.value)
@@ -449,12 +456,12 @@ export const LinkClientModal = ({
                 />
                 <FormControl size="small" sx={{ minWidth: 160, flex: 1 }}>
                   <InputLabel id={`photographer-label-${dIdx}-${pIdx}`}>
-                    Fotógrafo
+                    {t("linkClient.fields.photographer")}
                   </InputLabel>
                   <Select
                     labelId={`photographer-label-${dIdx}-${pIdx}`}
                     value={photo.photographer_id || ""}
-                    label="Fotógrafo"
+                    label={t("linkClient.fields.photographer")}
                     onChange={(e) =>
                       updatePhoto(dIdx, pIdx, "photographer_id", e.target.value)
                     }
@@ -477,13 +484,13 @@ export const LinkClientModal = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Juízes"
+                      label={t("linkClient.fields.judges")}
                       placeholder={
                         photo.judges?.length
                           ? ""
                           : activeSeason?.judges?.length
-                            ? "Selecione juízes"
-                            : "Nenhum juiz no evento"
+                            ? t("linkClient.fields.judgesPlaceholder")
+                            : t("linkClient.fields.noJudgesEvent")
                       }
                     />
                   )}
@@ -491,12 +498,12 @@ export const LinkClientModal = ({
                 />
                 <FormControl size="small" sx={{ minWidth: 140, flex: 1 }}>
                   <InputLabel id={`payment-label-${dIdx}-${pIdx}`}>
-                    Pagamento
+                    {t("linkClient.fields.paymentMethod")}
                   </InputLabel>
                   <Select
                     labelId={`payment-label-${dIdx}-${pIdx}`}
                     value={photo.payment_method || "Pix"}
-                    label="Pagamento"
+                    label={t("linkClient.fields.paymentMethod")}
                     onChange={(e) => {
                       const newMethod = e.target.value;
                       if (newMethod === "Não pago") {
@@ -543,7 +550,7 @@ export const LinkClientModal = ({
                     <TextField
                       size="small"
                       type="number"
-                      label="Valor Pago"
+                      label={t("linkClient.fields.amountPaid")}
                       slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
                       value={photo.amount_paid ?? 0}
                       onChange={(e) => {
@@ -573,14 +580,14 @@ export const LinkClientModal = ({
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} disabled={saving}>
-          Cancelar
+          {t("linkClient.cancel")}
         </Button>
         <Button
           onClick={handleSave}
           variant="contained"
           disabled={!personId || saving}
         >
-          {saving ? "Salvando..." : "Salvar Cadastro"}
+          {saving ? t("linkClient.linking") : t("linkClient.link")}
         </Button>
       </DialogActions>
     </Dialog>

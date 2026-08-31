@@ -20,14 +20,17 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutlineOutlined";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import { useTranslation } from "react-i18next";
 import { AuthHeroBanner } from "../components/AuthHeroBanner";
 import { authService } from "../services/auth.service";
 import { useAuthStore } from "../state/auth.store";
 import { useDocumentTitle } from "../../shared";
 import { brandColors } from "../../../styles/theme";
+import { LanguageSelector } from "../../../components/LanguageSelector";
 
 export function RegisterPage() {
-  useDocumentTitle("Criar Conta");
+  const { t } = useTranslation();
+  useDocumentTitle(t("auth.register.title"));
   const navigate = useNavigate();
   const setUser = useAuthStore((state) => state.setUser);
 
@@ -47,17 +50,17 @@ export function RegisterPage() {
     const trimmedEmail = email.trim();
 
     if (!trimmedName || !trimmedEmail || !password) {
-      setErrorMsg("Por favor, preencha todos os campos obrigatórios.");
+      setErrorMsg(t("auth.register.errorDefault"));
       return;
     }
 
     if (trimmedName.length < 2) {
-      setErrorMsg("O nome deve conter pelo menos 2 caracteres.");
+      setErrorMsg(t("auth.register.errorDefault"));
       return;
     }
 
     if (trimmedName.length > 100) {
-      setErrorMsg("O nome não pode exceder 100 caracteres.");
+      setErrorMsg(t("auth.register.errorDefault"));
       return;
     }
 
@@ -65,22 +68,22 @@ export function RegisterPage() {
       trimmedEmail.length > 254 ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)
     ) {
-      setErrorMsg("Por favor, insira um endereço de e-mail válido.");
+      setErrorMsg(t("auth.register.errorDefault"));
       return;
     }
 
     if (password.length < 8) {
-      setErrorMsg("A senha deve conter no mínimo 8 caracteres.");
+      setErrorMsg(t("auth.register.passwordTooShort"));
       return;
     }
 
     if (password.length > 72) {
-      setErrorMsg("A senha não pode exceder 72 caracteres.");
+      setErrorMsg(t("auth.register.errorDefault"));
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMsg("As senhas não conferem. Verifique e tente novamente.");
+      setErrorMsg(t("auth.register.errorPasswordMismatch"));
       return;
     }
 
@@ -96,8 +99,7 @@ export function RegisterPage() {
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } } };
       const message =
-        errorObj.response?.data?.message ||
-        "Não foi possível criar sua conta. Verifique os dados ou tente novamente.";
+        errorObj.response?.data?.message || t("auth.register.errorDefault");
       setErrorMsg(message);
     } finally {
       setLoading(false);
@@ -144,33 +146,44 @@ export function RegisterPage() {
           }}
         >
           <CardContent sx={{ p: { xs: 1, sm: 3 } }}>
-            {/* Mobile Header / Brand */}
+            {/* Header / Brand & Language Selector */}
             <Box
               sx={{
-                display: { xs: "flex", md: "none" },
+                display: "flex",
                 alignItems: "center",
+                justifyContent: "space-between",
                 mb: 3,
-                gap: 1,
               }}
             >
               <Box
                 sx={{
-                  bgcolor: brandColors.primary,
-                  borderRadius: 1.5,
-                  p: 0.75,
-                  display: "flex",
+                  display: { xs: "flex", md: "none" },
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 1,
                 }}
               >
-                <CameraAltIcon sx={{ fontSize: 24, color: "#FFFFFF" }} />
+                <Box
+                  sx={{
+                    bgcolor: brandColors.primary,
+                    borderRadius: 1.5,
+                    p: 0.75,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <CameraAltIcon sx={{ fontSize: 24, color: "#FFFFFF" }} />
+                </Box>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 800, color: "primary.main" }}
+                >
+                  PS
+                </Typography>
               </Box>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 800, color: "primary.main" }}
-              >
-                PS
-              </Typography>
+              <Box sx={{ ml: "auto" }}>
+                <LanguageSelector variant="auth" />
+              </Box>
             </Box>
 
             <Box sx={{ mb: 3 }}>
@@ -179,11 +192,10 @@ export function RegisterPage() {
                 variant="h4"
                 sx={{ fontWeight: 700, mb: 1, color: "text.primary" }}
               >
-                Criar uma conta
+                {t("auth.register.title")}
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Comece a gerenciar as fotos do seu evento de forma simples e
-                organizada.
+                {t("auth.register.subtitle")}
               </Typography>
             </Box>
 
@@ -197,7 +209,7 @@ export function RegisterPage() {
               <Stack spacing={2.2}>
                 <TextField
                   fullWidth
-                  label="Nome completo"
+                  label={t("auth.register.name")}
                   type="text"
                   placeholder="Seu Nome"
                   value={name}
@@ -220,7 +232,7 @@ export function RegisterPage() {
 
                 <TextField
                   fullWidth
-                  label="E-mail"
+                  label={t("auth.register.email")}
                   type="email"
                   placeholder="seu.email@exemplo.com"
                   value={email}
@@ -243,9 +255,9 @@ export function RegisterPage() {
 
                 <TextField
                   fullWidth
-                  label="Senha"
+                  label={t("auth.register.password")}
                   type={showPassword ? "text" : "password"}
-                  placeholder="Mínimo 8 caracteres (máx. 72)"
+                  placeholder={t("auth.register.passwordHelper")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
@@ -282,7 +294,7 @@ export function RegisterPage() {
 
                 <TextField
                   fullWidth
-                  label="Confirmar Senha"
+                  label={t("auth.register.confirmPassword")}
                   type={showPassword ? "text" : "password"}
                   placeholder="Digite a senha novamente"
                   value={confirmPassword}
@@ -319,7 +331,7 @@ export function RegisterPage() {
                   {loading ? (
                     <CircularProgress size={24} sx={{ color: "#FFFFFF" }} />
                   ) : (
-                    "Concluir Cadastro"
+                    t("auth.register.submit")
                   )}
                 </Button>
               </Stack>
@@ -327,7 +339,7 @@ export function RegisterPage() {
 
             <Box sx={{ mt: 3.5, textAlign: "center" }}>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Já tem uma conta?{" "}
+                {t("auth.register.hasAccount")}{" "}
                 <Link
                   component={RouterLink}
                   to="/login"
@@ -338,7 +350,7 @@ export function RegisterPage() {
                     "&:hover": { textDecoration: "underline" },
                   }}
                 >
-                  Fazer login
+                  {t("auth.register.login")}
                 </Link>
               </Typography>
             </Box>

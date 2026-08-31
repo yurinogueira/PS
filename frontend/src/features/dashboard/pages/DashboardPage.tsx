@@ -49,6 +49,7 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
+import { useTranslation } from "react-i18next";
 import {
   clientService,
   SeasonClient,
@@ -62,6 +63,7 @@ import { ClientDetailsModal } from "../../clients/components/ClientDetailsModal"
 import { formatPhone, maskPhone } from "../../../utils/phone";
 
 export const DashboardPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { activeSeason } = useSeasonStore();
   const { tenantStatus } = useTenantStore();
@@ -149,111 +151,7 @@ export const DashboardPage = () => {
     severity: "success",
   });
 
-  const handleExportClientsCsv = async () => {
-    setReportMenuAnchor(null);
-    setExportingReport(true);
-    try {
-      const resp = await reportService.exportClientsCsv(activeSeason?.id);
-      setSnackbar({
-        open: true,
-        message:
-          resp?.message ||
-          "Processamento do relatório iniciado! O link do arquivo CSV será enviado para o seu e-mail cadastrado.",
-        severity: "success",
-      });
-    } catch (err: unknown) {
-      const errorObj = err as { response?: { data?: { message?: string } } };
-      setSnackbar({
-        open: true,
-        message:
-          errorObj?.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório CSV.",
-        severity: "error",
-      });
-    } finally {
-      setExportingReport(false);
-    }
-  };
-
-  const handleExportClientsPdf = async () => {
-    setReportMenuAnchor(null);
-    setExportingReport(true);
-    try {
-      const resp = await reportService.exportClientsPdf(activeSeason?.id);
-      setSnackbar({
-        open: true,
-        message:
-          resp?.message ||
-          "Processamento do relatório em PDF iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
-        severity: "success",
-      });
-    } catch (err: unknown) {
-      const errorObj = err as { response?: { data?: { message?: string } } };
-      setSnackbar({
-        open: true,
-        message:
-          errorObj?.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório PDF.",
-        severity: "error",
-      });
-    } finally {
-      setExportingReport(false);
-    }
-  };
-
-  const handleExportUnpaidClientsCsv = async () => {
-    setReportMenuAnchor(null);
-    setExportingReport(true);
-    try {
-      const resp = await reportService.exportUnpaidClientsCsv(activeSeason?.id);
-      setSnackbar({
-        open: true,
-        message:
-          resp?.message ||
-          "Processamento do relatório iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
-        severity: "success",
-      });
-    } catch (err: unknown) {
-      const errorObj = err as { response?: { data?: { message?: string } } };
-      setSnackbar({
-        open: true,
-        message:
-          errorObj?.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório.",
-        severity: "error",
-      });
-    } finally {
-      setExportingReport(false);
-    }
-  };
-
-  const handleExportPaidClientsCsv = async () => {
-    setReportMenuAnchor(null);
-    setExportingReport(true);
-    try {
-      const resp = await reportService.exportPaidClientsCsv(activeSeason?.id);
-      setSnackbar({
-        open: true,
-        message:
-          resp?.message ||
-          "Processamento do relatório iniciado! O link do arquivo será enviado para o seu e-mail cadastrado.",
-        severity: "success",
-      });
-    } catch (err: unknown) {
-      const errorObj = err as { response?: { data?: { message?: string } } };
-      setSnackbar({
-        open: true,
-        message:
-          errorObj?.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório de clientes pagos.",
-        severity: "error",
-      });
-    } finally {
-      setExportingReport(false);
-    }
-  };
-
-  // Debounce search input
+  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
@@ -264,11 +162,123 @@ export const DashboardPage = () => {
 
   const seasonId = activeSeason?.id;
 
+  const handleExportClientsPdf = async () => {
+    if (!seasonId) return;
+    setReportMenuAnchor(null);
+    setExportingReport(true);
+    try {
+      const res = await reportService.exportClientsPdf(seasonId);
+      setSnackbar({
+        open: true,
+        message:
+          res.message ||
+          "Processamento do relatório em PDF iniciado! O link para download será enviado por e-mail quando o arquivo estiver pronto.",
+        severity: "success",
+      });
+    } catch (err: unknown) {
+      console.error("Erro ao solicitar relatório PDF:", err);
+      const errorObj = err as { response?: { data?: { message?: string } } };
+      setSnackbar({
+        open: true,
+        message:
+          errorObj.response?.data?.message ||
+          "Erro ao solicitar exportação do relatório PDF.",
+        severity: "error",
+      });
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
+  const handleExportClientsCsv = async () => {
+    if (!seasonId) return;
+    setReportMenuAnchor(null);
+    setExportingReport(true);
+    try {
+      const res = await reportService.exportClientsCsv(seasonId);
+      setSnackbar({
+        open: true,
+        message:
+          res.message ||
+          "Processamento do relatório iniciado! O link para download do CSV será enviado por e-mail quando o arquivo estiver pronto.",
+        severity: "success",
+      });
+    } catch (err: unknown) {
+      console.error("Erro ao solicitar relatório CSV de clientes:", err);
+      const errorObj = err as { response?: { data?: { message?: string } } };
+      setSnackbar({
+        open: true,
+        message:
+          errorObj.response?.data?.message ||
+          "Erro ao solicitar exportação do relatório CSV.",
+        severity: "error",
+      });
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
+  const handleExportPaidClientsCsv = async () => {
+    if (!seasonId) return;
+    setReportMenuAnchor(null);
+    setExportingReport(true);
+    try {
+      const res = await reportService.exportPaidClientsCsv(seasonId);
+      setSnackbar({
+        open: true,
+        message:
+          res.message ||
+          "Processamento do relatório iniciado! O link para download do CSV de clientes pagos será enviado por e-mail.",
+        severity: "success",
+      });
+    } catch (err: unknown) {
+      console.error("Erro ao exportar CSV de clientes pagos:", err);
+      const errorObj = err as { response?: { data?: { message?: string } } };
+      setSnackbar({
+        open: true,
+        message:
+          errorObj.response?.data?.message ||
+          "Erro ao solicitar exportação do relatório de clientes pagos.",
+        severity: "error",
+      });
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
+  const handleExportUnpaidClientsCsv = async () => {
+    if (!seasonId) return;
+    setReportMenuAnchor(null);
+    setExportingReport(true);
+    try {
+      const res = await reportService.exportUnpaidClientsCsv(seasonId);
+      setSnackbar({
+        open: true,
+        message:
+          res.message ||
+          "Processamento do relatório iniciado! O link para download do CSV de não pagos será enviado por e-mail.",
+        severity: "success",
+      });
+    } catch (err: unknown) {
+      console.error("Erro ao exportar CSV de não pagos:", err);
+      const errorObj = err as { response?: { data?: { message?: string } } };
+      setSnackbar({
+        open: true,
+        message:
+          errorObj.response?.data?.message ||
+          "Erro ao solicitar exportação do relatório.",
+        severity: "error",
+      });
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
   const loadData = useCallback(async () => {
     if (!seasonId) return;
+    setLoading(true);
     try {
-      setLoading(true);
-      const [clientRes, allClientsRes, peopleList] = await Promise.all([
+      const [paginatedRes, allRes, peopleRes] = await Promise.all([
         clientService.list({
           season_id: seasonId,
           search: debouncedSearch || undefined,
@@ -282,21 +292,10 @@ export const DashboardPage = () => {
         personService.list(),
       ]);
 
-      const paginatedList = Array.isArray(clientRes)
-        ? clientRes
-        : clientRes?.data || [];
-      const totalCount = Array.isArray(clientRes)
-        ? clientRes.length
-        : (clientRes?.total ?? paginatedList.length);
-
-      const fullList = Array.isArray(allClientsRes)
-        ? allClientsRes
-        : allClientsRes?.data || [];
-
-      setClients(paginatedList);
-      setAllSeasonClients(fullList);
-      setTotal(totalCount);
-      setPeople(peopleList || []);
+      setClients(paginatedRes?.data || []);
+      setTotal(paginatedRes?.total || 0);
+      setAllSeasonClients(allRes?.data || []);
+      setPeople(peopleRes || []);
     } catch (err) {
       console.error("Erro ao carregar dados do dashboard:", err);
     } finally {
@@ -406,7 +405,7 @@ export const DashboardPage = () => {
             variant="h5"
             sx={{ fontWeight: 800, color: "text.primary" }}
           >
-            Painel do Evento
+            {t("dashboard.eventPanel")}
           </Typography>
           {activeSeason ? (
             <Chip
@@ -419,7 +418,7 @@ export const DashboardPage = () => {
             />
           ) : (
             <Chip
-              label="Sem evento ativo"
+              label={t("dashboard.noActiveSeason")}
               size="small"
               color="warning"
               variant="outlined"
@@ -497,7 +496,7 @@ export const DashboardPage = () => {
                   color: "#ffffff",
                 }}
               >
-                Visão Geral
+                {t("dashboard.title")}
               </Typography>
               <Typography
                 variant="body1"
@@ -509,7 +508,7 @@ export const DashboardPage = () => {
               >
                 {activeSeason
                   ? `Clientes, cães e fotos vinculados ao evento "${activeSeason.name}".`
-                  : "Selecione um evento no cabeçalho para gerenciar os clientes e fotos."}
+                  : t("dashboard.subtitle")}
               </Typography>
             </Box>
 
@@ -539,7 +538,7 @@ export const DashboardPage = () => {
                 />
               ) : (
                 <Chip
-                  label="Selecione um evento no menu superior"
+                  label={t("dashboard.noActiveSeason")}
                   sx={{
                     bgcolor: "warning.main",
                     color: "warning.contrastText",
@@ -639,7 +638,7 @@ export const DashboardPage = () => {
                       color="text.secondary"
                       sx={{ fontWeight: 600, textTransform: "uppercase" }}
                     >
-                      Total de Pessoas
+                      {t("dashboard.kpi.totalClients")}
                     </Typography>
                     <Typography
                       variant="h4"
@@ -690,7 +689,7 @@ export const DashboardPage = () => {
                       color="text.secondary"
                       sx={{ fontWeight: 600, textTransform: "uppercase" }}
                     >
-                      Cachorros no Evento
+                      {t("dashboard.kpi.dogs")}
                     </Typography>
                     <Typography
                       variant="h4"
@@ -741,7 +740,7 @@ export const DashboardPage = () => {
                       color="text.secondary"
                       sx={{ fontWeight: 600, textTransform: "uppercase" }}
                     >
-                      Fotos Registradas
+                      {t("dashboard.kpi.totalPhotos")}
                     </Typography>
                     <Typography
                       variant="h4"
@@ -792,7 +791,7 @@ export const DashboardPage = () => {
                       color="text.secondary"
                       sx={{ fontWeight: 600, textTransform: "uppercase" }}
                     >
-                      Arrecadação Total
+                      {t("dashboard.kpi.totalRevenue")}
                     </Typography>
                     <Typography
                       variant="h4"
@@ -834,11 +833,10 @@ export const DashboardPage = () => {
           }}
         >
           <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
-            Nenhum evento selecionado
+            {t("dashboard.noSeason")}
           </Typography>
           <Typography variant="body2">
-            Por favor, selecione um evento no menu superior para visualizar a
-            listagem de clientes, cachorros e fotografias.
+            {t("dashboard.noSeasonDescription")}
           </Typography>
         </Alert>
       ) : (
@@ -867,7 +865,7 @@ export const DashboardPage = () => {
           >
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                Clientes e Competidores
+                {t("clients.title")}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Selecione uma pessoa para visualizar e cadastrar seus cachorros
@@ -886,7 +884,7 @@ export const DashboardPage = () => {
             >
               <TextField
                 size="small"
-                placeholder="Buscar por pessoa, cão ou número da foto..."
+                placeholder={t("dashboard.searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 sx={{ width: { xs: "100%", sm: 280, md: 340 } }}
@@ -917,7 +915,7 @@ export const DashboardPage = () => {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    Vincular Cliente
+                    {t("dashboard.actions.addClient")}
                   </Button>
                 </span>
               </Tooltip>
@@ -936,7 +934,7 @@ export const DashboardPage = () => {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    Nova Pessoa
+                    {t("dashboard.actions.addPerson")}
                   </Button>
                 </span>
               </Tooltip>
@@ -966,7 +964,7 @@ export const DashboardPage = () => {
               {debouncedSearch ? (
                 <>
                   <Typography variant="h6" color="text.secondary">
-                    Nenhum cliente encontrado
+                    {t("dashboard.noClientsFound")}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Nenhum cliente corresponde ao termo pesquisado &ldquo;
@@ -976,15 +974,14 @@ export const DashboardPage = () => {
               ) : (
                 <>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    Nenhum cliente vinculado neste evento
+                    {t("dashboard.noClientsLinked")}
                   </Typography>
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{ maxWidth: 420 }}
                   >
-                    Este evento ainda não possui clientes cadastrados. Comece
-                    vinculando uma pessoa e seus cães.
+                    {t("dashboard.noClientsDescription")}
                   </Typography>
                   <Button
                     variant="contained"
@@ -992,7 +989,7 @@ export const DashboardPage = () => {
                     onClick={() => setLinkModalOpen(true)}
                     sx={{ mt: 1, borderRadius: 2, textTransform: "none" }}
                   >
-                    Vincular Primeiro Cliente
+                    {t("dashboard.actions.linkFirstClient")}
                   </Button>
                 </>
               )}
@@ -1004,17 +1001,17 @@ export const DashboardPage = () => {
                   <TableHead sx={{ bgcolor: "grey.50" }}>
                     <TableRow>
                       <TableCell sx={{ fontWeight: 700 }}>
-                        Nome da Pessoa
+                        {t("clients.columns.name")}
                       </TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>Contato</TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>
-                        Cachorros no Evento
+                        {t("clientDetails.dogs")}
                       </TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>
-                        Total de Fotos
+                        {t("clientDetails.photos")}
                       </TableCell>
                       <TableCell align="right" sx={{ fontWeight: 700 }}>
-                        Ações
+                        {t("clients.columns.actions")}
                       </TableCell>
                     </TableRow>
                   </TableHead>
@@ -1184,7 +1181,7 @@ export const DashboardPage = () => {
                                   fontWeight: 600,
                                 }}
                               >
-                                Cachorros & Fotos
+                                {t("dashboard.actions.dogsAndPhotos")}
                               </Button>
                               <Button
                                 size="small"
@@ -1199,7 +1196,7 @@ export const DashboardPage = () => {
                                   textTransform: "none",
                                 }}
                               >
-                                Editar Dados
+                                {t("dashboard.actions.editData")}
                               </Button>
                             </Box>
                           </TableCell>
@@ -1256,13 +1253,13 @@ export const DashboardPage = () => {
         fullWidth
       >
         <DialogTitle sx={{ fontWeight: 700 }}>
-          Cadastrar Nova Pessoa
+          {t("dashboard.quickPerson.title")}
         </DialogTitle>
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
         >
           <TextField
-            label="Nome Completo"
+            label={t("people.fields.name")}
             fullWidth
             required
             autoFocus
@@ -1293,7 +1290,7 @@ export const DashboardPage = () => {
             }
           />
           <TextField
-            label="Telefone / WhatsApp"
+            label={t("people.fields.phone")}
             fullWidth
             value={newPersonForm.phone}
             onChange={(e) =>
@@ -1309,7 +1306,7 @@ export const DashboardPage = () => {
             onClick={() => setNewPersonOpen(false)}
             sx={{ textTransform: "none" }}
           >
-            Cancelar
+            {t("people.cancel")}
           </Button>
           <Button
             onClick={handleSaveNewPerson}
@@ -1317,7 +1314,7 @@ export const DashboardPage = () => {
             disabled={!newPersonForm.name.trim()}
             sx={{ textTransform: "none", fontWeight: 600 }}
           >
-            Salvar e Editar Dados
+            {t("dashboard.quickPerson.submit")}
           </Button>
         </DialogActions>
       </Dialog>

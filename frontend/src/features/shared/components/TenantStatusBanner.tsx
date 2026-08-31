@@ -2,9 +2,11 @@ import { Alert, Box, Typography } from "@mui/material";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { useTranslation } from "react-i18next";
 import { useTenantStore } from "../../../store/tenantStore";
 
 export const TenantStatusBanner = () => {
+  const { t } = useTranslation();
   const { tenantStatus } = useTenantStore();
 
   if (!tenantStatus) {
@@ -26,8 +28,7 @@ export const TenantStatusBanner = () => {
           }}
         >
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            Acesso suspenso por pendência de pagamento da assinatura. Entre em
-            contato com o suporte para regularizar.
+            {t("shared.tenantBanner.unpaid")}
           </Typography>
         </Alert>
       </Box>
@@ -49,9 +50,7 @@ export const TenantStatusBanner = () => {
           }}
         >
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            O período de teste gratuito de 14 dias da sua organização encerrou.
-            A edição de clientes e exportação de relatórios estão bloqueadas.
-            Entre em contato com o suporte para assinar um plano.
+            {t("shared.tenantBanner.trialExpired")}
           </Typography>
         </Alert>
       </Box>
@@ -73,9 +72,7 @@ export const TenantStatusBanner = () => {
           }}
         >
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            A sua organização excedeu o limite de clientes cadastrados no plano
-            atual. A criação de novos eventos e a exportação de relatórios estão
-            suspensas. Entre em contato com o suporte para regularizar.
+            {t("shared.tenantBanner.clientLimitExceeded")}
           </Typography>
         </Alert>
       </Box>
@@ -85,7 +82,6 @@ export const TenantStatusBanner = () => {
   // 4. Info: Free Trial Active
   if (tenantStatus.plan === "free" && !tenantStatus.isTrialExpired) {
     const days = tenantStatus.trialDaysRemaining;
-    const daysText = days === 1 ? "resta 1 dia" : `restam ${days} dias`;
     return (
       <Box sx={{ mb: 2.5 }}>
         <Alert
@@ -98,10 +94,12 @@ export const TenantStatusBanner = () => {
             fontWeight: 500,
           }}
         >
-          <Typography variant="body2">
-            Período de teste gratuito ativo: <strong>{daysText}</strong> de
-            teste.
-          </Typography>
+          <Typography
+            variant="body2"
+            dangerouslySetInnerHTML={{
+              __html: t("shared.tenantBanner.trialActive", { count: days }),
+            }}
+          />
         </Alert>
       </Box>
     );

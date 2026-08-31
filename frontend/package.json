@@ -18,8 +18,10 @@
     "@mui/icons-material": "^9.3.1",
     "@mui/material": "^9.3.1",
     "axios": "^1.11.0",
+    "i18next": "^26.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-i18next": "^17.0.12",
     "react-router-dom": "^7.7.1",
     "zustand": "^5.0.15"
   },
