@@ -19,6 +19,10 @@ vi.mock("../../../services/api/client.service", () => ({
     create: vi.fn(),
     update: vi.fn(),
   },
+  CURRENCIES: [
+    { label: "Real (R$)", value: "BRL" },
+    { label: "Dólar ($)", value: "USD" },
+  ],
 }));
 
 vi.mock("../../../services/api/photographer.service", () => ({
@@ -106,5 +110,54 @@ describe("PersonDetailsPage", () => {
     expect(screen.getByText("Vitórias:")).toBeInTheDocument();
     expect(screen.getByText("Best in Show 2026")).toBeInTheDocument();
     expect(screen.getByText("Nacional Canina")).toBeInTheDocument();
+  });
+
+  it("renders photos with custom USD currency and unpaid status correctly", async () => {
+    vi.mocked(clientService.list).mockResolvedValue({
+      data: [
+        {
+          id: "client-1",
+          person_id: "p123",
+          season_id: "s1",
+          dogs: [
+            {
+              breed: "Beagle",
+              is_owner: true,
+              competitions_won: 0,
+              photos: [
+                {
+                  file_number: "DSC_0001",
+                  photographer_id: "ph1",
+                  payment_method: "Cartão de Crédito",
+                  currency: "USD",
+                  amount_paid: 25.5,
+                },
+                {
+                  file_number: "DSC_0002",
+                  photographer_id: "ph1",
+                  payment_method: "Não pago",
+                  amount_paid: 0,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/people/p123"]}>
+        <Routes>
+          <Route path="/people/:id" element={<PersonDetailsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Arquivo: DSC_0001")).toBeInTheDocument();
+    expect(screen.getByText("$ 25.50")).toBeInTheDocument();
+    expect(screen.getByText("Arquivo: DSC_0002")).toBeInTheDocument();
   });
 });

@@ -28,6 +28,7 @@ type Photo struct {
 	FileNumber     string     `json:"file_number" bson:"file_number"`
 	PhotographerID string     `json:"photographer_id" bson:"photographer_id"`
 	PaymentMethod  string     `json:"payment_method" bson:"payment_method"` // Pix, Cartão de Crédito, Cartão de Débito, Dinheiro, Não pago
+	Currency       string     `json:"currency,omitempty" bson:"currency,omitempty"`
 	AmountPaid     *float64   `json:"amount_paid" bson:"amount_paid"`
 	Judges         []string   `json:"judges,omitempty" bson:"judges,omitempty"`
 	CreatedAt      *time.Time `json:"created_at,omitempty" bson:"created_at,omitempty"`

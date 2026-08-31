@@ -50,6 +50,7 @@ import {
   SeasonClient,
   Dog,
   Photo,
+  CURRENCIES,
 } from "../../../services/api/client.service";
 import { personService, Person } from "../../../services/api/person.service";
 import {
@@ -124,12 +125,14 @@ export const PersonDetailsPage = () => {
     fileNumbersText: string;
     photographer_id: string;
     payment_method: string;
+    currency: string;
     amount_paid: number;
     judges: string[];
   }>({
     fileNumbersText: "",
     photographer_id: "",
     payment_method: "Pix",
+    currency: "BRL",
     amount_paid: 0,
     judges: [],
   });
@@ -137,6 +140,7 @@ export const PersonDetailsPage = () => {
     file_number: "",
     photographer_id: "",
     payment_method: "Pix",
+    currency: "BRL",
     amount_paid: 0,
     judges: [],
   });
@@ -150,6 +154,7 @@ export const PersonDetailsPage = () => {
     file_number: "",
     photographer_id: "",
     payment_method: "Pix",
+    currency: "BRL",
     amount_paid: 0,
     judges: [],
   });
@@ -380,6 +385,7 @@ export const PersonDetailsPage = () => {
       fileNumbersText: "",
       photographer_id: defaultPhotog,
       payment_method: "Pix",
+      currency: "BRL",
       amount_paid: 0,
       judges: [],
     });
@@ -387,6 +393,7 @@ export const PersonDetailsPage = () => {
       file_number: "",
       photographer_id: defaultPhotog,
       payment_method: "Pix",
+      currency: "BRL",
       amount_paid: 0,
       judges: [],
     });
@@ -415,11 +422,15 @@ export const PersonDetailsPage = () => {
         return;
       }
 
+      const isUnpaid = batchPhotoForm.payment_method === "Não pago";
       const newPhotos: Photo[] = numbers.map((num) => ({
         file_number: num,
         photographer_id: batchPhotoForm.photographer_id,
         payment_method: batchPhotoForm.payment_method,
-        amount_paid: Number(batchPhotoForm.amount_paid) || 0,
+        currency: isUnpaid ? undefined : batchPhotoForm.currency || "BRL",
+        amount_paid: isUnpaid
+          ? 0
+          : Math.max(0, Number(batchPhotoForm.amount_paid) || 0),
         judges:
           batchPhotoForm.judges && batchPhotoForm.judges.length > 0
             ? batchPhotoForm.judges
@@ -433,11 +444,15 @@ export const PersonDetailsPage = () => {
         return;
       }
 
+      const isUnpaid = singlePhotoForm.payment_method === "Não pago";
       currentPhotos.unshift({
         file_number: singlePhotoForm.file_number.trim(),
         photographer_id: singlePhotoForm.photographer_id,
         payment_method: singlePhotoForm.payment_method,
-        amount_paid: Number(singlePhotoForm.amount_paid) || 0,
+        currency: isUnpaid ? undefined : singlePhotoForm.currency || "BRL",
+        amount_paid: isUnpaid
+          ? 0
+          : Math.max(0, Number(singlePhotoForm.amount_paid) || 0),
         judges:
           singlePhotoForm.judges && singlePhotoForm.judges.length > 0
             ? singlePhotoForm.judges
@@ -461,6 +476,7 @@ export const PersonDetailsPage = () => {
       file_number: photo.file_number || "",
       photographer_id: photo.photographer_id || "",
       payment_method: photo.payment_method || "Pix",
+      currency: photo.currency || "BRL",
       amount_paid: photo.amount_paid || 0,
       judges: photo.judges || [],
     });
@@ -478,13 +494,17 @@ export const PersonDetailsPage = () => {
     const currentDog = { ...newDogs[selectedDogIndex] };
     const currentPhotos = [...(currentDog.photos || [])];
     const existingPhoto = currentPhotos[editingPhotoIndex];
+    const isUnpaid = editPhotoForm.payment_method === "Não pago";
 
     currentPhotos[editingPhotoIndex] = {
       ...existingPhoto,
       file_number: editPhotoForm.file_number.trim(),
       photographer_id: editPhotoForm.photographer_id,
       payment_method: editPhotoForm.payment_method,
-      amount_paid: Number(editPhotoForm.amount_paid) || 0,
+      currency: isUnpaid ? undefined : editPhotoForm.currency || "BRL",
+      amount_paid: isUnpaid
+        ? 0
+        : Math.max(0, Number(editPhotoForm.amount_paid) || 0),
       judges:
         editPhotoForm.judges && editPhotoForm.judges.length > 0
           ? editPhotoForm.judges
@@ -1248,9 +1268,11 @@ export const PersonDetailsPage = () => {
                               variant="subtitle2"
                               sx={{ fontWeight: 700, color: "text.primary" }}
                             >
-                              {photo.amount_paid !== undefined
-                                ? `R$ ${Number(photo.amount_paid).toFixed(2)}`
-                                : "R$ 0.00"}
+                              {photo.payment_method === "Não pago"
+                                ? "Não pago"
+                                : photo.amount_paid !== undefined
+                                  ? `${photo.currency === "USD" ? "$" : "R$"} ${Number(photo.amount_paid).toFixed(2)}`
+                                  : `${photo.currency === "USD" ? "$" : "R$"} 0.00`}
                             </Typography>
                           </Box>
 
@@ -1600,18 +1622,28 @@ export const PersonDetailsPage = () => {
                 )}
               />
               <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: batchPhotoForm.payment_method === "Não pago" ? 12 : 4,
+                  }}
+                >
                   <FormControl fullWidth size="small">
                     <InputLabel>Forma de Pagamento</InputLabel>
                     <Select
                       value={batchPhotoForm.payment_method}
                       label="Forma de Pagamento"
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const newMethod = e.target.value;
                         setBatchPhotoForm({
                           ...batchPhotoForm,
-                          payment_method: e.target.value,
-                        })
-                      }
+                          payment_method: newMethod,
+                          amount_paid:
+                            newMethod === "Não pago"
+                              ? 0
+                              : batchPhotoForm.amount_paid,
+                        });
+                      }}
                     >
                       {PAYMENT_METHODS.map((m) => (
                         <MenuItem key={m} value={m}>
@@ -1621,24 +1653,50 @@ export const PersonDetailsPage = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="Valor por Foto (R$)"
-                    type="number"
-                    size="small"
-                    fullWidth
-                    value={batchPhotoForm.amount_paid}
-                    onChange={(e) =>
-                      setBatchPhotoForm({
-                        ...batchPhotoForm,
-                        amount_paid: Math.max(
-                          0,
-                          parseFloat(e.target.value) || 0,
-                        ),
-                      })
-                    }
-                  />
-                </Grid>
+                {batchPhotoForm.payment_method !== "Não pago" && (
+                  <>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Moeda</InputLabel>
+                        <Select
+                          value={batchPhotoForm.currency || "BRL"}
+                          label="Moeda"
+                          onChange={(e) =>
+                            setBatchPhotoForm({
+                              ...batchPhotoForm,
+                              currency: e.target.value,
+                            })
+                          }
+                        >
+                          {CURRENCIES.map((c) => (
+                            <MenuItem key={c.value} value={c.value}>
+                              {c.label}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <TextField
+                        label="Valor por Foto"
+                        type="number"
+                        size="small"
+                        fullWidth
+                        slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                        value={batchPhotoForm.amount_paid}
+                        onChange={(e) =>
+                          setBatchPhotoForm({
+                            ...batchPhotoForm,
+                            amount_paid: Math.max(
+                              0,
+                              parseFloat(e.target.value) || 0,
+                            ),
+                          })
+                        }
+                      />
+                    </Grid>
+                  </>
+                )}
               </Grid>
             </>
           ) : (
@@ -1710,18 +1768,28 @@ export const PersonDetailsPage = () => {
                 )}
               />
               <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: singlePhotoForm.payment_method === "Não pago" ? 12 : 4,
+                  }}
+                >
                   <FormControl fullWidth size="small">
                     <InputLabel>Forma de Pagamento</InputLabel>
                     <Select
                       value={singlePhotoForm.payment_method}
                       label="Forma de Pagamento"
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const newMethod = e.target.value;
                         setSinglePhotoForm({
                           ...singlePhotoForm,
-                          payment_method: e.target.value,
-                        })
-                      }
+                          payment_method: newMethod,
+                          amount_paid:
+                            newMethod === "Não pago"
+                              ? 0
+                              : singlePhotoForm.amount_paid,
+                        });
+                      }}
                     >
                       {PAYMENT_METHODS.map((m) => (
                         <MenuItem key={m} value={m}>
@@ -1731,24 +1799,50 @@ export const PersonDetailsPage = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="Valor Pago (R$)"
-                    type="number"
-                    size="small"
-                    fullWidth
-                    value={singlePhotoForm.amount_paid}
-                    onChange={(e) =>
-                      setSinglePhotoForm({
-                        ...singlePhotoForm,
-                        amount_paid: Math.max(
-                          0,
-                          parseFloat(e.target.value) || 0,
-                        ),
-                      })
-                    }
-                  />
-                </Grid>
+                {singlePhotoForm.payment_method !== "Não pago" && (
+                  <>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Moeda</InputLabel>
+                        <Select
+                          value={singlePhotoForm.currency || "BRL"}
+                          label="Moeda"
+                          onChange={(e) =>
+                            setSinglePhotoForm({
+                              ...singlePhotoForm,
+                              currency: e.target.value,
+                            })
+                          }
+                        >
+                          {CURRENCIES.map((c) => (
+                            <MenuItem key={c.value} value={c.value}>
+                              {c.label}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <TextField
+                        label="Valor Pago"
+                        type="number"
+                        size="small"
+                        fullWidth
+                        slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                        value={singlePhotoForm.amount_paid}
+                        onChange={(e) =>
+                          setSinglePhotoForm({
+                            ...singlePhotoForm,
+                            amount_paid: Math.max(
+                              0,
+                              parseFloat(e.target.value) || 0,
+                            ),
+                          })
+                        }
+                      />
+                    </Grid>
+                  </>
+                )}
               </Grid>
             </>
           )}
@@ -1847,18 +1941,28 @@ export const PersonDetailsPage = () => {
             )}
           />
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: editPhotoForm.payment_method === "Não pago" ? 12 : 4,
+              }}
+            >
               <FormControl fullWidth size="small">
                 <InputLabel>Forma de Pagamento</InputLabel>
                 <Select
                   value={editPhotoForm.payment_method}
                   label="Forma de Pagamento"
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const newMethod = e.target.value;
                     setEditPhotoForm({
                       ...editPhotoForm,
-                      payment_method: e.target.value,
-                    })
-                  }
+                      payment_method: newMethod,
+                      amount_paid:
+                        newMethod === "Não pago"
+                          ? 0
+                          : editPhotoForm.amount_paid,
+                    });
+                  }}
                 >
                   {PAYMENT_METHODS.map((m) => (
                     <MenuItem key={m} value={m}>
@@ -1868,21 +1972,50 @@ export const PersonDetailsPage = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label="Valor Pago (R$)"
-                type="number"
-                size="small"
-                fullWidth
-                value={editPhotoForm.amount_paid}
-                onChange={(e) =>
-                  setEditPhotoForm({
-                    ...editPhotoForm,
-                    amount_paid: Math.max(0, parseFloat(e.target.value) || 0),
-                  })
-                }
-              />
-            </Grid>
+            {editPhotoForm.payment_method !== "Não pago" && (
+              <>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Moeda</InputLabel>
+                    <Select
+                      value={editPhotoForm.currency || "BRL"}
+                      label="Moeda"
+                      onChange={(e) =>
+                        setEditPhotoForm({
+                          ...editPhotoForm,
+                          currency: e.target.value,
+                        })
+                      }
+                    >
+                      {CURRENCIES.map((c) => (
+                        <MenuItem key={c.value} value={c.value}>
+                          {c.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField
+                    label="Valor Pago"
+                    type="number"
+                    size="small"
+                    fullWidth
+                    slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                    value={editPhotoForm.amount_paid}
+                    onChange={(e) =>
+                      setEditPhotoForm({
+                        ...editPhotoForm,
+                        amount_paid: Math.max(
+                          0,
+                          parseFloat(e.target.value) || 0,
+                        ),
+                      })
+                    }
+                  />
+                </Grid>
+              </>
+            )}
           </Grid>
         </DialogContent>
         <DialogActions sx={{ p: 2.5 }}>

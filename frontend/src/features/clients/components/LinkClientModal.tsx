@@ -23,7 +23,12 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import { clientService, Dog } from "../../../services/api/client.service";
+import {
+  clientService,
+  Dog,
+  Photo,
+  CURRENCIES,
+} from "../../../services/api/client.service";
 import { personService, Person } from "../../../services/api/person.service";
 import {
   photographerService,
@@ -162,6 +167,7 @@ export const LinkClientModal = ({
       file_number: "",
       photographer_id: "",
       payment_method: "Pix",
+      currency: "BRL",
       amount_paid: 0,
     });
     newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
@@ -171,15 +177,22 @@ export const LinkClientModal = ({
   const updatePhoto = (
     dogIndex: number,
     photoIndex: number,
-    field: string,
-    value: unknown,
+    fieldOrObj: string | Partial<Photo>,
+    value?: unknown,
   ) => {
     const newDogs = [...dogs];
     const photos = [...newDogs[dogIndex].photos];
-    photos[photoIndex] = {
-      ...photos[photoIndex],
-      [field]: value,
-    };
+    if (typeof fieldOrObj === "string") {
+      photos[photoIndex] = {
+        ...photos[photoIndex],
+        [fieldOrObj]: value,
+      };
+    } else {
+      photos[photoIndex] = {
+        ...photos[photoIndex],
+        ...fieldOrObj,
+      };
+    }
     newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setDogs(newDogs);
   };
@@ -484,9 +497,20 @@ export const LinkClientModal = ({
                     labelId={`payment-label-${dIdx}-${pIdx}`}
                     value={photo.payment_method || "Pix"}
                     label="Pagamento"
-                    onChange={(e) =>
-                      updatePhoto(dIdx, pIdx, "payment_method", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const newMethod = e.target.value;
+                      if (newMethod === "Não pago") {
+                        updatePhoto(dIdx, pIdx, {
+                          payment_method: newMethod,
+                          amount_paid: 0,
+                        });
+                      } else {
+                        updatePhoto(dIdx, pIdx, {
+                          payment_method: newMethod,
+                          currency: photo.currency || "BRL",
+                        });
+                      }
+                    }}
                   >
                     {PAYMENT_METHODS.map((m) => (
                       <MenuItem key={m} value={m}>
@@ -495,21 +519,46 @@ export const LinkClientModal = ({
                     ))}
                   </Select>
                 </FormControl>
-                <TextField
-                  size="small"
-                  type="number"
-                  label="Valor Pago"
-                  value={photo.amount_paid ?? 0}
-                  onChange={(e) =>
-                    updatePhoto(
-                      dIdx,
-                      pIdx,
-                      "amount_paid",
-                      parseFloat(e.target.value) || 0,
-                    )
-                  }
-                  sx={{ width: 120 }}
-                />
+                {photo.payment_method !== "Não pago" && (
+                  <>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                      <InputLabel id={`currency-label-${dIdx}-${pIdx}`}>
+                        Moeda
+                      </InputLabel>
+                      <Select
+                        labelId={`currency-label-${dIdx}-${pIdx}`}
+                        value={photo.currency || "BRL"}
+                        label="Moeda"
+                        onChange={(e) =>
+                          updatePhoto(dIdx, pIdx, "currency", e.target.value)
+                        }
+                      >
+                        {CURRENCIES.map((c) => (
+                          <MenuItem key={c.value} value={c.value}>
+                            {c.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      size="small"
+                      type="number"
+                      label="Valor Pago"
+                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                      value={photo.amount_paid ?? 0}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        updatePhoto(
+                          dIdx,
+                          pIdx,
+                          "amount_paid",
+                          isNaN(val) ? 0 : Math.max(0, val),
+                        );
+                      }}
+                      sx={{ width: 120 }}
+                    />
+                  </>
+                )}
                 <IconButton
                   size="small"
                   color="error"
