@@ -21,7 +21,6 @@ import {
   Alert,
   Chip,
   Card,
-  CardActionArea,
   CardContent,
   Grid,
   Divider,
@@ -805,8 +804,10 @@ export const PersonDetailsPage = () => {
                     <Card
                       key={idx}
                       elevation={0}
+                      onClick={() => setSelectedDogIndex(idx)}
                       sx={{
                         borderRadius: 2.5,
+                        cursor: "pointer",
                         border: "2px solid",
                         borderColor: isSelected ? "primary.main" : "divider",
                         bgcolor: isSelected
@@ -819,87 +820,80 @@ export const PersonDetailsPage = () => {
                         },
                       }}
                     >
-                      <CardActionArea
-                        onClick={() => setSelectedDogIndex(idx)}
-                        sx={{ p: 1.5 }}
-                      >
-                        <CardContent sx={{ p: "0 !important" }}>
-                          <Box
+                      <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            mb: 1,
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle1"
                             sx={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "flex-start",
-                              mb: 1,
+                              fontWeight: 700,
+                              color: isSelected
+                                ? "primary.main"
+                                : "text.primary",
                             }}
                           >
-                            <Typography
-                              variant="subtitle1"
-                              sx={{
-                                fontWeight: 700,
-                                color: isSelected
-                                  ? "primary.main"
-                                  : "text.primary",
-                              }}
-                            >
-                              {dog.breed || "Sem raça definida"}
-                            </Typography>
-                            <Chip
-                              size="small"
-                              label={dog.is_owner ? "Dono" : "Apresentador"}
-                              color={dog.is_owner ? "success" : "default"}
-                              variant="outlined"
-                              sx={{ fontSize: "0.75rem", height: 22 }}
-                            />
-                          </Box>
+                            {dog.breed || "Sem raça definida"}
+                          </Typography>
+                          <Chip
+                            size="small"
+                            label={dog.is_owner ? "Dono" : "Apresentador"}
+                            color={dog.is_owner ? "success" : "default"}
+                            variant="outlined"
+                            sx={{ fontSize: "0.75rem", height: 22 }}
+                          />
+                        </Box>
 
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              mt: 1,
-                            }}
-                          >
-                            <Chip
-                              icon={
-                                <PhotoCameraIcon style={{ fontSize: 14 }} />
-                              }
-                              label={`${photoCount} ${photoCount === 1 ? "foto" : "fotos"}`}
-                              size="small"
-                              color={photoCount > 0 ? "primary" : "default"}
-                              sx={{ fontWeight: 600, fontSize: "0.75rem" }}
-                            />
-                            <Box sx={{ display: "flex", gap: 0.5 }}>
-                              <Tooltip title="Editar Cão">
-                                <IconButton
-                                  size="small"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenEditDog(idx);
-                                  }}
-                                >
-                                  <EditIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Excluir Cão">
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setDeleteDogConfirm({
-                                      open: true,
-                                      index: idx,
-                                    });
-                                  }}
-                                >
-                                  <DeleteIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            </Box>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            mt: 1,
+                          }}
+                        >
+                          <Chip
+                            icon={<PhotoCameraIcon style={{ fontSize: 14 }} />}
+                            label={`${photoCount} ${photoCount === 1 ? "foto" : "fotos"}`}
+                            size="small"
+                            color={photoCount > 0 ? "primary" : "default"}
+                            sx={{ fontWeight: 600, fontSize: "0.75rem" }}
+                          />
+                          <Box sx={{ display: "flex", gap: 0.5 }}>
+                            <Tooltip title="Editar Cão">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenEditDog(idx);
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Excluir Cão">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeleteDogConfirm({
+                                    open: true,
+                                    index: idx,
+                                  });
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
                           </Box>
-                        </CardContent>
-                      </CardActionArea>
+                        </Box>
+                      </CardContent>
                     </Card>
                   );
                 })}
