@@ -24,6 +24,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import { useTranslation } from "react-i18next";
 
 import { profileService } from "../services/profile.service";
 import { authService } from "../../auth/services/auth.service";
@@ -32,7 +33,8 @@ import { ProfileData } from "../types/profile.types";
 import { useDocumentTitle, PageLoadingFallback } from "../../shared";
 
 export function ProfilePage() {
-  useDocumentTitle("Meu Perfil");
+  const { t } = useTranslation();
+  useDocumentTitle(t("profile.title"));
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
 
@@ -80,7 +82,7 @@ export function ProfilePage() {
       })
       .catch(() => {
         if (isMounted) {
-          setPageError("Não foi possível carregar as informações do perfil.");
+          setPageError(t("profile.errorLoad"));
         }
       })
       .finally(() => {
@@ -92,7 +94,7 @@ export function ProfilePage() {
     return () => {
       isMounted = false;
     };
-  }, [setUser]);
+  }, [setUser, t]);
 
   // Cooldown countdown timer
   useEffect(() => {
@@ -109,7 +111,7 @@ export function ProfilePage() {
     setNameError(null);
 
     if (name.trim().length < 2 || name.trim().length > 100) {
-      setNameError("O nome deve ter entre 2 e 100 caracteres.");
+      setNameError(t("profile.errorPasswordTooShort"));
       return;
     }
 
@@ -118,7 +120,7 @@ export function ProfilePage() {
       const updatedUser = await profileService.updateProfile({
         name: name.trim(),
       });
-      setNameSuccess("Nome atualizado com sucesso!");
+      setNameSuccess(t("profile.successName"));
       if (user) {
         setUser({ ...user, name: updatedUser.name });
       }
@@ -130,9 +132,7 @@ export function ProfilePage() {
       }
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } } };
-      setNameError(
-        errorObj.response?.data?.message || "Erro ao atualizar o nome.",
-      );
+      setNameError(errorObj.response?.data?.message || t("shared.error"));
     } finally {
       setUpdatingName(false);
     }
@@ -144,17 +144,17 @@ export function ProfilePage() {
     setPasswordError(null);
 
     if (!currentPassword) {
-      setPasswordError("Informe sua senha atual.");
+      setPasswordError(t("profile.fields.currentPassword"));
       return;
     }
 
     if (newPassword.length < 8 || newPassword.length > 72) {
-      setPasswordError("A nova senha deve ter entre 8 e 72 caracteres.");
+      setPasswordError(t("profile.errorPasswordTooShort"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError("A confirmação de senha não coincide com a nova senha.");
+      setPasswordError(t("profile.errorPasswordMismatch"));
       return;
     }
 
@@ -164,15 +164,13 @@ export function ProfilePage() {
         currentPassword,
         newPassword,
       });
-      setPasswordSuccess(res.message || "Senha alterada com sucesso!");
+      setPasswordSuccess(res.message || t("profile.successPassword"));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } } };
-      setPasswordError(
-        errorObj.response?.data?.message || "Erro ao alterar a senha.",
-      );
+      setPasswordError(errorObj.response?.data?.message || t("shared.error"));
     } finally {
       setUpdatingPassword(false);
     }
@@ -214,7 +212,7 @@ export function ProfilePage() {
           variant="h4"
           sx={{ fontWeight: 800, color: "text.primary" }}
         >
-          Meu Perfil & Configurações
+          {t("profile.title")}
         </Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
           Gerencie seus dados de acesso e status de e-mail.
@@ -364,7 +362,7 @@ export function ProfilePage() {
                   sx={{ color: "primary.main", fontSize: 28 }}
                 />
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Dados Pessoais
+                  {t("profile.personalData")}
                 </Typography>
               </Stack>
 
@@ -392,14 +390,14 @@ export function ProfilePage() {
                 <Stack spacing={2.5}>
                   <TextField
                     fullWidth
-                    label="E-mail (Não editável)"
+                    label={t("profile.fields.emailReadonly")}
                     value={profileData?.user?.email || ""}
                     disabled
                   />
 
                   <TextField
                     fullWidth
-                    label="Nome Completo"
+                    label={t("profile.fields.fullName")}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={updatingName}
@@ -419,7 +417,9 @@ export function ProfilePage() {
                     disabled={updatingName || !name.trim()}
                     sx={{ alignSelf: "flex-start", fontWeight: 600 }}
                   >
-                    {updatingName ? "Salvando..." : "Salvar Alterações"}
+                    {updatingName
+                      ? t("profile.saving")
+                      : t("profile.saveChanges")}
                   </Button>
                 </Stack>
               </Box>
@@ -447,7 +447,7 @@ export function ProfilePage() {
                   sx={{ color: "primary.main", fontSize: 28 }}
                 />
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Alterar Senha
+                  {t("profile.changePassword")}
                 </Typography>
               </Stack>
 
@@ -475,7 +475,7 @@ export function ProfilePage() {
                 <Stack spacing={2}>
                   <TextField
                     fullWidth
-                    label="Senha Atual"
+                    label={t("profile.fields.currentPassword")}
                     type={showCurrentPassword ? "text" : "password"}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
@@ -508,14 +508,14 @@ export function ProfilePage() {
 
                   <TextField
                     fullWidth
-                    label="Nova Senha"
+                    label={t("profile.fields.newPassword")}
                     type={showNewPassword ? "text" : "password"}
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder={t("profile.fields.newPasswordPlaceholder")}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     disabled={updatingPassword}
                     required
-                    helperText="Entre 8 e 72 caracteres"
+                    helperText={t("profile.fields.newPasswordHelper")}
                     slotProps={{
                       input: {
                         endAdornment: (
@@ -541,7 +541,7 @@ export function ProfilePage() {
 
                   <TextField
                     fullWidth
-                    label="Confirmar Nova Senha"
+                    label={t("profile.fields.confirmNewPassword")}
                     type={showNewPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -568,7 +568,9 @@ export function ProfilePage() {
                     }
                     sx={{ alignSelf: "flex-start", fontWeight: 600 }}
                   >
-                    {updatingPassword ? "Atualizando..." : "Alterar Senha"}
+                    {updatingPassword
+                      ? t("profile.updating")
+                      : t("profile.changePasswordBtn")}
                   </Button>
                 </Stack>
               </Box>

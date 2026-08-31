@@ -28,6 +28,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import { useTranslation } from "react-i18next";
 import {
   clientService,
   SeasonClient,
@@ -63,6 +64,7 @@ export const ClientDetailsModal = ({
   onClose,
   onSuccess,
 }: ClientDetailsModalProps) => {
+  const { t } = useTranslation();
   const { activeSeason } = useSeasonStore();
   const [client, setClient] = useState<SeasonClient | null>(null);
   const [person, setPerson] = useState<Person | null>(null);
@@ -162,20 +164,16 @@ export const ClientDetailsModal = ({
 
   const addDog = () => {
     if (!client) return;
-    setClient({
-      ...client,
-      dogs: [
-        {
-          breed: "",
-          judge: "",
-          is_owner: false,
-          competitions_won: 0,
-          won_competitions: [],
-          photos: [],
-        },
-        ...(client.dogs || []),
-      ],
+    const newDogs = client.dogs ? [...client.dogs] : [];
+    newDogs.unshift({
+      breed: "",
+      judge: "",
+      is_owner: false,
+      competitions_won: 0,
+      won_competitions: [],
+      photos: [],
     });
+    setClient({ ...client, dogs: newDogs });
   };
 
   const updateDog = (index: number, field: string, value: unknown) => {
@@ -217,7 +215,7 @@ export const ClientDetailsModal = ({
   ) => {
     if (!client) return;
     const newDogs = [...(client.dogs || [])];
-    const photos = [...(newDogs[dogIndex].photos || [])];
+    const photos = [...newDogs[dogIndex].photos];
     if (typeof fieldOrObj === "string") {
       photos[photoIndex] = {
         ...photos[photoIndex],
@@ -236,7 +234,7 @@ export const ClientDetailsModal = ({
   const removePhoto = (dogIndex: number, photoIndex: number) => {
     if (!client) return;
     const newDogs = [...(client.dogs || [])];
-    const photos = [...(newDogs[dogIndex].photos || [])];
+    const photos = [...newDogs[dogIndex].photos];
     photos.splice(photoIndex, 1);
     newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setClient({ ...client, dogs: newDogs });
@@ -252,14 +250,14 @@ export const ClientDetailsModal = ({
             alignItems: "center",
           }}
         >
-          <Typography variant="h6">Detalhes do Cliente</Typography>
+          <Typography variant="h6">{t("clientDetails.title")}</Typography>
           <Button
-            variant="outlined"
             color="error"
             size="small"
+            startIcon={<DeleteIcon />}
             onClick={() => setDeleteConfirmOpen(true)}
           >
-            Excluir Cliente
+            {t("clients.actions.unlink")}
           </Button>
         </DialogTitle>
 
@@ -269,51 +267,38 @@ export const ClientDetailsModal = ({
           {error && <Alert severity="error">{error}</Alert>}
 
           {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                py: 4,
+              }}
+            >
               <CircularProgress />
             </Box>
           ) : (
             <>
               {person && (
-                <Paper sx={{ p: 2.5, bgcolor: "#f8f9fa" }}>
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 600, mb: 1 }}
-                  >
-                    Dados da Pessoa
+                <Paper
+                  sx={{
+                    p: 2,
+                    bgcolor: "#fafafa",
+                    borderRadius: 2,
+                    border: "1px solid #e0e0e0",
+                  }}
+                >
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    {person.name}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
-                      gap: 2,
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Nome
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {person.name || "-"}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        E-mail
-                      </Typography>
-                      <Typography variant="body2">
-                        {person.email || "-"}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Telefone
-                      </Typography>
-                      <Typography variant="body2">
-                        {formatPhone(person.phone) || "-"}
-                      </Typography>
-                    </Box>
-                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    {person.email ? `E-mail: ${person.email}` : ""}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {person.phone
+                      ? `Telefone: ${formatPhone(person.phone)}`
+                      : ""}
+                  </Typography>
                 </Paper>
               )}
 
@@ -324,43 +309,57 @@ export const ClientDetailsModal = ({
                   alignItems: "center",
                 }}
               >
-                <Typography variant="h6">Cachorros</Typography>
+                <Typography variant="h6">{t("clientDetails.dogs")}</Typography>
                 <Button
                   variant="outlined"
                   size="small"
                   startIcon={<AddIcon />}
                   onClick={addDog}
                 >
-                  Adicionar Cachorro
+                  {t("clientDetails.addDog")}
                 </Button>
               </Box>
 
-              {(!client?.dogs || client.dogs.length === 0) && (
+              {client?.dogs?.length === 0 && (
                 <Typography variant="body2" color="text.secondary">
-                  Nenhum cachorro cadastrado.
+                  {t("clientDetails.noDogs")}
                 </Typography>
               )}
 
               {client?.dogs?.map((dog, dIdx) => (
-                <Accordion key={dIdx} defaultExpanded sx={{ mb: 1 }}>
+                <Accordion key={dIdx} defaultExpanded>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                      {dog.breed || `Cachorro #${dIdx + 1}`}
-                    </Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        pr: 2,
+                      }}
+                    >
+                      <Typography sx={{ fontWeight: 600 }}>
+                        {dog.breed ||
+                          `${t("linkClient.fields.dogName")} #${dIdx + 1}`}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeDog(dIdx);
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
                   </AccordionSummary>
                   <AccordionDetails
                     sx={{ display: "flex", flexDirection: "column", gap: 2 }}
                   >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: 2,
-                        flexWrap: "wrap",
-                        alignItems: "center",
-                      }}
-                    >
+                    <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
                       <TextField
-                        label="Raça"
+                        label={t("linkClient.fields.dogName")}
                         size="small"
                         value={dog.breed}
                         onChange={(e) =>
@@ -370,7 +369,7 @@ export const ClientDetailsModal = ({
                       />
                       <TextField
                         type="number"
-                        label="Competições Ganhas"
+                        label={t("linkClient.fields.competitions")}
                         size="small"
                         value={dog.competitions_won}
                         onChange={(e) =>
@@ -393,20 +392,12 @@ export const ClientDetailsModal = ({
                         }
                         label="Dono?"
                       />
-                      <IconButton
-                        color="error"
-                        size="small"
-                        onClick={() => removeDog(dIdx)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
                     </Box>
 
                     {dog.competitions_won > 0 && (
                       <Box
                         sx={{
                           p: 1.5,
-                          mb: 2,
                           bgcolor: "#f8fafc",
                           borderRadius: 2,
                           border: "1px solid",
@@ -427,14 +418,14 @@ export const ClientDetailsModal = ({
                           }}
                         >
                           <EmojiEventsIcon fontSize="inherit" color="warning" />
-                          Competições Vencidas (
+                          {t("linkClient.fields.competitions")} (
                           {dog.won_competitions?.length || 0})
                         </Typography>
                         <Box sx={{ display: "flex", gap: 1 }}>
                           <TextField
                             size="small"
                             fullWidth
-                            placeholder="Nome da competição vencida..."
+                            placeholder={t("linkClient.fields.addCompetition")}
                             value={compInputs[dIdx] || ""}
                             onChange={(e) =>
                               setCompInputs({
@@ -457,7 +448,7 @@ export const ClientDetailsModal = ({
                             startIcon={<AddIcon />}
                             sx={{ textTransform: "none", whiteSpace: "nowrap" }}
                           >
-                            Adicionar
+                            {t("shared.add")}
                           </Button>
                         </Box>
                         {dog.won_competitions &&
@@ -499,13 +490,15 @@ export const ClientDetailsModal = ({
                         mt: 1,
                       }}
                     >
-                      <Typography variant="subtitle2">Fotos</Typography>
+                      <Typography variant="subtitle2">
+                        {t("clientDetails.photos")}
+                      </Typography>
                       <Button
                         size="small"
                         startIcon={<AddIcon />}
                         onClick={() => addPhoto(dIdx)}
                       >
-                        Adicionar Foto
+                        {t("clientDetails.addPhoto")}
                       </Button>
                     </Box>
 
@@ -516,7 +509,7 @@ export const ClientDetailsModal = ({
                           display: "flex",
                           gap: 2,
                           alignItems: "center",
-                          bgcolor: "#f9f9f9",
+                          bgcolor: "#fafafa",
                           p: 1.5,
                           borderRadius: 1,
                           border: "1px solid #e0e0e0",
@@ -525,7 +518,7 @@ export const ClientDetailsModal = ({
                       >
                         <TextField
                           size="small"
-                          label="Número do Arquivo"
+                          label={t("linkClient.fields.fileNumber")}
                           value={photo.file_number}
                           onChange={(e) =>
                             updatePhoto(
@@ -541,13 +534,15 @@ export const ClientDetailsModal = ({
                           size="small"
                           sx={{ minWidth: 160, flex: 1 }}
                         >
-                          <InputLabel id={`modal-photog-label-${dIdx}-${pIdx}`}>
-                            Fotógrafo
+                          <InputLabel
+                            id={`modal-photographer-label-${dIdx}-${pIdx}`}
+                          >
+                            {t("linkClient.fields.photographer")}
                           </InputLabel>
                           <Select
-                            labelId={`modal-photog-label-${dIdx}-${pIdx}`}
+                            labelId={`modal-photographer-label-${dIdx}-${pIdx}`}
                             value={photo.photographer_id || ""}
-                            label="Fotógrafo"
+                            label={t("linkClient.fields.photographer")}
                             onChange={(e) =>
                               updatePhoto(
                                 dIdx,
@@ -575,13 +570,13 @@ export const ClientDetailsModal = ({
                           renderInput={(params) => (
                             <TextField
                               {...params}
-                              label="Juízes"
+                              label={t("linkClient.fields.judges")}
                               placeholder={
                                 photo.judges?.length
                                   ? ""
                                   : activeSeason?.judges?.length
-                                    ? "Selecione juízes"
-                                    : "Nenhum juiz no evento"
+                                    ? t("linkClient.fields.judgesPlaceholder")
+                                    : t("linkClient.fields.noJudgesEvent")
                               }
                             />
                           )}
@@ -594,12 +589,12 @@ export const ClientDetailsModal = ({
                           <InputLabel
                             id={`modal-payment-label-${dIdx}-${pIdx}`}
                           >
-                            Pagamento
+                            {t("linkClient.fields.paymentMethod")}
                           </InputLabel>
                           <Select
                             labelId={`modal-payment-label-${dIdx}-${pIdx}`}
                             value={photo.payment_method || "Pix"}
-                            label="Pagamento"
+                            label={t("linkClient.fields.paymentMethod")}
                             onChange={(e) => {
                               const newMethod = e.target.value;
                               if (newMethod === "Não pago") {
@@ -653,7 +648,7 @@ export const ClientDetailsModal = ({
                             <TextField
                               size="small"
                               type="number"
-                              label="Valor Pago"
+                              label={t("linkClient.fields.amountPaid")}
                               slotProps={{
                                 htmlInput: { min: 0, step: "0.01" },
                               }}
@@ -689,14 +684,14 @@ export const ClientDetailsModal = ({
 
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={onClose} disabled={saving || loading}>
-            Fechar
+            {t("shared.close")}
           </Button>
           <Button
             onClick={handleSave}
             variant="contained"
             disabled={saving || loading}
           >
-            {saving ? "Salvando..." : "Salvar Alterações"}
+            {saving ? t("shared.saving") : t("profile.saveChanges")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -706,19 +701,16 @@ export const ClientDetailsModal = ({
         open={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
       >
-        <DialogTitle>Confirmar Exclusão</DialogTitle>
+        <DialogTitle>{t("shared.delete")}</DialogTitle>
         <DialogContent>
-          <Typography>
-            Tem certeza que deseja excluir o cadastro deste cliente neste
-            evento?
-          </Typography>
+          <Typography>{t("clients.actions.confirmUnlink")}</Typography>
         </DialogContent>
         <DialogActions>
           <Button
             onClick={() => setDeleteConfirmOpen(false)}
             disabled={deleting}
           >
-            Cancelar
+            {t("shared.cancel")}
           </Button>
           <Button
             onClick={handleDelete}
@@ -726,7 +718,7 @@ export const ClientDetailsModal = ({
             variant="contained"
             disabled={deleting}
           >
-            {deleting ? "Excluindo..." : "Excluir"}
+            {deleting ? "Excluindo..." : t("shared.delete")}
           </Button>
         </DialogActions>
       </Dialog>

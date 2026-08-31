@@ -16,13 +16,16 @@ import {
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
+import { useTranslation } from "react-i18next";
 import { AuthHeroBanner } from "../components/AuthHeroBanner";
 import { authService } from "../services/auth.service";
 import { useDocumentTitle } from "../../shared";
 import { brandColors } from "../../../styles/theme";
+import { LanguageSelector } from "../../../components/LanguageSelector";
 
 export function ForgotPasswordPage() {
-  useDocumentTitle("Recuperar Senha");
+  const { t } = useTranslation();
+  useDocumentTitle(t("auth.forgotPassword.title"));
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,7 +38,7 @@ export function ForgotPasswordPage() {
     setSuccessMsg(null);
 
     if (!email.trim()) {
-      setErrorMsg("Por favor, informe seu e-mail cadastrado.");
+      setErrorMsg(t("auth.forgotPassword.errorDefault"));
       return;
     }
 
@@ -44,13 +47,13 @@ export function ForgotPasswordPage() {
       const res = await authService.forgotPassword({ email: email.trim() });
       setSuccessMsg(
         res.message ||
-          "Se o e-mail informado estiver cadastrado, você receberá instruções para redefinir sua senha.",
+          t("auth.forgotPassword.successMessage", { email: email.trim() }),
       );
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } } };
       setErrorMsg(
         errorObj.response?.data?.message ||
-          "Ocorreu um erro ao processar sua solicitação. Tente novamente.",
+          t("auth.forgotPassword.errorDefault"),
       );
     } finally {
       setLoading(false);
@@ -97,31 +100,42 @@ export function ForgotPasswordPage() {
           }}
         >
           <CardContent sx={{ p: { xs: 1, sm: 3 } }}>
-            {/* Mobile Header / Brand */}
+            {/* Header / Brand & Language Selector */}
             <Box
               sx={{
-                display: { xs: "flex", md: "none" },
+                display: "flex",
                 alignItems: "center",
+                justifyContent: "space-between",
                 mb: 3,
-                gap: 1,
               }}
             >
               <Box
                 sx={{
-                  bgcolor: brandColors.primary,
-                  borderRadius: 1.5,
-                  p: 0.75,
-                  display: "flex",
+                  display: { xs: "flex", md: "none" },
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 1,
                 }}
-              ></Box>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 800, color: "primary.main" }}
               >
-                PS
-              </Typography>
+                <Box
+                  sx={{
+                    bgcolor: brandColors.primary,
+                    borderRadius: 1.5,
+                    p: 0.75,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 800, color: "primary.main" }}
+                >
+                  PS
+                </Typography>
+              </Box>
+              <Box sx={{ ml: "auto" }}>
+                <LanguageSelector variant="auth" />
+              </Box>
             </Box>
 
             <Box sx={{ mb: 3.5 }}>
@@ -130,11 +144,10 @@ export function ForgotPasswordPage() {
                 variant="h4"
                 sx={{ fontWeight: 700, mb: 1, color: "text.primary" }}
               >
-                Recuperar Senha
+                {t("auth.forgotPassword.title")}
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Informe o e-mail da sua conta para receber o link seguro de
-                redefinição.
+                {t("auth.forgotPassword.subtitle")}
               </Typography>
             </Box>
 
@@ -150,7 +163,7 @@ export function ForgotPasswordPage() {
                   sx={{ fontSize: 48, color: "success.main", mb: 2 }}
                 />
                 <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>
-                  Solicitação enviada com sucesso!
+                  {t("auth.forgotPassword.successTitle")}
                 </Typography>
                 <Typography
                   variant="body2"
@@ -165,7 +178,7 @@ export function ForgotPasswordPage() {
                   fullWidth
                   startIcon={<ArrowBackRoundedIcon />}
                 >
-                  Voltar para o Login
+                  {t("auth.forgotPassword.backToLogin")}
                 </Button>
               </Box>
             ) : (
@@ -173,7 +186,7 @@ export function ForgotPasswordPage() {
                 <Stack spacing={2.5}>
                   <TextField
                     fullWidth
-                    label="E-mail cadastrado"
+                    label={t("auth.forgotPassword.email")}
                     type="email"
                     placeholder="seu.email@exemplo.com"
                     value={email}
@@ -209,7 +222,7 @@ export function ForgotPasswordPage() {
                     {loading ? (
                       <CircularProgress size={24} sx={{ color: "#FFFFFF" }} />
                     ) : (
-                      "Enviar Link de Recuperação"
+                      t("auth.forgotPassword.submit")
                     )}
                   </Button>
                 </Stack>
@@ -233,7 +246,7 @@ export function ForgotPasswordPage() {
                   }}
                 >
                   <ArrowBackRoundedIcon fontSize="small" />
-                  Voltar para o Login
+                  {t("auth.forgotPassword.backToLogin")}
                 </Link>
               </Box>
             )}

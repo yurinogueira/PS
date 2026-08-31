@@ -1,6 +1,9 @@
 import { Box, CircularProgress } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 export function PageLoadingFallback() {
+  const { t } = useTranslation();
+
   return (
     <Box
       sx={{
@@ -11,7 +14,7 @@ export function PageLoadingFallback() {
         width: "100%",
       }}
       aria-busy="true"
-      aria-label="Carregando conteúdo da página"
+      aria-label={t("shared.loadingPage")}
     >
       <CircularProgress size={40} thickness={4} color="primary" />
     </Box>

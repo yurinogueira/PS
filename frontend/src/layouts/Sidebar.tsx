@@ -17,6 +17,7 @@ import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import CollectionsIcon from "@mui/icons-material/Collections";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import SupervisorAccountRoundedIcon from "@mui/icons-material/SupervisorAccountRounded";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../features/auth/state/auth.store";
 
 interface SidebarProps {
@@ -25,39 +26,56 @@ interface SidebarProps {
   drawerWidth: number;
 }
 
-const menuItems = [
-  { text: "Visão Geral", icon: <DashboardRoundedIcon />, path: "/dashboard" },
-  { text: "Eventos", icon: <EventNoteRoundedIcon />, path: "/seasons" },
-  {
-    text: "Fotógrafos",
-    icon: <CameraAltRoundedIcon />,
-    path: "/photographers",
-  },
-  { text: "Pessoas", icon: <PeopleAltRoundedIcon />, path: "/people" },
-  { text: "Clientes e Fotos", icon: <CollectionsIcon />, path: "/clients" },
-];
-
-const adminMenuItems = [
-  {
-    text: "Organizações",
-    icon: <BusinessRoundedIcon />,
-    path: "/admin/tenants",
-  },
-  {
-    text: "Usuários & Acessos",
-    icon: <SupervisorAccountRoundedIcon />,
-    path: "/admin/users",
-  },
-];
-
 export function Sidebar({
   mobileOpen,
   onDrawerToggle,
   drawerWidth,
 }: SidebarProps) {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+
+  const menuItems = [
+    {
+      text: t("layout.nav.overview"),
+      icon: <DashboardRoundedIcon />,
+      path: "/dashboard",
+    },
+    {
+      text: t("layout.nav.seasons"),
+      icon: <EventNoteRoundedIcon />,
+      path: "/seasons",
+    },
+    {
+      text: t("layout.nav.photographers"),
+      icon: <CameraAltRoundedIcon />,
+      path: "/photographers",
+    },
+    {
+      text: t("layout.nav.people"),
+      icon: <PeopleAltRoundedIcon />,
+      path: "/people",
+    },
+    {
+      text: t("layout.nav.clientsPhotos"),
+      icon: <CollectionsIcon />,
+      path: "/clients",
+    },
+  ];
+
+  const adminMenuItems = [
+    {
+      text: t("layout.nav.organizations"),
+      icon: <BusinessRoundedIcon />,
+      path: "/admin/tenants",
+    },
+    {
+      text: t("layout.nav.usersAccess"),
+      icon: <SupervisorAccountRoundedIcon />,
+      path: "/admin/users",
+    },
+  ];
 
   const handleNavigation = (path: string) => {
     if (mobileOpen) {
@@ -93,7 +111,7 @@ export function Sidebar({
         {menuItems.map((item) => {
           const isActive = location.pathname.startsWith(item.path);
           return (
-            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+            <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
               <ListItemButton
                 onClick={() => handleNavigation(item.path)}
                 selected={isActive}
@@ -152,13 +170,13 @@ export function Sidebar({
                 letterSpacing: "0.8px",
               }}
             >
-              Administração
+              {t("layout.admin")}
             </Typography>
             {adminMenuItems.map((item) => {
               const isActive = location.pathname.startsWith(item.path);
               return (
                 <ListItem
-                  key={item.text}
+                  key={item.path}
                   disablePadding
                   sx={{ mt: 0.5, mb: 0.5 }}
                 >

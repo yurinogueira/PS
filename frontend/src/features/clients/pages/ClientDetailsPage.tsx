@@ -30,11 +30,11 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useTranslation } from "react-i18next";
 import {
   clientService,
   SeasonClient,
   Photo,
-  Dog,
   CURRENCIES,
 } from "../../../services/api/client.service";
 import { personService, Person } from "../../../services/api/person.service";
@@ -54,6 +54,7 @@ const PAYMENT_METHODS = [
 ];
 
 export const ClientDetailsPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { activeSeason } = useSeasonStore();
@@ -148,6 +149,13 @@ export const ClientDetailsPage = () => {
     });
   };
 
+  const updateDog = (index: number, field: string, value: unknown) => {
+    if (!client) return;
+    const newDogs = [...(client.dogs || [])];
+    newDogs[index] = { ...newDogs[index], [field]: value };
+    setClient({ ...client, dogs: newDogs });
+  };
+
   const handleAddCompetitionToDog = (dogIndex: number) => {
     const text = (compInputs[dogIndex] || "").trim();
     if (!text || !client) return;
@@ -177,27 +185,16 @@ export const ClientDetailsPage = () => {
     setClient({ ...client, dogs: newDogs });
   };
 
-  const updateDog = <K extends keyof Dog>(
-    index: number,
-    field: K,
-    value: Dog[K],
-  ) => {
-    if (!client) return;
-    const newDogs = [...client.dogs];
-    newDogs[index] = { ...newDogs[index], [field]: value };
-    setClient({ ...client, dogs: newDogs });
-  };
-
   const removeDog = (index: number) => {
     if (!client) return;
-    const newDogs = [...client.dogs];
+    const newDogs = [...(client.dogs || [])];
     newDogs.splice(index, 1);
     setClient({ ...client, dogs: newDogs });
   };
 
   const addPhoto = (dogIndex: number) => {
     if (!client) return;
-    const newDogs = [...client.dogs];
+    const newDogs = [...(client.dogs || [])];
     const photos = newDogs[dogIndex].photos
       ? [...newDogs[dogIndex].photos]
       : [];
@@ -207,7 +204,7 @@ export const ClientDetailsPage = () => {
       payment_method: "Pix",
       currency: "BRL",
       amount_paid: 0,
-    } as Photo);
+    });
     newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setClient({ ...client, dogs: newDogs });
   };
@@ -215,85 +212,90 @@ export const ClientDetailsPage = () => {
   const updatePhoto = (
     dogIndex: number,
     photoIndex: number,
-    fieldOrObj: keyof Photo | Partial<Photo>,
+    fieldOrObj: string | Partial<Photo>,
     value?: unknown,
   ) => {
     if (!client) return;
-    const newDogs = [...client.dogs];
+    const newDogs = [...(client.dogs || [])];
+    const photos = [...newDogs[dogIndex].photos];
     if (typeof fieldOrObj === "string") {
-      newDogs[dogIndex].photos[photoIndex] = {
-        ...newDogs[dogIndex].photos[photoIndex],
+      photos[photoIndex] = {
+        ...photos[photoIndex],
         [fieldOrObj]: value,
       };
     } else {
-      newDogs[dogIndex].photos[photoIndex] = {
-        ...newDogs[dogIndex].photos[photoIndex],
+      photos[photoIndex] = {
+        ...photos[photoIndex],
         ...fieldOrObj,
       };
     }
+    newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setClient({ ...client, dogs: newDogs });
   };
 
   const removePhoto = (dogIndex: number, photoIndex: number) => {
     if (!client) return;
-    const newDogs = [...client.dogs];
-    newDogs[dogIndex].photos.splice(photoIndex, 1);
+    const newDogs = [...(client.dogs || [])];
+    const photos = [...newDogs[dogIndex].photos];
+    photos.splice(photoIndex, 1);
+    newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setClient({ ...client, dogs: newDogs });
   };
 
-  if (!client) return <Typography>Carregando...</Typography>;
+  if (!client)
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography>{t("shared.loading")}</Typography>
+      </Box>
+    );
 
   return (
-    <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
+    <Box sx={{ p: 3, maxWidth: 1200, margin: "0 auto" }}>
       <Box
         sx={{
           display: "flex",
-          flexDirection: { xs: "column", sm: "row" },
-          alignItems: { xs: "stretch", sm: "center" },
+          justifyContent: "space-between",
+          alignItems: "center",
           mb: 3,
-          gap: 2,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton onClick={() => navigate("/clients")}>
             <ArrowBackIcon />
           </IconButton>
-          <Typography
-            variant="h4"
-            sx={{
-              fontSize: { xs: "1.4rem", sm: "2rem" },
-              fontWeight: 700,
-            }}
-          >
-            Detalhes do Cliente
-          </Typography>
+          <Typography variant="h4">{t("clientDetails.title")}</Typography>
         </Box>
-        <Box sx={{ flexGrow: { sm: 1 } }} />
-        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", gap: 2 }}>
           <Button
             variant="outlined"
             color="error"
+            startIcon={<DeleteIcon />}
             onClick={() => setDeleteDialogOpen(true)}
-            sx={{ flex: { xs: 1, sm: "initial" }, whiteSpace: "nowrap" }}
           >
-            Excluir Cliente
+            {t("clients.actions.unlink")}
           </Button>
-          <Button
-            variant="contained"
-            onClick={handleSave}
-            sx={{ flex: { xs: 1, sm: "initial" }, whiteSpace: "nowrap" }}
-          >
-            Salvar Alterações
+          <Button variant="contained" onClick={handleSave}>
+            {t("profile.saveChanges")}
           </Button>
         </Box>
       </Box>
 
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6">Dados da Pessoa</Typography>
-        <Typography>Nome: {person?.name}</Typography>
-        <Typography>E-mail: {person?.email}</Typography>
-        <Typography>Telefone: {formatPhone(person?.phone) || "-"}</Typography>
-      </Paper>
+      {person && (
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Dados da Pessoa
+          </Typography>
+          <Typography variant="body1">
+            <strong>Nome:</strong> {person.name}
+          </Typography>
+          <Typography variant="body1">
+            <strong>E-mail:</strong> {person.email || "-"}
+          </Typography>
+          <Typography variant="body1">
+            <strong>Telefone:</strong> {formatPhone(person.phone) || "-"}
+          </Typography>
+        </Paper>
+      )}
 
       <Box
         sx={{
@@ -303,93 +305,92 @@ export const ClientDetailsPage = () => {
           mb: 2,
         }}
       >
-        <Typography variant="h5">Cachorros</Typography>
+        <Typography variant="h5">{t("clientDetails.dogs")}</Typography>
         <Button variant="outlined" startIcon={<AddIcon />} onClick={addDog}>
-          Adicionar Cachorro
+          {t("clientDetails.addDog")}
         </Button>
       </Box>
 
       {client.dogs?.map((dog, dIdx) => (
         <Accordion key={dIdx} defaultExpanded sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-              {dog.breed || "Novo Cachorro"}
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
             <Box
               sx={{
                 display: "flex",
-                flexWrap: "wrap",
-                gap: 2,
-                mb: 3,
+                justifyContent: "space-between",
                 alignItems: "center",
+                width: "100%",
+                pr: 2,
               }}
             >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                {dog.breed || `${t("linkClient.fields.dogName")} #${dIdx + 1}`}
+              </Typography>
+              <IconButton
+                color="error"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeDog(dIdx);
+                }}
+                title="Excluir Cachorro"
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
               <TextField
-                label="Raça (Opcional)"
+                size="small"
+                label={t("linkClient.fields.dogName")}
                 value={dog.breed}
                 onChange={(e) => updateDog(dIdx, "breed", e.target.value)}
-                sx={{
-                  flex: { xs: "1 1 100%", sm: "1 1 200px" },
-                  minWidth: "160px",
-                }}
+                sx={{ flex: 1, minWidth: 200 }}
               />
               <TextField
+                size="small"
                 type="number"
-                label="Competições Ganhas"
-                required
+                label={t("linkClient.fields.competitions")}
                 value={dog.competitions_won}
                 onChange={(e) =>
                   updateDog(
                     dIdx,
                     "competitions_won",
-                    parseInt(e.target.value) || 0,
+                    parseInt(e.target.value, 10) || 0,
                   )
                 }
-                sx={{
-                  flex: { xs: "1 1 100%", sm: "1 1 180px" },
-                  minWidth: "160px",
-                }}
+                sx={{ width: 180 }}
               />
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={dog.is_owner || false}
+                    checked={Boolean(dog.is_owner)}
                     onChange={(e) =>
                       updateDog(dIdx, "is_owner", e.target.checked)
                     }
                   />
                 }
-                label="Dono do Cachorro (Opcional)"
-                sx={{ minWidth: "200px" }}
+                label="Dono?"
               />
-              <IconButton
-                color="error"
-                onClick={() => removeDog(dIdx)}
-                title="Excluir Cachorro"
-                sx={{ ml: "auto" }}
-              >
-                <DeleteIcon />
-              </IconButton>
             </Box>
 
             {dog.competitions_won > 0 && (
               <Box
                 sx={{
-                  p: 2,
-                  mb: 3,
+                  p: 1.5,
+                  mb: 2,
                   bgcolor: "#f8fafc",
                   borderRadius: 2,
                   border: "1px solid",
                   borderColor: "divider",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 1.5,
+                  gap: 1,
                 }}
               >
                 <Typography
-                  variant="subtitle2"
+                  variant="caption"
                   sx={{
                     fontWeight: 700,
                     color: "text.primary",
@@ -398,14 +399,15 @@ export const ClientDetailsPage = () => {
                     gap: 0.5,
                   }}
                 >
-                  <EmojiEventsIcon fontSize="small" color="warning" />
-                  Competições Vencidas ({dog.won_competitions?.length || 0})
+                  <EmojiEventsIcon fontSize="inherit" color="warning" />
+                  {t("linkClient.fields.competitions")} (
+                  {dog.won_competitions?.length || 0})
                 </Typography>
                 <Box sx={{ display: "flex", gap: 1 }}>
                   <TextField
                     size="small"
                     fullWidth
-                    placeholder="Nome da competição vencida..."
+                    placeholder={t("linkClient.fields.addCompetition")}
                     value={compInputs[dIdx] || ""}
                     onChange={(e) =>
                       setCompInputs({
@@ -428,7 +430,7 @@ export const ClientDetailsPage = () => {
                     startIcon={<AddIcon />}
                     sx={{ textTransform: "none", whiteSpace: "nowrap" }}
                   >
-                    Adicionar
+                    {t("shared.add")}
                   </Button>
                 </Box>
                 {dog.won_competitions && dog.won_competitions.length > 0 && (
@@ -463,21 +465,21 @@ export const ClientDetailsPage = () => {
 
             <Box
               sx={{
-                mb: 2,
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                mb: 2,
               }}
             >
-              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                Fotos
+              <Typography variant="subtitle2">
+                {t("clientDetails.photos")}
               </Typography>
               <Button
                 size="small"
                 startIcon={<AddIcon />}
                 onClick={() => addPhoto(dIdx)}
               >
-                Adicionar Foto
+                {t("clientDetails.addPhoto")}
               </Button>
             </Box>
 
@@ -486,19 +488,19 @@ export const ClientDetailsPage = () => {
                 key={pIdx}
                 sx={{
                   display: "flex",
-                  flexWrap: "wrap",
                   gap: 2,
+                  mb: 1.5,
                   alignItems: "center",
-                  mb: 2,
-                  p: 2,
-                  bgcolor: "#f9f9f9",
-                  borderRadius: 2,
-                  border: "1px solid #E2E8F0",
+                  flexWrap: "wrap",
+                  p: 1.5,
+                  borderRadius: 1,
+                  bgcolor: "#fcfcfc",
+                  border: "1px solid #f0f0f0",
                 }}
               >
                 <TextField
                   size="small"
-                  label="Número do Arquivo"
+                  label={t("linkClient.fields.fileNumber")}
                   required
                   value={photo.file_number}
                   onChange={(e) =>
@@ -517,10 +519,12 @@ export const ClientDetailsPage = () => {
                     minWidth: "180px",
                   }}
                 >
-                  <InputLabel required>Fotógrafo</InputLabel>
+                  <InputLabel required>
+                    {t("linkClient.fields.photographer")}
+                  </InputLabel>
                   <Select
                     value={photo.photographer_id || ""}
-                    label="Fotógrafo *"
+                    label={t("linkClient.fields.photographer")}
                     onChange={(e) =>
                       updatePhoto(dIdx, pIdx, "photographer_id", e.target.value)
                     }
@@ -543,13 +547,13 @@ export const ClientDetailsPage = () => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Juízes"
+                      label={t("linkClient.fields.judges")}
                       placeholder={
                         photo.judges?.length
                           ? ""
                           : activeSeason?.judges?.length
-                            ? "Selecione juízes"
-                            : "Nenhum juiz no evento"
+                            ? t("linkClient.fields.judgesPlaceholder")
+                            : t("linkClient.fields.noJudgesEvent")
                       }
                     />
                   )}
@@ -566,10 +570,12 @@ export const ClientDetailsPage = () => {
                     minWidth: "160px",
                   }}
                 >
-                  <InputLabel required>Forma de Pagamento</InputLabel>
+                  <InputLabel required>
+                    {t("linkClient.fields.paymentMethod")}
+                  </InputLabel>
                   <Select
                     value={photo.payment_method || "Pix"}
-                    label="Forma de Pagamento *"
+                    label={t("linkClient.fields.paymentMethod")}
                     onChange={(e) => {
                       const newMethod = e.target.value;
                       if (newMethod === "Não pago") {
@@ -620,7 +626,7 @@ export const ClientDetailsPage = () => {
                     <TextField
                       size="small"
                       type="number"
-                      label="Valor Pago (Opcional)"
+                      label={t("linkClient.fields.amountPaid")}
                       slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
                       value={
                         photo.amount_paid === undefined ||
@@ -664,20 +670,20 @@ export const ClientDetailsPage = () => {
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
       >
-        <DialogTitle>Confirmar Exclusão</DialogTitle>
+        <DialogTitle>{t("shared.delete")}</DialogTitle>
         <DialogContent>
-          <Typography>
-            Tem certeza que deseja excluir o cadastro deste cliente no evento?
-          </Typography>
+          <Typography>{t("clients.actions.confirmUnlink")}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>
+            {t("shared.cancel")}
+          </Button>
           <Button
             onClick={handleConfirmDelete}
             color="error"
             variant="contained"
           >
-            Excluir
+            {t("shared.delete")}
           </Button>
         </DialogActions>
       </Dialog>

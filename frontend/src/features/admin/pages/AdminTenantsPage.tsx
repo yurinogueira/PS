@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -37,11 +37,13 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import PaymentRoundedIcon from "@mui/icons-material/PaymentRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import { useTranslation } from "react-i18next";
 import { adminService } from "../services/admin.service";
 import { Tenant } from "../types/admin.types";
 import { useDocumentTitle } from "../../shared/hooks/useDocumentTitle";
 
 export const AdminTenantsPage = () => {
+  const { t } = useTranslation();
   useDocumentTitle("Gestão de Tenants - Admin");
 
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -78,22 +80,22 @@ export const AdminTenantsPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const loadTenants = async () => {
+  const loadTenants = useCallback(async () => {
     setLoading(true);
     try {
       const data = await adminService.getTenants();
       setTenants(data || []);
     } catch (err) {
       console.error("Erro ao carregar tenants:", err);
-      setErrorMessage("Não foi possível carregar a lista de organizações.");
+      setErrorMessage(t("admin.tenants.errorLoad"));
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     loadTenants();
-  }, []);
+  }, [loadTenants]);
 
   const handleOpenCreate = () => {
     setTenantName("");
@@ -127,7 +129,7 @@ export const AdminTenantsPage = () => {
         paymentStatus: createPaymentStatus,
         hideOverviewByDefault: createHideOverviewByDefault,
       });
-      setSuccessMessage(`Organização "${clean}" criada com sucesso.`);
+      setSuccessMessage(t("admin.tenants.successCreate"));
       setOpenCreate(false);
       setTenantName("");
       await loadTenants();
@@ -137,8 +139,7 @@ export const AdminTenantsPage = () => {
         message?: string;
       };
       setErrorMessage(
-        error.response?.data?.message ||
-          "Erro ao criar organização. Verifique se o nome já está em uso.",
+        error.response?.data?.message || t("admin.tenants.errorCreate"),
       );
     } finally {
       setSubmitting(false);
@@ -160,7 +161,7 @@ export const AdminTenantsPage = () => {
         plan: newPlan,
       });
       setSuccessMessage(
-        `Plano da organização "${selectedTenant.name}" atualizado para "${newPlan === "free" ? "Gratuito (Trial)" : "Padrão"}" com sucesso.`,
+        `Plano da organização "${selectedTenant.name}" atualizado com sucesso.`,
       );
       setPlanModalOpen(false);
       await loadTenants();
@@ -192,7 +193,7 @@ export const AdminTenantsPage = () => {
         paymentStatus: newPaymentStatus,
       });
       setSuccessMessage(
-        `Status de pagamento da organização "${selectedTenant.name}" atualizado para "${newPaymentStatus === "paid" ? "Em dia" : "Inadimplente"}".`,
+        `Status de pagamento da organização "${selectedTenant.name}" atualizado com sucesso.`,
       );
       setPaymentModalOpen(false);
       await loadTenants();
@@ -272,7 +273,7 @@ export const AdminTenantsPage = () => {
               fontSize: { xs: "1.5rem", sm: "2rem" },
             }}
           >
-            Organizações
+            {t("admin.tenants.title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             Gerencie organizações, planos de assinatura (Gratuito/Padrão),
@@ -285,7 +286,7 @@ export const AdminTenantsPage = () => {
           onClick={handleOpenCreate}
           sx={{ fontWeight: 600, width: { xs: "100%", sm: "auto" } }}
         >
-          Nova Organização
+          {t("admin.tenants.add")}
         </Button>
       </Box>
 
@@ -373,15 +374,21 @@ export const AdminTenantsPage = () => {
           <TableHead sx={{ bgcolor: "grey.50" }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>
-                Nome da Organização
+                {t("admin.tenants.columns.name")}
               </TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Plano</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Pagamento</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("admin.tenants.columns.plan")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("admin.tenants.columns.payment")}
+              </TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Visão Geral</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Expiração Trial</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("admin.tenants.columns.trial")}
+              </TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Data de Criação</TableCell>
               <TableCell sx={{ fontWeight: 600, textAlign: "right" }}>
-                Ações
+                {t("admin.tenants.columns.actions")}
               </TableCell>
             </TableRow>
           </TableHead>
@@ -395,7 +402,7 @@ export const AdminTenantsPage = () => {
                     color="text.secondary"
                     sx={{ mt: 1 }}
                   >
-                    Carregando organizações...
+                    {t("admin.tenants.loading")}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -406,7 +413,7 @@ export const AdminTenantsPage = () => {
                     sx={{ fontSize: 48, color: "text.disabled", mb: 1 }}
                   />
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    Nenhuma organização encontrada
+                    {t("admin.tenants.noData")}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {searchTerm
@@ -416,20 +423,20 @@ export const AdminTenantsPage = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTenants.map((t) => {
-                const isFree = (t.plan || "free") === "free";
-                const isPaid = (t.paymentStatus || "paid") === "paid";
+              filteredTenants.map((tItem) => {
+                const isFree = (tItem.plan || "free") === "free";
+                const isPaid = (tItem.paymentStatus || "paid") === "paid";
                 const isHiddenByDefault = Boolean(
-                  t.settings?.hideOverviewByDefault,
+                  tItem.settings?.hideOverviewByDefault,
                 );
-                const expiresAt = t.planExpiresAt
-                  ? new Date(t.planExpiresAt)
+                const expiresAt = tItem.planExpiresAt
+                  ? new Date(tItem.planExpiresAt)
                   : null;
                 const isExpired =
                   isFree && expiresAt && expiresAt.getTime() < now;
 
                 return (
-                  <TableRow key={t.name} hover>
+                  <TableRow key={tItem.name} hover>
                     <TableCell>
                       <Box
                         sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
@@ -449,13 +456,17 @@ export const AdminTenantsPage = () => {
                           variant="subtitle2"
                           sx={{ fontWeight: 600 }}
                         >
-                          {t.name}
+                          {tItem.name}
                         </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={isFree ? "Gratuito (Trial)" : "Padrão"}
+                        label={
+                          isFree
+                            ? t("admin.tenants.plans.free")
+                            : t("admin.tenants.plans.standard")
+                        }
                         size="small"
                         color={isFree ? "default" : "primary"}
                         variant={isFree ? "outlined" : "filled"}
@@ -464,7 +475,11 @@ export const AdminTenantsPage = () => {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={isPaid ? "Em dia" : "Inadimplente"}
+                        label={
+                          isPaid
+                            ? t("admin.tenants.payment.paid")
+                            : t("admin.tenants.payment.unpaid")
+                        }
                         size="small"
                         color={isPaid ? "success" : "error"}
                         variant="filled"
@@ -495,8 +510,10 @@ export const AdminTenantsPage = () => {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary">
-                        {t.createdAt
-                          ? new Date(t.createdAt).toLocaleDateString("pt-BR")
+                        {tItem.createdAt
+                          ? new Date(tItem.createdAt).toLocaleDateString(
+                              "pt-BR",
+                            )
                           : "-"}
                       </Typography>
                     </TableCell>
@@ -508,29 +525,31 @@ export const AdminTenantsPage = () => {
                           gap: 1,
                         }}
                       >
-                        <Tooltip title="Configurações da Organização">
+                        <Tooltip title={t("admin.tenants.actions.settings")}>
                           <IconButton
                             size="small"
                             color="default"
-                            onClick={() => handleOpenSettingsModal(t)}
+                            onClick={() => handleOpenSettingsModal(tItem)}
                           >
                             <SettingsRoundedIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Alterar Plano">
+                        <Tooltip title={t("admin.tenants.actions.changePlan")}>
                           <IconButton
                             size="small"
                             color="primary"
-                            onClick={() => handleOpenPlanModal(t)}
+                            onClick={() => handleOpenPlanModal(tItem)}
                           >
                             <EditRoundedIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Alterar Status de Pagamento">
+                        <Tooltip
+                          title={t("admin.tenants.actions.changePayment")}
+                        >
                           <IconButton
                             size="small"
                             color={isPaid ? "default" : "error"}
-                            onClick={() => handleOpenPaymentModal(t)}
+                            onClick={() => handleOpenPaymentModal(tItem)}
                           >
                             <PaymentRoundedIcon fontSize="small" />
                           </IconButton>
@@ -554,7 +573,7 @@ export const AdminTenantsPage = () => {
       >
         <form onSubmit={handleCreate}>
           <DialogTitle sx={{ fontWeight: 700 }}>
-            Nova Organização (Tenant)
+            {t("admin.tenants.createModal.title")}
           </DialogTitle>
           <DialogContent
             sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
@@ -571,7 +590,7 @@ export const AdminTenantsPage = () => {
             {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
             <TextField
-              label="Nome do Tenant / Identificador"
+              label={t("admin.tenants.createModal.name")}
               placeholder="ex: studio-fotografico"
               fullWidth
               required
@@ -583,34 +602,44 @@ export const AdminTenantsPage = () => {
             />
 
             <FormControl fullWidth size="small">
-              <InputLabel>Plano Inicial</InputLabel>
+              <InputLabel>
+                {t("admin.tenants.createModal.initialPlan")}
+              </InputLabel>
               <Select
                 value={createPlan}
-                label="Plano Inicial"
+                label={t("admin.tenants.createModal.initialPlan")}
                 onChange={(e) =>
                   setCreatePlan(e.target.value as "free" | "standard")
                 }
                 disabled={submitting}
               >
-                <MenuItem value="free">Gratuito (Trial de 14 dias)</MenuItem>
+                <MenuItem value="free">
+                  {t("admin.tenants.createModal.freePlan")}
+                </MenuItem>
                 <MenuItem value="standard">
-                  Padrão (Ilimitado / Limite 300 clientes por evento)
+                  {t("admin.tenants.createModal.standardPlan")}
                 </MenuItem>
               </Select>
             </FormControl>
 
             <FormControl fullWidth size="small">
-              <InputLabel>Status de Pagamento</InputLabel>
+              <InputLabel>
+                {t("admin.tenants.createModal.paymentStatus")}
+              </InputLabel>
               <Select
                 value={createPaymentStatus}
-                label="Status de Pagamento"
+                label={t("admin.tenants.createModal.paymentStatus")}
                 onChange={(e) =>
                   setCreatePaymentStatus(e.target.value as "paid" | "unpaid")
                 }
                 disabled={submitting}
               >
-                <MenuItem value="paid">Em dia (Pago)</MenuItem>
-                <MenuItem value="unpaid">Inadimplente (Não pago)</MenuItem>
+                <MenuItem value="paid">
+                  {t("admin.tenants.createModal.paid")}
+                </MenuItem>
+                <MenuItem value="unpaid">
+                  {t("admin.tenants.createModal.unpaid")}
+                </MenuItem>
               </Select>
             </FormControl>
 
@@ -624,7 +653,7 @@ export const AdminTenantsPage = () => {
                   disabled={submitting}
                 />
               }
-              label="Ocultar Visão Geral por Padrão?"
+              label={t("admin.tenants.createModal.hideOverview")}
             />
           </DialogContent>
           <DialogActions sx={{ p: 2.5 }}>
@@ -633,7 +662,7 @@ export const AdminTenantsPage = () => {
               disabled={submitting}
               color="inherit"
             >
-              Cancelar
+              {t("admin.tenants.createModal.cancel")}
             </Button>
             <Button
               type="submit"
@@ -644,7 +673,9 @@ export const AdminTenantsPage = () => {
               }
               sx={{ fontWeight: 600 }}
             >
-              {submitting ? "Criando..." : "Criar Organização"}
+              {submitting
+                ? t("admin.tenants.createModal.creating")
+                : t("admin.tenants.createModal.create")}
             </Button>
           </DialogActions>
         </form>
@@ -657,28 +688,33 @@ export const AdminTenantsPage = () => {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 700 }}>Alterar Plano</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          {t("admin.tenants.planModal.title")}
+        </DialogTitle>
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
         >
           <Typography variant="body2" color="text.secondary">
-            Organização: <strong>{selectedTenant?.name}</strong>
+            {t("admin.tenants.planModal.organization")}
+            <strong>{selectedTenant?.name}</strong>
           </Typography>
 
           <FormControl fullWidth size="small">
-            <InputLabel>Plano</InputLabel>
+            <InputLabel>{t("admin.tenants.planModal.plan")}</InputLabel>
             <Select
               value={newPlan}
-              label="Plano"
+              label={t("admin.tenants.planModal.plan")}
               onChange={(e) =>
                 setNewPlan(e.target.value as "free" | "standard")
               }
               disabled={submitting}
             >
               <MenuItem value="free">
-                Gratuito (Reinicia trial de 14 dias)
+                {t("admin.tenants.planModal.freeRestart")}
               </MenuItem>
-              <MenuItem value="standard">Padrão</MenuItem>
+              <MenuItem value="standard">
+                {t("admin.tenants.planModal.standard")}
+              </MenuItem>
             </Select>
           </FormControl>
         </DialogContent>
@@ -688,7 +724,7 @@ export const AdminTenantsPage = () => {
             disabled={submitting}
             color="inherit"
           >
-            Cancelar
+            {t("admin.tenants.planModal.cancel")}
           </Button>
           <Button
             onClick={handleUpdatePlan}
@@ -699,7 +735,9 @@ export const AdminTenantsPage = () => {
             }
             sx={{ fontWeight: 600 }}
           >
-            {submitting ? "Salvando..." : "Salvar Plano"}
+            {submitting
+              ? t("admin.tenants.planModal.saving")
+              : t("admin.tenants.planModal.save")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -712,28 +750,31 @@ export const AdminTenantsPage = () => {
         fullWidth
       >
         <DialogTitle sx={{ fontWeight: 700 }}>
-          Alterar Status de Pagamento
+          {t("admin.tenants.paymentModal.title")}
         </DialogTitle>
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
         >
           <Typography variant="body2" color="text.secondary">
-            Organização: <strong>{selectedTenant?.name}</strong>
+            {t("admin.tenants.paymentModal.organization")}
+            <strong>{selectedTenant?.name}</strong>
           </Typography>
 
           <FormControl fullWidth size="small">
-            <InputLabel>Status de Pagamento</InputLabel>
+            <InputLabel>{t("admin.tenants.paymentModal.status")}</InputLabel>
             <Select
               value={newPaymentStatus}
-              label="Status de Pagamento"
+              label={t("admin.tenants.paymentModal.status")}
               onChange={(e) =>
                 setNewPaymentStatus(e.target.value as "paid" | "unpaid")
               }
               disabled={submitting}
             >
-              <MenuItem value="paid">Em dia (Acesso Liberado)</MenuItem>
+              <MenuItem value="paid">
+                {t("admin.tenants.paymentModal.paidStatus")}
+              </MenuItem>
               <MenuItem value="unpaid">
-                Inadimplente (Acesso e Escritas Bloqueados)
+                {t("admin.tenants.paymentModal.unpaidStatus")}
               </MenuItem>
             </Select>
           </FormControl>
@@ -744,7 +785,7 @@ export const AdminTenantsPage = () => {
             disabled={submitting}
             color="inherit"
           >
-            Cancelar
+            {t("admin.tenants.paymentModal.cancel")}
           </Button>
           <Button
             onClick={handleUpdatePaymentStatus}
@@ -759,7 +800,9 @@ export const AdminTenantsPage = () => {
             }
             sx={{ fontWeight: 600 }}
           >
-            {submitting ? "Salvando..." : "Salvar Status"}
+            {submitting
+              ? t("admin.tenants.paymentModal.saving")
+              : t("admin.tenants.paymentModal.save")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -772,18 +815,18 @@ export const AdminTenantsPage = () => {
         fullWidth
       >
         <DialogTitle sx={{ fontWeight: 700 }}>
-          Configurações da Organização
+          {t("admin.tenants.settingsModal.title")}
         </DialogTitle>
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
         >
           <Typography variant="body2" color="text.secondary">
-            Organização: <strong>{selectedTenant?.name}</strong>
+            {t("admin.tenants.settingsModal.organization")}
+            <strong>{selectedTenant?.name}</strong>
           </Typography>
 
           <Alert severity="info" sx={{ fontSize: "0.85rem" }}>
-            Define o comportamento padrão de exibição do painel para todos os
-            usuários desta organização.
+            {t("admin.tenants.settingsModal.info")}
           </Alert>
 
           <FormControlLabel
@@ -794,7 +837,7 @@ export const AdminTenantsPage = () => {
                 disabled={submitting}
               />
             }
-            label="Ocultar Visão Geral por Padrão?"
+            label={t("admin.tenants.settingsModal.hideOverview")}
           />
         </DialogContent>
         <DialogActions sx={{ p: 2.5 }}>
@@ -803,7 +846,7 @@ export const AdminTenantsPage = () => {
             disabled={submitting}
             color="inherit"
           >
-            Cancelar
+            {t("admin.tenants.settingsModal.cancel")}
           </Button>
           <Button
             onClick={handleUpdateSettings}
@@ -818,7 +861,9 @@ export const AdminTenantsPage = () => {
             }
             sx={{ fontWeight: 600 }}
           >
-            {submitting ? "Salvando..." : "Salvar Configurações"}
+            {submitting
+              ? t("admin.tenants.settingsModal.saving")
+              : t("admin.tenants.settingsModal.save")}
           </Button>
         </DialogActions>
       </Dialog>

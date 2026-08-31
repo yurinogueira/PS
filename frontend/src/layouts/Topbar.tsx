@@ -19,15 +19,18 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../features/auth/state/auth.store";
 import { useSeasonStore } from "../store/seasonStore";
 import { seasonService, Season } from "../services/api/season.service";
+import { LanguageSelector } from "../components/LanguageSelector";
 
 interface TopbarProps {
   onDrawerToggle: () => void;
 }
 
 export function Topbar({ onDrawerToggle }: TopbarProps) {
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const navigate = useNavigate();
@@ -92,7 +95,7 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
       <Toolbar>
         <IconButton
           color="inherit"
-          aria-label="abrir menu"
+          aria-label={t("layout.openMenu")}
           edge="start"
           onClick={(e) => {
             (e.currentTarget as HTMLElement)?.blur();
@@ -110,7 +113,7 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
             component="div"
             sx={{ display: { xs: "none", sm: "block" } }}
           >
-            Painel Administrativo
+            {t("layout.adminPanel")}
           </Typography>
         </Box>
 
@@ -122,10 +125,10 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
           }}
         >
           <FormControl fullWidth size="small">
-            <InputLabel>Evento Ativo</InputLabel>
+            <InputLabel>{t("layout.activeSeason")}</InputLabel>
             <Select
               value={activeSeason?.id || ""}
-              label="Evento Ativo"
+              label={t("layout.activeSeason")}
               onChange={(e) => handleChangeSeason(e.target.value)}
               sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
             >
@@ -138,12 +141,16 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
           </FormControl>
         </Box>
 
+        <Box sx={{ mr: { xs: 1, sm: 2 } }}>
+          <LanguageSelector />
+        </Box>
+
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Typography
             variant="body2"
             sx={{ display: { xs: "none", sm: "block" }, fontWeight: 500 }}
           >
-            {user?.name || "Usuário"}
+            {user?.name || t("layout.user")}
           </Typography>
           <IconButton onClick={handleMenu} size="small" sx={{ ml: 1 }}>
             <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.main" }}>
@@ -185,13 +192,13 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
               <ListItemIcon>
                 <SettingsIcon fontSize="small" />
               </ListItemIcon>
-              Meu Perfil
+              {t("layout.myProfile")}
             </MenuItem>
             <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
               <ListItemIcon>
                 <LogoutIcon fontSize="small" sx={{ color: "error.main" }} />
               </ListItemIcon>
-              Sair
+              {t("layout.logout")}
             </MenuItem>
           </Menu>
         </Box>

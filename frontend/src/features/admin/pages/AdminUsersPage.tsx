@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -35,11 +35,13 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import SupervisorAccountRoundedIcon from "@mui/icons-material/SupervisorAccountRounded";
+import { useTranslation } from "react-i18next";
 import { adminService } from "../services/admin.service";
 import { AdminUser, Tenant } from "../types/admin.types";
 import { useDocumentTitle } from "../../shared/hooks/useDocumentTitle";
 
 export const AdminUsersPage = () => {
+  const { t } = useTranslation();
   useDocumentTitle("Gestão de Usuários - Admin");
 
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -58,7 +60,7 @@ export const AdminUsersPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [usersData, tenantsData] = await Promise.all([
@@ -69,17 +71,15 @@ export const AdminUsersPage = () => {
       setTenants(tenantsData || []);
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
-      setErrorMessage(
-        "Não foi possível carregar os dados de usuários e tenants.",
-      );
+      setErrorMessage(t("admin.users.errorLoad"));
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleOpenAssign = (user: AdminUser) => {
     setSelectedUser(user);
@@ -101,7 +101,7 @@ export const AdminUsersPage = () => {
       });
       setSuccessMessage(
         selectedTenant
-          ? `Organização "${selectedTenant}" atribuída com sucesso ao usuário ${selectedUser.name}.`
+          ? t("admin.users.successAssign")
           : `Organização desvinculada do usuário ${selectedUser.name}.`,
       );
       setOpenAssign(false);
@@ -113,8 +113,7 @@ export const AdminUsersPage = () => {
         message?: string;
       };
       setErrorMessage(
-        error.response?.data?.message ||
-          "Erro ao atribuir organização ao usuário.",
+        error.response?.data?.message || t("admin.users.errorAssign"),
       );
     } finally {
       setSubmitting(false);
@@ -159,7 +158,7 @@ export const AdminUsersPage = () => {
               fontSize: { xs: "1.5rem", sm: "2rem" },
             }}
           >
-            Gestão de Usuários
+            {t("admin.users.title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             Aprove e vincule novos usuários aos seus respectivos tenants para
@@ -312,16 +311,20 @@ export const AdminUsersPage = () => {
         <Table sx={{ minWidth: 680 }}>
           <TableHead sx={{ bgcolor: "grey.50" }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>Usuário</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>
-                E-mail & Confirmação
+                {t("admin.users.columns.name")}
               </TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Função</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>
-                Organização (Tenant)
+                {t("admin.users.columns.email")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("admin.users.columns.superAdmin")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("admin.users.columns.tenant")}
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>
-                Ações
+                {t("admin.users.columns.actions")}
               </TableCell>
             </TableRow>
           </TableHead>
@@ -335,7 +338,7 @@ export const AdminUsersPage = () => {
                     color="text.secondary"
                     sx={{ mt: 1 }}
                   >
-                    Carregando usuários...
+                    {t("admin.users.loading")}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -346,7 +349,7 @@ export const AdminUsersPage = () => {
                     sx={{ fontSize: 48, color: "text.disabled", mb: 1 }}
                   />
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    Nenhum usuário encontrado
+                    {t("admin.users.noData")}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Tente alterar os termos de busca ou o filtro aplicado.
@@ -457,7 +460,7 @@ export const AdminUsersPage = () => {
                       </Box>
                     ) : (
                       <Chip
-                        label="Pendente de Aprovação"
+                        label={t("admin.users.pending")}
                         size="small"
                         color="warning"
                         variant="outlined"
@@ -473,7 +476,9 @@ export const AdminUsersPage = () => {
                       onClick={() => handleOpenAssign(u)}
                       sx={{ fontWeight: 600 }}
                     >
-                      {u.tenantId ? "Alterar Tenant" : "Atribuir Tenant"}
+                      {u.tenantId
+                        ? t("admin.users.changeTenant")
+                        : t("admin.users.assignTenant")}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -492,7 +497,7 @@ export const AdminUsersPage = () => {
       >
         <form onSubmit={handleSaveAssign}>
           <DialogTitle sx={{ fontWeight: 700 }}>
-            Atribuir Organização (Tenant)
+            {t("admin.users.assignModal.title")}
           </DialogTitle>
           <DialogContent
             sx={{ display: "flex", flexDirection: "column", gap: 2.5, pt: 2 }}
@@ -516,20 +521,22 @@ export const AdminUsersPage = () => {
             {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
             <FormControl fullWidth size="medium">
-              <InputLabel id="tenant-select-label">Organização</InputLabel>
+              <InputLabel id="tenant-select-label">
+                {t("admin.users.assignModal.organization")}
+              </InputLabel>
               <Select
                 labelId="tenant-select-label"
                 value={selectedTenant}
-                label="Organização"
+                label={t("admin.users.assignModal.organization")}
                 disabled={submitting}
                 onChange={(e) => setSelectedTenant(e.target.value)}
               >
                 <MenuItem value="">
-                  <em>Nenhuma (Deixar pendente de aprovação)</em>
+                  <em>{t("admin.users.assignModal.noOrg")}</em>
                 </MenuItem>
-                {tenants.map((t) => (
-                  <MenuItem key={t.name} value={t.name}>
-                    {t.name}
+                {tenants.map((tItem) => (
+                  <MenuItem key={tItem.name} value={tItem.name}>
+                    {tItem.name}
                   </MenuItem>
                 ))}
               </Select>
@@ -537,8 +544,7 @@ export const AdminUsersPage = () => {
 
             {tenants.length === 0 && (
               <Alert severity="warning">
-                Nenhuma organização cadastrada. Crie uma organização na página
-                de Tenants antes de vincular usuários.
+                {t("admin.users.assignModal.noOrgWarning")}
               </Alert>
             )}
           </DialogContent>
@@ -548,7 +554,7 @@ export const AdminUsersPage = () => {
               disabled={submitting}
               color="inherit"
             >
-              Cancelar
+              {t("admin.users.assignModal.cancel")}
             </Button>
             <Button
               type="submit"
@@ -557,7 +563,9 @@ export const AdminUsersPage = () => {
               startIcon={submitting && <CircularProgress size={16} />}
               sx={{ fontWeight: 600 }}
             >
-              {submitting ? "Salvando..." : "Salvar Atribuição"}
+              {submitting
+                ? t("admin.users.assignModal.saving")
+                : t("admin.users.assignModal.save")}
             </Button>
           </DialogActions>
         </form>

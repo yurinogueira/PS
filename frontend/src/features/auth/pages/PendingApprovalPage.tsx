@@ -8,13 +8,16 @@ import {
   CardContent,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../state/auth.store";
 import { useDocumentTitle } from "../../shared/hooks/useDocumentTitle";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/auth.service";
+import { LanguageSelector } from "../../../components/LanguageSelector";
 
 export function PendingApprovalPage() {
-  useDocumentTitle("Aguardando Aprovação");
+  const { t } = useTranslation();
+  useDocumentTitle(t("auth.pendingApproval.title"));
   const clearAuth = useAuthStore((state) => state.clear);
   const navigate = useNavigate();
 
@@ -38,8 +41,13 @@ export function PendingApprovalPage() {
         alignItems: "center",
         justifyContent: "center",
         p: 3,
+        position: "relative",
       }}
     >
+      <Box sx={{ position: "absolute", top: 20, right: 20 }}>
+        <LanguageSelector variant="auth" />
+      </Box>
+
       <Container maxWidth="sm">
         <Card
           elevation={0}
@@ -68,17 +76,14 @@ export function PendingApprovalPage() {
               variant="h5"
               sx={{ fontWeight: 700, mb: 2, color: "text.primary" }}
             >
-              Acesso Restrito
+              {t("auth.pendingApproval.title")}
             </Typography>
 
             <Typography
               variant="body1"
               sx={{ color: "text.secondary", mb: 4, lineHeight: 1.6 }}
             >
-              Sua conta foi criada com sucesso, mas estamos aguardando um
-              administrador aprovar e vincular seu acesso à organização. Por
-              favor, tente novamente mais tarde ou entre em contato com o
-              suporte.
+              {t("auth.pendingApproval.message")}
             </Typography>
 
             <Button
@@ -88,7 +93,7 @@ export function PendingApprovalPage() {
               onClick={handleLogout}
               sx={{ fontWeight: 600, px: 4 }}
             >
-              Sair
+              {t("auth.pendingApproval.logout")}
             </Button>
           </CardContent>
         </Card>

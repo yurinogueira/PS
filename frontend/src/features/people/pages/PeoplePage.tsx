@@ -23,10 +23,12 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import PetsIcon from "@mui/icons-material/Pets";
+import { useTranslation } from "react-i18next";
 import { personService, Person } from "../../../services/api/person.service";
 import { maskPhone, formatPhone } from "../../../utils/phone";
 
 export const PeoplePage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [people, setPeople] = useState<Person[]>([]);
   const [open, setOpen] = useState(false);
@@ -123,7 +125,7 @@ export const PeoplePage = () => {
             fontWeight: 700,
           }}
         >
-          Pessoas (Cadastro Único)
+          {t("people.title")}
         </Typography>
         <Button
           variant="contained"
@@ -131,7 +133,7 @@ export const PeoplePage = () => {
           onClick={handleOpenCreate}
           sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
         >
-          Nova Pessoa
+          {t("people.add")}
         </Button>
       </Box>
 
@@ -148,10 +150,14 @@ export const PeoplePage = () => {
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>Nome</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("people.fields.name")}
+              </TableCell>
               <TableCell sx={{ fontWeight: 600 }}>E-mail</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>E-mail Alternativo</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Telefone</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("people.fields.phone")}
+              </TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>
                 Ações
               </TableCell>
@@ -161,7 +167,7 @@ export const PeoplePage = () => {
             {people.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} align="center">
-                  Nenhuma pessoa cadastrada.
+                  {t("people.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -182,7 +188,7 @@ export const PeoplePage = () => {
                         <PetsIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Editar">
+                    <Tooltip title={t("people.edit")}>
                       <IconButton
                         color="primary"
                         size="small"
@@ -192,7 +198,7 @@ export const PeoplePage = () => {
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Excluir">
+                    <Tooltip title={t("people.delete")}>
                       <IconButton
                         color="error"
                         size="small"
@@ -216,12 +222,14 @@ export const PeoplePage = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>{editingId ? "Editar Pessoa" : "Nova Pessoa"}</DialogTitle>
+        <DialogTitle>
+          {editingId ? t("people.edit") : t("people.add")}
+        </DialogTitle>
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
         >
           <TextField
-            label="Nome"
+            label={t("people.fields.name")}
             fullWidth
             required
             value={form.name}
@@ -244,7 +252,7 @@ export const PeoplePage = () => {
             }
           />
           <TextField
-            label="Telefone (Opcional)"
+            label={t("people.fields.phone")}
             fullWidth
             placeholder="(21) 99999-9999"
             value={form.phone}
@@ -257,13 +265,13 @@ export const PeoplePage = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setOpen(false)}>{t("people.cancel")}</Button>
           <Button
             onClick={handleSave}
             variant="contained"
             disabled={!form.name.trim()}
           >
-            Salvar
+            {t("people.save")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -273,21 +281,22 @@ export const PeoplePage = () => {
         open={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
       >
-        <DialogTitle>Confirmar Exclusão</DialogTitle>
+        <DialogTitle>{t("people.confirmDelete")}</DialogTitle>
         <DialogContent>
           <Typography>
-            Tem certeza que deseja excluir a pessoa{" "}
-            <strong>{deletingPerson?.name}</strong>?
+            {t("people.confirmDelete")} <strong>{deletingPerson?.name}</strong>?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteConfirmOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>
+            {t("people.cancel")}
+          </Button>
           <Button
             onClick={handleConfirmDelete}
             color="error"
             variant="contained"
           >
-            Excluir
+            {t("people.delete")}
           </Button>
         </DialogActions>
       </Dialog>

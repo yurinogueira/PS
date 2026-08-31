@@ -2,9 +2,12 @@ import { Box, Typography, Stack } from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import ShieldCheckIcon from "@mui/icons-material/VerifiedUser";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import { useTranslation } from "react-i18next";
 import { brandColors } from "../../../styles/theme";
 
 export function AuthHeroBanner() {
+  const { t } = useTranslation();
+
   return (
     <Box
       sx={{
@@ -68,7 +71,7 @@ export function AuthHeroBanner() {
             variant="h5"
             sx={{ fontWeight: 800, letterSpacing: -0.5, color: "#FFFFFF" }}
           >
-            PS
+            {t("auth.brand")}
           </Typography>
         </Stack>
         <Typography
@@ -79,7 +82,7 @@ export function AuthHeroBanner() {
             color: "rgba(255, 255, 255, 0.9)",
           }}
         >
-          Photo Storage • Gestão de Fotos de Competição
+          {t("auth.brandTagline")}
         </Typography>
       </Box>
 
@@ -96,7 +99,7 @@ export function AuthHeroBanner() {
             color: "#FFFFFF",
           }}
         >
-          O controle total do seu evento em um só lugar.
+          {t("auth.heroCopy")}
         </Typography>
         <Typography
           variant="body1"
@@ -109,8 +112,7 @@ export function AuthHeroBanner() {
             color: "rgba(255, 255, 255, 0.95)",
           }}
         >
-          Acompanhe fotógrafos, clientes, cachorros vencedores e o histórico de
-          vendas de fotos com clareza e precisão.
+          {t("auth.heroDescription")}
         </Typography>
 
         {/* Feature Highlights */}
@@ -131,7 +133,7 @@ export function AuthHeroBanner() {
               variant="body2"
               sx={{ fontWeight: 500, color: "#FFFFFF" }}
             >
-              Cadastro organizado de fotos por cachorro e cliente
+              {t("auth.heroFeature1")}
             </Typography>
           </Stack>
 
@@ -151,7 +153,7 @@ export function AuthHeroBanner() {
               variant="body2"
               sx={{ fontWeight: 500, color: "#FFFFFF" }}
             >
-              Controle rápido de formas de pagamento e valores recebidos
+              {t("auth.heroFeature2")}
             </Typography>
           </Stack>
 
@@ -171,7 +173,7 @@ export function AuthHeroBanner() {
               variant="body2"
               sx={{ fontWeight: 500, color: "#FFFFFF" }}
             >
-              Filtro global por evento para organização financeira
+              {t("auth.heroFeature3")}
             </Typography>
           </Stack>
         </Stack>
@@ -183,7 +185,7 @@ export function AuthHeroBanner() {
           variant="caption"
           sx={{ opacity: 0.8, color: "rgba(255, 255, 255, 0.8)" }}
         >
-          © {new Date().getFullYear()} PS. Todos os direitos reservados.
+          {t("auth.heroCopyright", { year: new Date().getFullYear() })}
         </Typography>
       </Box>
     </Box>

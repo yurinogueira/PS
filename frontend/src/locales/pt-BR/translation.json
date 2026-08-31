@@ -1,0 +1,555 @@
+{
+  "layout": {
+    "adminPanel": "Painel Administrativo",
+    "activeSeason": "Evento Ativo",
+    "noSeason": "Nenhum evento",
+    "user": "Usuário",
+    "myProfile": "Meu Perfil",
+    "logout": "Sair",
+    "openMenu": "Abrir menu",
+    "admin": "Administração",
+    "nav": {
+      "overview": "Visão Geral",
+      "seasons": "Eventos",
+      "photographers": "Fotógrafos",
+      "people": "Pessoas",
+      "clientsPhotos": "Clientes e Fotos",
+      "organizations": "Organizações",
+      "usersAccess": "Gestão de Usuários"
+    }
+  },
+  "language": {
+    "select": "Idioma",
+    "ptBR": "PT-BR",
+    "enUS": "EN-US"
+  },
+  "auth": {
+    "brand": "PS",
+    "brandTagline": "Photo Storage • Gestão de Fotos de Competição",
+    "heroCopy": "O controle total do seu evento em um só lugar.",
+    "heroDescription": "Acompanhe fotógrafos, clientes, cachorros vencedores e o histórico de vendas de fotos com clareza e precisão.",
+    "heroFeature1": "Cadastro organizado de fotos por cachorro e cliente",
+    "heroFeature2": "Controle rápido de formas de pagamento e valores recebidos",
+    "heroFeature3": "Filtro global por evento para organização financeira",
+    "heroCopyright": "© {{year}} PS. Todos os direitos reservados.",
+    "login": {
+      "title": "Bem-vindo de volta",
+      "subtitle": "Digite suas credenciais para acessar o painel.",
+      "email": "E-mail",
+      "password": "Senha",
+      "forgotPassword": "Esqueceu sua senha?",
+      "submit": "Entrar no PS",
+      "loading": "Entrando...",
+      "noAccount": "Ainda não possui uma conta?",
+      "register": "Criar conta gratuita",
+      "errorInvalid": "E-mail ou senha inválidos.",
+      "errorDefault": "Não foi possível conectar ao servidor. Tente novamente mais tarde."
+    },
+    "register": {
+      "title": "Criar uma conta",
+      "subtitle": "Comece a gerenciar as fotos e os clientes das suas competições em poucos minutos.",
+      "name": "Nome completo",
+      "email": "E-mail",
+      "password": "Senha",
+      "passwordHelper": "Entre 8 e 72 caracteres",
+      "confirmPassword": "Confirmar Senha",
+      "submit": "Concluir Cadastro",
+      "loading": "Criando conta...",
+      "hasAccount": "Já tem uma conta?",
+      "login": "Fazer login",
+      "successTitle": "Conta criada com sucesso!",
+      "successMessage": "Enviamos um e-mail de confirmação para {{email}}. Verifique sua caixa de entrada e siga as instruções para ativar sua conta.",
+      "goToLogin": "Ir para o Login",
+      "passwordTooShort": "A senha deve conter no mínimo 8 caracteres.",
+      "errorPasswordMismatch": "As senhas não conferem. Verifique e tente novamente.",
+      "errorDefault": "Não foi possível criar a conta. Tente novamente."
+    },
+    "forgotPassword": {
+      "title": "Recuperar Senha",
+      "subtitle": "Informe seu e-mail cadastrado e enviaremos um link para você redefinir sua senha.",
+      "email": "E-mail cadastrado",
+      "submit": "Enviar Link de Recuperação",
+      "loading": "Enviando...",
+      "backToLogin": "Voltar para o Login",
+      "successTitle": "E-mail enviado!",
+      "successMessage": "Se o endereço {{email}} estiver cadastrado, você receberá um link de recuperação em breve.",
+      "errorDefault": "Não foi possível enviar o e-mail. Tente novamente."
+    },
+    "resetPassword": {
+      "title": "Nova Senha",
+      "subtitle": "Escolha uma nova senha segura para sua conta.",
+      "newPassword": "Nova Senha",
+      "newPasswordHelper": "Mínimo 8 caracteres",
+      "newPasswordPlaceholder": "Mínimo 8 caracteres",
+      "confirmPassword": "Confirmar Nova Senha",
+      "submit": "Salvar Nova Senha",
+      "loading": "Salvando...",
+      "backToLogin": "Voltar para o Login",
+      "successTitle": "Senha redefinida com sucesso!",
+      "successMessage": "Sua senha foi atualizada. Faça login com sua nova senha.",
+      "goToLogin": "Ir para o Login",
+      "tokenMissing": "Token de recuperação não identificado. Utilize o link enviado por e-mail.",
+      "errorPasswordMismatch": "As senhas não coincidem.",
+      "errorDefault": "Não foi possível redefinir a senha. O link pode ter expirado."
+    },
+    "verifyEmail": {
+      "title": "Confirmação de E-mail",
+      "validating": "Validando seu e-mail...",
+      "validatingDescription": "Aguarde um instante enquanto confirmamos seu endereço de e-mail.",
+      "successTitle": "E-mail Validado com Sucesso!",
+      "successMessage": "Seu e-mail foi confirmado com sucesso. Agora você já pode cadastrar e gerenciar as fotos do seu evento no PS.",
+      "goToDashboard": "Ir para o Painel",
+      "goToLogin": "Fazer Login",
+      "failTitle": "Falha na Validação",
+      "failButton": "Ir para o Meu Perfil",
+      "tokenMissing": "Token de validação ausente. Utilize o link enviado para seu e-mail.",
+      "errorDefault": "Não foi possível validar seu e-mail. O link pode ter expirado ou já ter sido utilizado."
+    },
+    "pendingApproval": {
+      "title": "Acesso Restrito",
+      "message": "Sua conta foi criada com sucesso, mas estamos aguardando um administrador aprovar e vincular seu acesso à organização. Por favor, tente novamente mais tarde ou entre em contato com o suporte.",
+      "logout": "Sair"
+    }
+  },
+  "dashboard": {
+    "title": "Visão Geral",
+    "eventPanel": "Painel do Evento",
+    "subtitle": "Resumo do evento ativo e métricas gerais.",
+    "noSeason": "Nenhum evento selecionado",
+    "noActiveSeason": "Nenhum evento ativo",
+    "noSeasonDescription": "Por favor, selecione um evento no menu superior para visualizar a listagem de clientes, cachorros e fotografias.",
+    "searchPlaceholder": "Buscar por pessoa, cão ou número da foto...",
+    "noClientsFound": "Nenhum cliente encontrado",
+    "noClientsLinked": "Nenhum cliente vinculado neste evento",
+    "noClientsDescription": "Este evento ainda não possui clientes cadastrados. Comece vinculando uma pessoa e seus cães.",
+    "kpi": {
+      "totalClients": "Total de Pessoas",
+      "dogs": "Cachorros no Evento",
+      "totalPhotos": "Fotos Registradas",
+      "totalRevenue": "Arrecadação Total",
+      "photographers": "Fotógrafos",
+      "paidClients": "Clientes Pagos",
+      "unpaidClients": "Clientes em Aberto"
+    },
+    "sections": {
+      "quickActions": "Ações Rápidas",
+      "recentActivity": "Atividade Recente",
+      "paymentMethods": "Formas de Pagamento",
+      "topPhotographers": "Top Fotógrafos"
+    },
+    "actions": {
+      "addClient": "Vincular Cliente",
+      "addPerson": "Nova Pessoa",
+      "linkFirstClient": "Vincular Primeiro Cliente",
+      "dogsAndPhotos": "Cachorros & Fotos",
+      "editData": "Editar Dados",
+      "downloadReport": "Baixar Relatório",
+      "manageSeasons": "Gerenciar Eventos"
+    },
+    "quickPerson": {
+      "title": "Cadastrar Nova Pessoa",
+      "submit": "Salvar e Editar Dados"
+    },
+    "loading": "Carregando métricas...",
+    "hidden": "Visão geral oculta pela configuração da organização."
+  },
+  "seasons": {
+    "title": "Eventos",
+    "add": "Novo Evento",
+    "edit": "Editar Evento",
+    "delete": "Excluir",
+    "confirmDelete": "Confirmar Exclusão",
+    "confirmDeleteDescription": "Tem certeza que deseja excluir este evento? Todos os dados associados serão perdidos.",
+    "fields": {
+      "name": "Nome do Evento",
+      "year": "Ano",
+      "judges": "Juízes",
+      "judgesPlaceholder": "Adicionar juiz...",
+      "addJudge": "Adicionar"
+    },
+    "noData": "Nenhum evento cadastrado.",
+    "noDataDescription": "Crie o primeiro evento para começar.",
+    "loading": "Carregando eventos...",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "cancel": "Cancelar",
+    "active": "Ativo",
+    "setActive": "Definir como Ativo",
+    "successCreate": "Evento criado com sucesso.",
+    "successUpdate": "Evento atualizado com sucesso.",
+    "successDelete": "Evento excluído com sucesso.",
+    "errorCreate": "Não foi possível criar o evento.",
+    "errorUpdate": "Não foi possível atualizar o evento.",
+    "errorDelete": "Não foi possível excluir o evento."
+  },
+  "photographers": {
+    "title": "Fotógrafos",
+    "add": "Novo Fotógrafo",
+    "edit": "Editar Fotógrafo",
+    "delete": "Excluir Fotógrafo",
+    "confirmDelete": "Tem certeza que deseja excluir este fotógrafo?",
+    "fields": {
+      "name": "Nome",
+      "email": "E-mail",
+      "phone": "Telefone"
+    },
+    "noData": "Nenhum fotógrafo cadastrado.",
+    "noDataDescription": "Cadastre fotógrafos para associá-los às fotos.",
+    "loading": "Carregando fotógrafos...",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "cancel": "Cancelar",
+    "successCreate": "Fotógrafo criado com sucesso.",
+    "successUpdate": "Fotógrafo atualizado com sucesso.",
+    "successDelete": "Fotógrafo excluído com sucesso.",
+    "errorCreate": "Não foi possível criar o fotógrafo.",
+    "errorUpdate": "Não foi possível atualizar o fotógrafo.",
+    "errorDelete": "Não foi possível excluir o fotógrafo."
+  },
+  "people": {
+    "title": "Pessoas (Cadastro Único)",
+    "add": "Nova Pessoa",
+    "edit": "Editar Pessoa",
+    "delete": "Excluir",
+    "confirmDelete": "Confirmar Exclusão",
+    "search": "Buscar por nome...",
+    "fields": {
+      "name": "Nome",
+      "phone": "Telefone (Opcional)",
+      "document": "Documento"
+    },
+    "noData": "Nenhuma pessoa cadastrada.",
+    "noDataDescription": "Adicione pessoas para associá-las como proprietários de cachorros.",
+    "loading": "Carregando pessoas...",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "cancel": "Cancelar",
+    "successCreate": "Pessoa criada com sucesso.",
+    "successUpdate": "Pessoa atualizada com sucesso.",
+    "successDelete": "Pessoa excluída com sucesso.",
+    "errorCreate": "Não foi possível criar a pessoa.",
+    "errorUpdate": "Não foi possível atualizar a pessoa.",
+    "errorDelete": "Não foi possível excluir a pessoa."
+  },
+  "personDetails": {
+    "title": "Detalhes da Pessoa",
+    "dogs": "Cachorros",
+    "addDog": "Adicionar Cachorro",
+    "editDog": "Editar Cachorro",
+    "deleteDog": "Excluir Cachorro",
+    "confirmDeleteDog": "Tem certeza que deseja excluir este cachorro e todas as suas fotos associadas neste evento?",
+    "photos": "Fotos",
+    "addPhoto": "Adicionar Foto",
+    "editPhoto": "Editar Foto",
+    "deletePhoto": "Excluir Foto",
+    "confirmDeletePhoto": "Tem certeza que deseja remover esta foto?",
+    "fields": {
+      "dogName": "Nome do Cachorro",
+      "fileNumber": "Número do Arquivo da Foto",
+      "photographer": "Fotógrafo",
+      "judges": "Juízes da Foto",
+      "judgesPlaceholder": "Selecione os juízes",
+      "noJudges": "Nenhum juiz cadastrado no evento",
+      "judgesHelper": "Selecione os juízes do evento vinculados a esta foto.",
+      "judgesNoEventHelper": "Cadastre juízes no evento para poder selecioná-los aqui.",
+      "paymentMethod": "Forma de Pagamento",
+      "amountPaid": "Valor Pago (R$)",
+      "noneInformed": "Nenhum / Não informado",
+      "competitions": "Competições Ganhas",
+      "addCompetition": "Adicionar competição..."
+    },
+    "save": "Salvar Foto",
+    "saving": "Salvando...",
+    "cancel": "Cancelar",
+    "back": "Voltar"
+  },
+  "clients": {
+    "title": "Clientes e Fotos",
+    "search": "Buscar por pessoa, cão ou número da foto...",
+    "add": "Vincular Cliente",
+    "noData": "Nenhum cliente vinculado neste evento",
+    "noDataDescription": "Este evento ainda não possui clientes cadastrados. Comece vinculando uma pessoa e seus cães.",
+    "loading": "Carregando clientes...",
+    "columns": {
+      "name": "Nome",
+      "dogs": "Cachorros",
+      "photos": "Fotos",
+      "revenue": "Receita",
+      "actions": "Ações"
+    },
+    "actions": {
+      "details": "Ver Detalhes",
+      "unlink": "Desvincular",
+      "confirmUnlink": "Tem certeza que deseja desvincular este cliente do evento?"
+    },
+    "successLink": "Cliente vinculado com sucesso.",
+    "successUnlink": "Cliente desvinculado com sucesso.",
+    "errorLink": "Não foi possível vincular o cliente.",
+    "errorUnlink": "Não foi possível desvincular o cliente.",
+    "errorLoad": "Não foi possível carregar os clientes."
+  },
+  "clientDetails": {
+    "title": "Detalhes do Cliente",
+    "back": "Voltar",
+    "dogs": "Cachorros",
+    "addDog": "Adicionar Cachorro",
+    "noDogs": "Nenhum cachorro cadastrado para este cliente neste evento.",
+    "photos": "Fotos",
+    "addPhoto": "Adicionar Foto",
+    "noPhotos": "Nenhuma foto cadastrada.",
+    "loading": "Carregando...",
+    "fields": {
+      "dogName": "Nome do Cachorro",
+      "fileNumber": "Número do Arquivo",
+      "photographer": "Fotógrafo",
+      "paymentMethod": "Forma de Pagamento",
+      "amountPaid": "Valor Pago (R$)",
+      "judges": "Juízes",
+      "judgesPlaceholder": "Selecione juízes",
+      "noJudgesEvent": "Nenhum juiz no evento",
+      "noneInformed": "Nenhum / Não informado",
+      "competitions": "Competições",
+      "addCompetition": "Adicionar"
+    },
+    "addDogModal": {
+      "title": "Adicionar Cachorro",
+      "addPhoto": "Adicionar Foto",
+      "save": "Salvar Cadastro",
+      "saving": "Salvando...",
+      "cancel": "Cancelar"
+    },
+    "addPhotoModal": {
+      "title": "Adicionar Fotos",
+      "bulkTitle": "Fotos em Lote",
+      "bulkDescription": "Informe os números dos arquivos separados por vírgula ou nova linha.",
+      "bulkPlaceholder": "Ex: 1234, 5678, 9012",
+      "singleTitle": "Foto Individual",
+      "save": "Adicionar Fotos",
+      "cancel": "Cancelar"
+    },
+    "editPhotoModal": {
+      "title": "Editar Foto",
+      "save": "Salvar Foto",
+      "cancel": "Cancelar"
+    },
+    "confirmDeleteDog": {
+      "title": "Confirmar Exclusão de Cachorro",
+      "message": "Tem certeza que deseja excluir este cachorro e todas as suas fotos associadas neste evento?",
+      "confirm": "Excluir Cachorro",
+      "cancel": "Cancelar"
+    },
+    "confirmDeletePhoto": {
+      "title": "Confirmar Exclusão de Foto",
+      "message": "Tem certeza que deseja remover esta foto?",
+      "confirm": "Excluir Foto",
+      "cancel": "Cancelar"
+    },
+    "successAddDog": "Cachorro adicionado com sucesso.",
+    "successEditPhoto": "Foto atualizada com sucesso.",
+    "successDeleteDog": "Cachorro excluído com sucesso.",
+    "successDeletePhoto": "Foto excluída com sucesso.",
+    "successAddPhotos": "Fotos adicionadas com sucesso."
+  },
+  "linkClient": {
+    "title": "Vincular Cliente no Evento",
+    "subtitle": "Nenhum cachorro adicionado. Clique no botão acima para adicionar.",
+    "search": "Buscar pessoa...",
+    "noResults": "Nenhuma pessoa encontrada.",
+    "noData": "Nenhuma pessoa cadastrada. Cadastre pessoas primeiro.",
+    "loading": "Buscando pessoas...",
+    "link": "Salvar Cadastro",
+    "linking": "Salvando...",
+    "cancel": "Cancelar",
+    "fields": {
+      "person": "Selecione a Pessoa",
+      "dogName": "Raça",
+      "fileNumber": "Número do Arquivo",
+      "photographer": "Fotógrafo",
+      "paymentMethod": "Pagamento",
+      "amountPaid": "Valor Pago",
+      "judges": "Juízes",
+      "judgesPlaceholder": "Selecione juízes",
+      "noJudgesEvent": "Nenhum juiz no evento",
+      "noneInformed": "Nenhum / Não informado",
+      "competitions": "Competições Vencidas",
+      "addPhoto": "Adicionar Foto",
+      "addCompetition": "Nome da competição vencida..."
+    }
+  },
+  "reports": {
+    "title": "Download de Relatório",
+    "loading": "Baixando seu relatório...",
+    "loadingDescription": "Aguarde enquanto seu arquivo CSV é transferido com segurança.",
+    "loginRequired": "Você precisa estar conectado à sua conta para fazer o download deste relatório com segurança.",
+    "loginButton": "Fazer Login para Baixar",
+    "successTitle": "Download Concluído!",
+    "successMessage": "O relatório de clientes foi gerado e baixado no seu navegador.",
+    "downloadAgain": "Baixar Novamente",
+    "goToDashboard": "Ir para o Painel",
+    "failTitle": "Falha no Download",
+    "retry": "Tentar Novamente",
+    "errors": {
+      "forbidden": "Acesso negado: este relatório pertence a outro tenant.",
+      "notFound": "Relatório não encontrado ou link expirado.",
+      "default": "Não foi possível baixar o relatório. Verifique se o arquivo ainda existe e se você tem permissão de acesso."
+    }
+  },
+  "profile": {
+    "title": "Meu Perfil & Configurações",
+    "personalData": "Dados Pessoais",
+    "changePassword": "Alterar Senha",
+    "fields": {
+      "emailReadonly": "E-mail (Não editável)",
+      "fullName": "Nome Completo",
+      "currentPassword": "Senha Atual",
+      "newPassword": "Nova Senha",
+      "newPasswordPlaceholder": "Mínimo 8 caracteres",
+      "newPasswordHelper": "Entre 8 e 72 caracteres",
+      "confirmNewPassword": "Confirmar Nova Senha"
+    },
+    "saveChanges": "Salvar Alterações",
+    "saving": "Salvando...",
+    "changePasswordBtn": "Alterar Senha",
+    "updating": "Atualizando...",
+    "successName": "Nome atualizado com sucesso.",
+    "successPassword": "Senha alterada com sucesso.",
+    "errorPasswordMismatch": "As senhas não coincidem.",
+    "errorPasswordTooShort": "A nova senha deve ter pelo menos 8 caracteres.",
+    "loading": "Carregando perfil...",
+    "errorLoad": "Não foi possível carregar o perfil."
+  },
+  "admin": {
+    "tenants": {
+      "title": "Organizações",
+      "add": "Nova Organização",
+      "edit": "Editar",
+      "loading": "Carregando organizações...",
+      "noData": "Nenhuma organização encontrada",
+      "columns": {
+        "name": "Nome da Organização",
+        "plan": "Plano",
+        "payment": "Pagamento",
+        "trial": "Expiração Trial",
+        "clients": "Clientes",
+        "actions": "Ações"
+      },
+      "plans": {
+        "free": "Gratuito (Trial)",
+        "standard": "Padrão"
+      },
+      "payment": {
+        "paid": "Em dia",
+        "unpaid": "Inadimplente"
+      },
+      "trial": {
+        "expired": "Expirado",
+        "daysRemaining": "{{days}}d restantes"
+      },
+      "createModal": {
+        "title": "Nova Organização (Tenant)",
+        "name": "Nome do Tenant / Identificador",
+        "initialPlan": "Plano Inicial",
+        "freePlan": "Gratuito (Trial de 14 dias)",
+        "standardPlan": "Padrão (Ilimitado / Limite 300 clientes por evento)",
+        "paymentStatus": "Status de Pagamento",
+        "paid": "Em dia (Pago)",
+        "unpaid": "Inadimplente (Não pago)",
+        "hideOverview": "Ocultar Visão Geral por Padrão?",
+        "create": "Criar Organização",
+        "creating": "Criando...",
+        "cancel": "Cancelar"
+      },
+      "planModal": {
+        "title": "Alterar Plano",
+        "organization": "Organização: ",
+        "plan": "Plano",
+        "freeRestart": "Gratuito (Reinicia trial de 14 dias)",
+        "standard": "Padrão",
+        "save": "Salvar Plano",
+        "saving": "Salvando...",
+        "cancel": "Cancelar"
+      },
+      "paymentModal": {
+        "title": "Alterar Status de Pagamento",
+        "organization": "Organização: ",
+        "status": "Status de Pagamento",
+        "paidStatus": "Em dia (Acesso Liberado)",
+        "unpaidStatus": "Inadimplente (Acesso e Escritas Bloqueados)",
+        "save": "Salvar Status",
+        "saving": "Salvando...",
+        "cancel": "Cancelar"
+      },
+      "settingsModal": {
+        "title": "Configurações da Organização",
+        "organization": "Organização: ",
+        "info": "Define o comportamento padrão de exibição do painel para todos os usuários desta organização.",
+        "hideOverview": "Ocultar Visão Geral por Padrão?",
+        "save": "Salvar Configurações",
+        "saving": "Salvando...",
+        "cancel": "Cancelar"
+      },
+      "actions": {
+        "changePlan": "Alterar Plano",
+        "changePayment": "Alterar Status de Pagamento",
+        "settings": "Configurações da Organização"
+      },
+      "successCreate": "Organização criada com sucesso.",
+      "errorCreate": "Erro ao criar organização. Verifique se o nome já está em uso.",
+      "errorLoad": "Não foi possível carregar a lista de organizações."
+    },
+    "users": {
+      "title": "Gestão de Usuários",
+      "loading": "Carregando usuários...",
+      "noData": "Nenhum usuário encontrado",
+      "columns": {
+        "name": "Usuário",
+        "email": "E-mail & Confirmação",
+        "tenant": "Organização (Tenant)",
+        "superAdmin": "Função",
+        "actions": "Ações"
+      },
+      "pending": "Pendente de Aprovação",
+      "yes": "Sim",
+      "no": "Não",
+      "assignTenant": "Atribuir Tenant",
+      "changeTenant": "Alterar Tenant",
+      "assignModal": {
+        "title": "Atribuir Organização (Tenant)",
+        "organization": "Organização",
+        "noOrg": "Nenhuma (Deixar pendente de aprovação)",
+        "noOrgWarning": "Nenhuma organização cadastrada. Crie uma organização na página de Tenants antes de vincular usuários.",
+        "save": "Salvar Atribuição",
+        "saving": "Salvando...",
+        "cancel": "Cancelar"
+      },
+      "errorLoad": "Não foi possível carregar os dados de usuários e tenants.",
+      "successAssign": "Organização atribuída com sucesso.",
+      "errorAssign": "Erro ao atribuir organização ao usuário."
+    }
+  },
+  "shared": {
+    "loadingPage": "Carregando conteúdo da página",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "delete": "Excluir",
+    "confirm": "Confirmar",
+    "back": "Voltar",
+    "add": "Adicionar",
+    "edit": "Editar",
+    "close": "Fechar",
+    "yes": "Sim",
+    "no": "Não",
+    "search": "Buscar",
+    "loading": "Carregando...",
+    "noData": "Nenhum dado encontrado.",
+    "error": "Ocorreu um erro. Tente novamente.",
+    "tenantBanner": {
+      "unpaid": "Acesso suspenso por pendência de pagamento da assinatura. Entre em contato com o suporte para regularizar.",
+      "trialExpired": "O período de teste gratuito de 14 dias da sua organização encerrou. A edição de clientes e exportação de relatórios estão bloqueadas. Entre em contato com o suporte para assinar um plano.",
+      "clientLimitExceeded": "A sua organização excedeu o limite de clientes cadastrados no plano atual. A criação de novos eventos e a exportação de relatórios estão suspensas. Entre em contato com o suporte para regularizar.",
+      "trialActive_one": "Período de teste gratuito ativo: <strong>resta 1 dia</strong> de teste.",
+      "trialActive_other": "Período de teste gratuito ativo: <strong>restam {{count}} dias</strong> de teste."
+    }
+  }
+}

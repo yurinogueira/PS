@@ -11,14 +11,17 @@ import {
 } from "@mui/material";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
+import { useTranslation } from "react-i18next";
 import { AuthHeroBanner } from "../components/AuthHeroBanner";
 import { authService } from "../services/auth.service";
 import { useAuthStore } from "../state/auth.store";
 import { useDocumentTitle } from "../../shared";
 import { brandColors } from "../../../styles/theme";
+import { LanguageSelector } from "../../../components/LanguageSelector";
 
 export function VerifyEmailPage() {
-  useDocumentTitle("Confirmação de E-mail");
+  const { t } = useTranslation();
+  useDocumentTitle(t("auth.verifyEmail.title"));
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get("token") || "";
@@ -29,9 +32,7 @@ export function VerifyEmailPage() {
   const [loading, setLoading] = useState(hasToken);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(
-    hasToken
-      ? null
-      : "Token de validação ausente. Utilize o link enviado para seu e-mail.",
+    hasToken ? null : t("auth.verifyEmail.tokenMissing"),
   );
 
   useEffect(() => {
@@ -56,7 +57,7 @@ export function VerifyEmailPage() {
           };
           setErrorMsg(
             errorObj.response?.data?.message ||
-              "Não foi possível validar seu e-mail. O link pode ter expirado ou já ter sido utilizado.",
+              t("auth.verifyEmail.errorDefault"),
           );
         }
       })
@@ -69,7 +70,7 @@ export function VerifyEmailPage() {
     return () => {
       isMounted = false;
     };
-  }, [hasToken, token, setUser]);
+  }, [hasToken, token, setUser, t]);
 
   return (
     <Box
@@ -111,43 +112,52 @@ export function VerifyEmailPage() {
           }}
         >
           <CardContent sx={{ p: { xs: 1, sm: 3 }, textAlign: "center" }}>
-            {/* Mobile Header / Brand */}
+            {/* Header / Brand & Language Selector */}
             <Box
               sx={{
-                display: { xs: "flex", md: "none" },
+                display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent: "space-between",
                 mb: 3,
-                gap: 1,
               }}
             >
               <Box
                 sx={{
-                  bgcolor: brandColors.primary,
-                  borderRadius: 1.5,
-                  p: 0.75,
-                  display: "flex",
+                  display: { xs: "flex", md: "none" },
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 1,
                 }}
-              ></Box>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 800, color: "primary.main" }}
               >
-                PS
-              </Typography>
+                <Box
+                  sx={{
+                    bgcolor: brandColors.primary,
+                    borderRadius: 1.5,
+                    p: 0.75,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 800, color: "primary.main" }}
+                >
+                  PS
+                </Typography>
+              </Box>
+              <Box sx={{ ml: "auto" }}>
+                <LanguageSelector variant="auth" />
+              </Box>
             </Box>
 
             {loading && (
               <Box sx={{ py: 6 }}>
                 <CircularProgress size={48} sx={{ mb: 3 }} />
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                  Validando seu e-mail...
+                  {t("auth.verifyEmail.validating")}
                 </Typography>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Aguarde um instante enquanto confirmamos seu endereço de
-                  e-mail.
+                  {t("auth.verifyEmail.validatingDescription")}
                 </Typography>
               </Box>
             )}
@@ -158,14 +168,13 @@ export function VerifyEmailPage() {
                   sx={{ fontSize: 64, color: "success.main", mb: 2 }}
                 />
                 <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-                  E-mail Validado com Sucesso!
+                  {t("auth.verifyEmail.successTitle")}
                 </Typography>
                 <Typography
                   variant="body2"
                   sx={{ color: "text.secondary", mb: 4 }}
                 >
-                  Seu e-mail foi confirmado com sucesso. Agora você já pode
-                  cadastrar e gerenciar as fotos do seu evento no PS.
+                  {t("auth.verifyEmail.successMessage")}
                 </Typography>
                 <Button
                   onClick={() =>
@@ -178,7 +187,9 @@ export function VerifyEmailPage() {
                   size="large"
                   sx={{ py: 1.4, fontWeight: 600 }}
                 >
-                  {isAuthenticated ? "Ir para o Painel" : "Fazer Login"}
+                  {isAuthenticated
+                    ? t("auth.verifyEmail.goToDashboard")
+                    : t("auth.verifyEmail.goToLogin")}
                 </Button>
               </Box>
             )}
@@ -189,7 +200,7 @@ export function VerifyEmailPage() {
                   sx={{ fontSize: 64, color: "error.main", mb: 2 }}
                 />
                 <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-                  Falha na Validação
+                  {t("auth.verifyEmail.failTitle")}
                 </Typography>
                 {errorMsg && (
                   <Alert severity="error" sx={{ mb: 3, textAlign: "left" }}>
@@ -207,7 +218,9 @@ export function VerifyEmailPage() {
                   size="large"
                   sx={{ py: 1.4, fontWeight: 600 }}
                 >
-                  {isAuthenticated ? "Ir para o Meu Perfil" : "Ir para o Login"}
+                  {isAuthenticated
+                    ? t("auth.verifyEmail.failButton")
+                    : t("auth.verifyEmail.goToLogin")}
                 </Button>
               </Box>
             )}

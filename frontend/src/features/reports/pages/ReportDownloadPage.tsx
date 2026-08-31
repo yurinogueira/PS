@@ -12,6 +12,7 @@ import {
 import FileDownloadDoneRoundedIcon from "@mui/icons-material/FileDownloadDoneRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
+import { useTranslation } from "react-i18next";
 import { AuthHeroBanner } from "../../auth/components/AuthHeroBanner";
 import { reportService } from "../../../services/api/report.service";
 import { useAuthStore } from "../../auth/state/auth.store";
@@ -19,7 +20,8 @@ import { useDocumentTitle } from "../../shared";
 import { brandColors } from "../../../styles/theme";
 
 export function ReportDownloadPage() {
-  useDocumentTitle("Download de Relatório");
+  const { t } = useTranslation();
+  useDocumentTitle(t("reports.title"));
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const fileParam = searchParams.get("file") || "";
@@ -30,9 +32,7 @@ export function ReportDownloadPage() {
   const [loading, setLoading] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(
-    hasFile
-      ? null
-      : "Parâmetro de arquivo ausente. Utilize o link enviado para seu e-mail.",
+    hasFile ? null : t("reports.errors.default"),
   );
 
   const triggerDownload = useCallback(async () => {
@@ -57,15 +57,14 @@ export function ReportDownloadPage() {
 
       setDownloaded(true);
     } catch (err: unknown) {
-      let message =
-        "Não foi possível baixar o relatório. Verifique se o arquivo ainda existe e se você tem permissão de acesso.";
+      let message = t("reports.errors.default");
       const errorObj = err as {
         response?: { status?: number; data?: { message?: string } };
       };
       if (errorObj?.response?.status === 403) {
-        message = "Acesso negado: este relatório pertence a outro tenant.";
+        message = t("reports.errors.forbidden");
       } else if (errorObj?.response?.status === 404) {
-        message = "Relatório não encontrado ou link expirado.";
+        message = t("reports.errors.notFound");
       } else if (errorObj?.response?.data?.message) {
         message = errorObj.response.data.message;
       }
@@ -73,7 +72,7 @@ export function ReportDownloadPage() {
     } finally {
       setLoading(false);
     }
-  }, [hasFile, fileParam]);
+  }, [hasFile, fileParam, t]);
 
   useEffect(() => {
     if (isAuthenticated && hasFile && !downloaded && !loading && !errorMsg) {
@@ -162,14 +161,13 @@ export function ReportDownloadPage() {
                   sx={{ fontSize: 64, color: "primary.main", mb: 2 }}
                 />
                 <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-                  Download de Relatório
+                  {t("reports.title")}
                 </Typography>
                 <Typography
                   variant="body2"
                   sx={{ color: "text.secondary", mb: 4 }}
                 >
-                  Você precisa estar conectado à sua conta para fazer o download
-                  deste relatório com segurança.
+                  {t("reports.loginRequired")}
                 </Typography>
                 <Button
                   onClick={() =>
@@ -185,17 +183,17 @@ export function ReportDownloadPage() {
                   size="large"
                   sx={{ py: 1.4, fontWeight: 600 }}
                 >
-                  Fazer Login para Baixar
+                  {t("reports.loginButton")}
                 </Button>
               </Box>
             ) : loading ? (
               <Box sx={{ py: 6 }}>
                 <CircularProgress size={48} sx={{ mb: 3 }} />
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                  Baixando seu relatório...
+                  {t("reports.loading")}
                 </Typography>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Aguarde enquanto seu arquivo CSV é transferido com segurança.
+                  {t("reports.loadingDescription")}
                 </Typography>
               </Box>
             ) : downloaded ? (
@@ -204,13 +202,13 @@ export function ReportDownloadPage() {
                   sx={{ fontSize: 64, color: "success.main", mb: 2 }}
                 />
                 <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-                  Download Concluído!
+                  {t("reports.successTitle")}
                 </Typography>
                 <Typography
                   variant="body2"
                   sx={{ color: "text.secondary", mb: 4 }}
                 >
-                  O relatório de clientes foi gerado e baixado no seu navegador.
+                  {t("reports.successMessage")}
                 </Typography>
                 <Box
                   sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}
@@ -223,7 +221,7 @@ export function ReportDownloadPage() {
                     startIcon={<FileDownloadRoundedIcon />}
                     sx={{ py: 1.4, fontWeight: 600 }}
                   >
-                    Baixar Novamente
+                    {t("reports.downloadAgain")}
                   </Button>
                   <Button
                     onClick={() => navigate("/dashboard", { replace: true })}
@@ -232,7 +230,7 @@ export function ReportDownloadPage() {
                     size="large"
                     sx={{ py: 1.4, fontWeight: 600 }}
                   >
-                    Ir para o Painel
+                    {t("reports.goToDashboard")}
                   </Button>
                 </Box>
               </Box>
@@ -242,7 +240,7 @@ export function ReportDownloadPage() {
                   sx={{ fontSize: 64, color: "error.main", mb: 2 }}
                 />
                 <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-                  Falha no Download
+                  {t("reports.failTitle")}
                 </Typography>
                 {errorMsg && (
                   <Alert severity="error" sx={{ mb: 3, textAlign: "left" }}>
@@ -260,7 +258,7 @@ export function ReportDownloadPage() {
                       size="large"
                       sx={{ py: 1.4, fontWeight: 600 }}
                     >
-                      Tentar Novamente
+                      {t("reports.retry")}
                     </Button>
                   )}
                   <Button
@@ -270,7 +268,7 @@ export function ReportDownloadPage() {
                     size="large"
                     sx={{ py: 1.4, fontWeight: 600 }}
                   >
-                    Ir para o Painel
+                    {t("reports.goToDashboard")}
                   </Button>
                 </Box>
               </Box>
