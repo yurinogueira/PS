@@ -2282,6 +2282,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "currency": {
+                    "type": "string"
+                },
                 "file_number": {
                     "type": "string"
                 },

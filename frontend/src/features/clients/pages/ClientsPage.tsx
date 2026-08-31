@@ -43,6 +43,7 @@ import {
   SeasonClient,
   Dog,
   Photo,
+  CURRENCIES,
 } from "../../../services/api/client.service";
 import { personService, Person } from "../../../services/api/person.service";
 import {
@@ -183,23 +184,31 @@ export const ClientsPage = () => {
       file_number: "",
       photographer_id: "",
       payment_method: "Pix",
+      currency: "BRL",
       amount_paid: 0,
     } as Photo);
     newDogs[dogIndex] = { ...newDogs[dogIndex], photos };
     setDogs(newDogs);
   };
 
-  const updatePhoto = <K extends keyof Photo>(
+  const updatePhoto = (
     dogIndex: number,
     photoIndex: number,
-    field: K,
-    value: Photo[K],
+    fieldOrObj: keyof Photo | Partial<Photo>,
+    value?: unknown,
   ) => {
     const newDogs = [...dogs];
-    newDogs[dogIndex].photos[photoIndex] = {
-      ...newDogs[dogIndex].photos[photoIndex],
-      [field]: value,
-    };
+    if (typeof fieldOrObj === "string") {
+      newDogs[dogIndex].photos[photoIndex] = {
+        ...newDogs[dogIndex].photos[photoIndex],
+        [fieldOrObj]: value,
+      };
+    } else {
+      newDogs[dogIndex].photos[photoIndex] = {
+        ...newDogs[dogIndex].photos[photoIndex],
+        ...fieldOrObj,
+      };
+    }
     setDogs(newDogs);
   };
 
@@ -756,14 +765,20 @@ export const ClientsPage = () => {
                     <Select
                       value={photo.payment_method}
                       label="Forma de Pagamento *"
-                      onChange={(e) =>
-                        updatePhoto(
-                          dIdx,
-                          pIdx,
-                          "payment_method",
-                          e.target.value,
-                        )
-                      }
+                      onChange={(e) => {
+                        const newMethod = e.target.value;
+                        if (newMethod === "Não pago") {
+                          updatePhoto(dIdx, pIdx, {
+                            payment_method: newMethod,
+                            amount_paid: 0,
+                          });
+                        } else {
+                          updatePhoto(dIdx, pIdx, {
+                            payment_method: newMethod,
+                            currency: photo.currency || "BRL",
+                          });
+                        }
+                      }}
                     >
                       {PAYMENT_METHODS.map((m) => (
                         <MenuItem key={m} value={m}>
@@ -772,31 +787,58 @@ export const ClientsPage = () => {
                       ))}
                     </Select>
                   </FormControl>
-                  <TextField
-                    size="small"
-                    type="number"
-                    label="Valor Pago (Opcional)"
-                    value={
-                      photo.amount_paid === undefined ||
-                      photo.amount_paid === null
-                        ? ""
-                        : photo.amount_paid
-                    }
-                    onChange={(e) =>
-                      updatePhoto(
-                        dIdx,
-                        pIdx,
-                        "amount_paid",
-                        e.target.value === ""
-                          ? 0
-                          : parseFloat(e.target.value) || 0,
-                      )
-                    }
-                    sx={{
-                      flex: { xs: "1 1 100%", sm: "1 1 150px" },
-                      minWidth: "140px",
-                    }}
-                  />
+                  {photo.payment_method !== "Não pago" && (
+                    <>
+                      <FormControl
+                        size="small"
+                        required
+                        sx={{
+                          flex: { xs: "1 1 100%", sm: "1 1 140px" },
+                          minWidth: "120px",
+                        }}
+                      >
+                        <InputLabel required>Moeda</InputLabel>
+                        <Select
+                          value={photo.currency || "BRL"}
+                          label="Moeda *"
+                          onChange={(e) =>
+                            updatePhoto(dIdx, pIdx, "currency", e.target.value)
+                          }
+                        >
+                          {CURRENCIES.map((c) => (
+                            <MenuItem key={c.value} value={c.value}>
+                              {c.label}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        size="small"
+                        type="number"
+                        label="Valor Pago (Opcional)"
+                        slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                        value={
+                          photo.amount_paid === undefined ||
+                          photo.amount_paid === null
+                            ? ""
+                            : photo.amount_paid
+                        }
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          updatePhoto(
+                            dIdx,
+                            pIdx,
+                            "amount_paid",
+                            isNaN(val) ? 0 : Math.max(0, val),
+                          );
+                        }}
+                        sx={{
+                          flex: { xs: "1 1 100%", sm: "1 1 150px" },
+                          minWidth: "140px",
+                        }}
+                      />
+                    </>
+                  )}
                   <IconButton
                     color="error"
                     size="small"

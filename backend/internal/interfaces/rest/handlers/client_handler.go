@@ -49,7 +49,8 @@ func (h *SeasonClientHandler) Create(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusForbidden)
 		case errors.Is(err, client.ErrPersonNotFound),
 			errors.Is(err, client.ErrSeasonNotFound),
-			errors.Is(err, client.ErrPhotographerNotFound):
+			errors.Is(err, client.ErrPhotographerNotFound),
+			errors.Is(err, client.ErrInvalidAmountPaid):
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -179,7 +180,8 @@ func (h *SeasonClientHandler) Update(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		case errors.Is(err, client.ErrPersonNotFound),
 			errors.Is(err, client.ErrSeasonNotFound),
-			errors.Is(err, client.ErrPhotographerNotFound):
+			errors.Is(err, client.ErrPhotographerNotFound),
+			errors.Is(err, client.ErrInvalidAmountPaid):
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)

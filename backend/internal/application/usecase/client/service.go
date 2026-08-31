@@ -17,6 +17,7 @@ var (
 	ErrSeasonNotFound       = errors.New("season not found or does not belong to tenant")
 	ErrPhotographerNotFound = errors.New("photographer not found or does not belong to tenant")
 	ErrClientNotFound       = errors.New("client not found or does not belong to tenant")
+	ErrInvalidAmountPaid    = errors.New("amount_paid cannot be negative")
 )
 
 type Service struct {
@@ -89,6 +90,25 @@ func (s *Service) validateReferences(ctx context.Context, c *domain.SeasonClient
 	return nil
 }
 
+func (s *Service) validateAndNormalizePhotos(c *domain.SeasonClient) error {
+	for i := range c.Dogs {
+		for j := range c.Dogs[i].Photos {
+			photo := &c.Dogs[i].Photos[j]
+			if photo.AmountPaid != nil && *photo.AmountPaid < 0 {
+				return ErrInvalidAmountPaid
+			}
+			if photo.PaymentMethod == "Não pago" {
+				photo.AmountPaid = nil
+			} else {
+				if photo.Currency == "" {
+					photo.Currency = "BRL"
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func (s *Service) Create(ctx context.Context, client *domain.SeasonClient, tenantID string) error {
 	if s.tenantValidator != nil {
 		if err := s.tenantValidator.ValidateCanWriteClients(ctx, tenantID); err != nil {
@@ -96,6 +116,9 @@ func (s *Service) Create(ctx context.Context, client *domain.SeasonClient, tenan
 		}
 	}
 	client.TenantID = tenantID
+	if err := s.validateAndNormalizePhotos(client); err != nil {
+		return err
+	}
 	if err := s.validateReferences(ctx, client, tenantID); err != nil {
 		return err
 	}
@@ -128,6 +151,9 @@ func (s *Service) Update(ctx context.Context, client *domain.SeasonClient, tenan
 	client.TenantID = tenantID
 	if _, err := s.repo.GetByID(ctx, client.ID, tenantID); err != nil {
 		return ErrClientNotFound
+	}
+	if err := s.validateAndNormalizePhotos(client); err != nil {
+		return err
 	}
 	if err := s.validateReferences(ctx, client, tenantID); err != nil {
 		return err

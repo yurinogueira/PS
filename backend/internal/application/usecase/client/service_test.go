@@ -501,3 +501,142 @@ func TestClientService_CrossTenantValidation(t *testing.T) {
 		}
 	})
 }
+
+func TestClientService_PhotoCurrencyAndAmountValidation(t *testing.T) {
+	repo := newMockRepo()
+	personRepo := newMockPersonRepo()
+	seasonRepo := newMockSeasonRepo()
+	photogRepo := newMockPhotographerRepo()
+
+	svc := client.NewService(repo, personRepo, seasonRepo, photogRepo)
+	ctx := context.Background()
+	tenantID := "tenant-test"
+
+	personRepo.items["person-1"] = &persondomain.Person{ID: "person-1", TenantID: tenantID, Name: "Owner 1"}
+	seasonRepo.items["season-1"] = &seasondomain.Season{ID: "season-1", TenantID: tenantID, Name: "Season 1"}
+	photogRepo.items["photo-1"] = &photographerdomain.Photographer{ID: "photo-1", TenantID: tenantID, Name: "Photo 1"}
+
+	t.Run("Create - negative amount paid rejected", func(t *testing.T) {
+		negVal := -10.5
+		c := &domain.SeasonClient{
+			PersonID: "person-1",
+			SeasonID: "season-1",
+			Dogs: []domain.Dog{
+				{
+					Breed: "Husky",
+					Photos: []domain.Photo{
+						{
+							FileNumber:     "F1",
+							PhotographerID: "photo-1",
+							PaymentMethod:  "Pix",
+							AmountPaid:     &negVal,
+						},
+					},
+				},
+			},
+		}
+		err := svc.Create(ctx, c, tenantID)
+		if !errors.Is(err, client.ErrInvalidAmountPaid) {
+			t.Fatalf("expected ErrInvalidAmountPaid, got %v", err)
+		}
+	})
+
+	t.Run("Update - negative amount paid rejected", func(t *testing.T) {
+		c := &domain.SeasonClient{
+			ID:       "client-valid",
+			PersonID: "person-1",
+			SeasonID: "season-1",
+			Dogs:     []domain.Dog{{Breed: "Pug"}},
+		}
+		if err := svc.Create(ctx, c, tenantID); err != nil {
+			t.Fatalf("unexpected error creating client: %v", err)
+		}
+
+		negVal := -5.0
+		c.Dogs[0].Photos = []domain.Photo{
+			{
+				FileNumber:     "F2",
+				PhotographerID: "photo-1",
+				PaymentMethod:  "Dinheiro",
+				AmountPaid:     &negVal,
+			},
+		}
+		err := svc.Update(ctx, c, tenantID)
+		if !errors.Is(err, client.ErrInvalidAmountPaid) {
+			t.Fatalf("expected ErrInvalidAmountPaid on Update, got %v", err)
+		}
+	})
+
+	t.Run("Create - default currency BRL and custom USD", func(t *testing.T) {
+		valBrl := 50.0
+		valUsd := 20.0
+		c := &domain.SeasonClient{
+			ID:       "client-curr",
+			PersonID: "person-1",
+			SeasonID: "season-1",
+			Dogs: []domain.Dog{
+				{
+					Breed: "Beagle",
+					Photos: []domain.Photo{
+						{
+							FileNumber:     "BRL_01",
+							PhotographerID: "photo-1",
+							PaymentMethod:  "Pix",
+							AmountPaid:     &valBrl,
+							// Currency empty -> should default to BRL
+						},
+						{
+							FileNumber:     "USD_01",
+							PhotographerID: "photo-1",
+							PaymentMethod:  "Cartão de Crédito",
+							Currency:       "USD",
+							AmountPaid:     &valUsd,
+						},
+					},
+				},
+			},
+		}
+		if err := svc.Create(ctx, c, tenantID); err != nil {
+			t.Fatalf("unexpected error creating client with currencies: %v", err)
+		}
+
+		created, err := svc.GetByID(ctx, "client-curr", tenantID)
+		if err != nil {
+			t.Fatalf("unexpected error getting client: %v", err)
+		}
+		if created.Dogs[0].Photos[0].Currency != "BRL" {
+			t.Fatalf("expected default Currency BRL, got %s", created.Dogs[0].Photos[0].Currency)
+		}
+		if created.Dogs[0].Photos[1].Currency != "USD" {
+			t.Fatalf("expected Currency USD, got %s", created.Dogs[0].Photos[1].Currency)
+		}
+	})
+
+	t.Run("Create & Update - 'Não pago' resets amount_paid", func(t *testing.T) {
+		val := 100.0
+		c := &domain.SeasonClient{
+			ID:       "client-unpaid",
+			PersonID: "person-1",
+			SeasonID: "season-1",
+			Dogs: []domain.Dog{
+				{
+					Breed: "Bulldog",
+					Photos: []domain.Photo{
+						{
+							FileNumber:     "UNPAID_01",
+							PhotographerID: "photo-1",
+							PaymentMethod:  "Não pago",
+							AmountPaid:     &val, // Residual value should be nulled
+						},
+					},
+				},
+			},
+		}
+		if err := svc.Create(ctx, c, tenantID); err != nil {
+			t.Fatalf("unexpected error creating unpaid client: %v", err)
+		}
+		if c.Dogs[0].Photos[0].AmountPaid != nil {
+			t.Fatalf("expected AmountPaid to be nil for 'Não pago', got %v", *c.Dogs[0].Photos[0].AmountPaid)
+		}
+	})
+}
