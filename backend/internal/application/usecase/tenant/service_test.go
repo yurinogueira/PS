@@ -273,4 +273,23 @@ func TestTenantService_PlanLimitsAndRules(t *testing.T) {
 	if updatedPaid.PaymentStatus != domaintenant.PaymentStatusPaid {
 		t.Fatalf("expected paid status, got %s", updatedPaid.PaymentStatus)
 	}
+
+	// 7. Update settings (hide overview by default)
+	updatedSettings, err := svc.UpdateSettings(ctx, "active-free", domaintenant.TenantSettings{
+		HideOverviewByDefault: true,
+	})
+	if err != nil {
+		t.Fatalf("failed to update settings: %v", err)
+	}
+	if !updatedSettings.Settings.HideOverviewByDefault {
+		t.Fatal("expected HideOverviewByDefault to be true")
+	}
+
+	statusWithSettings, err := svc.GetTenantStatus(ctx, "active-free")
+	if err != nil {
+		t.Fatalf("failed to get tenant status: %v", err)
+	}
+	if !statusWithSettings.Settings.HideOverviewByDefault {
+		t.Fatal("expected GetTenantStatus to return HideOverviewByDefault true")
+	}
 }

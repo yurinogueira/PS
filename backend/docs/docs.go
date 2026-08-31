@@ -261,6 +261,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/tenants/{name}/settings": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Atualiza preferências e flags de configuração do tenant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Atualizar configurações da organização",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Nome do Tenant",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Novas configurações do tenant",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateTenantSettingsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.SuccessEnvelope"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/users": {
             "get": {
                 "security": [
@@ -2271,6 +2341,10 @@ const docTemplate = `{
         "handlers.CreateTenantRequest": {
             "type": "object",
             "properties": {
+                "hideOverviewByDefault": {
+                    "type": "boolean",
+                    "example": false
+                },
                 "name": {
                     "type": "string",
                     "example": "acme-corp"
@@ -2352,6 +2426,15 @@ const docTemplate = `{
                 "plan": {
                     "type": "string",
                     "example": "standard"
+                }
+            }
+        },
+        "handlers.UpdateTenantSettingsRequest": {
+            "type": "object",
+            "properties": {
+                "hideOverviewByDefault": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },

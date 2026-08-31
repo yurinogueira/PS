@@ -81,6 +81,9 @@ definitions:
     type: object
   handlers.CreateTenantRequest:
     properties:
+      hideOverviewByDefault:
+        example: false
+        type: boolean
       name:
         example: acme-corp
         type: string
@@ -138,6 +141,12 @@ definitions:
       plan:
         example: standard
         type: string
+    type: object
+  handlers.UpdateTenantSettingsRequest:
+    properties:
+      hideOverviewByDefault:
+        example: true
+        type: boolean
     type: object
   handlers.VerifyEmailRequest:
     properties:
@@ -379,6 +388,51 @@ paths:
       security:
       - BearerAuth: []
       summary: Atualizar plano da organização
+      tags:
+      - Admin
+  /api/v1/admin/tenants/{name}/settings:
+    put:
+      consumes:
+      - application/json
+      description: Atualiza preferências e flags de configuração do tenant
+      parameters:
+      - description: Nome do Tenant
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Novas configurações do tenant
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateTenantSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.SuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Atualizar configurações da organização
       tags:
       - Admin
   /api/v1/admin/users:

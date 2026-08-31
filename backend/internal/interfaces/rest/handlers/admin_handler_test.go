@@ -101,6 +101,17 @@ func TestAdminHandler_Tenants(t *testing.T) {
 	if recPay.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d: %s", recPay.Code, recPay.Body.String())
 	}
+
+	// 5. Update Tenant Settings
+	setBody, _ := json.Marshal(map[string]bool{"hideOverviewByDefault": true})
+	reqSet := httptest.NewRequest("PUT", "/api/v1/admin/tenants/alpha-tenant/settings", bytes.NewReader(setBody))
+	reqSet.SetPathValue("name", "alpha-tenant")
+	recSet := httptest.NewRecorder()
+	handler.UpdateTenantSettings(recSet, reqSet)
+
+	if recSet.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d: %s", recSet.Code, recSet.Body.String())
+	}
 }
 
 func TestAdminHandler_Users(t *testing.T) {
