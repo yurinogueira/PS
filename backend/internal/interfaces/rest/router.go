@@ -118,6 +118,7 @@ func NewRouter(
 	mux.Handle("POST /api/v1/admin/tenants", adminChain(adminHandler.CreateTenant))
 	mux.Handle("PUT /api/v1/admin/tenants/{name}/plan", adminChain(adminHandler.UpdateTenantPlan))
 	mux.Handle("PUT /api/v1/admin/tenants/{name}/payment-status", adminChain(adminHandler.UpdateTenantPaymentStatus))
+	mux.Handle("PUT /api/v1/admin/tenants/{name}/settings", adminChain(adminHandler.UpdateTenantSettings))
 	mux.Handle("GET /api/v1/admin/users", adminChain(adminHandler.ListUsers))
 	mux.Handle("PUT /api/v1/admin/users/{id}/tenant", adminChain(adminHandler.AssignTenant))
 

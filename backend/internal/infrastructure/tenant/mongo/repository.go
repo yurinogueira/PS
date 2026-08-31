@@ -12,14 +12,19 @@ import (
 	mongoinfra "ps/internal/infrastructure/database/mongo"
 )
 
+type tenantDocSettings struct {
+	HideOverviewByDefault bool `bson:"hideOverviewByDefault"`
+}
+
 type tenantDoc struct {
-	Name          string     `bson:"_id"`
-	Plan          string     `bson:"plan"`
-	PaymentStatus string     `bson:"paymentStatus"`
-	PlanStartedAt *time.Time `bson:"planStartedAt,omitempty"`
-	PlanExpiresAt *time.Time `bson:"planExpiresAt,omitempty"`
-	CreatedAt     time.Time  `bson:"createdAt"`
-	UpdatedAt     time.Time  `bson:"updatedAt,omitempty"`
+	Name          string            `bson:"_id"`
+	Plan          string            `bson:"plan"`
+	PaymentStatus string            `bson:"paymentStatus"`
+	Settings      tenantDocSettings `bson:"settings"`
+	PlanStartedAt *time.Time        `bson:"planStartedAt,omitempty"`
+	PlanExpiresAt *time.Time        `bson:"planExpiresAt,omitempty"`
+	CreatedAt     time.Time         `bson:"createdAt"`
+	UpdatedAt     time.Time         `bson:"updatedAt,omitempty"`
 }
 
 func (d tenantDoc) toDomain() domaintenant.Tenant {
@@ -45,6 +50,9 @@ func (d tenantDoc) toDomain() domaintenant.Tenant {
 		Name:          d.Name,
 		Plan:          plan,
 		PaymentStatus: paymentStatus,
+		Settings: domaintenant.TenantSettings{
+			HideOverviewByDefault: d.Settings.HideOverviewByDefault,
+		},
 		PlanStartedAt: startedAt,
 		PlanExpiresAt: expiresAt,
 		CreatedAt:     d.CreatedAt,
@@ -94,6 +102,9 @@ func (r *Repository) Create(ctx context.Context, tenant domaintenant.Tenant) (do
 		Name:          tenant.Name,
 		Plan:          tenant.Plan,
 		PaymentStatus: tenant.PaymentStatus,
+		Settings: tenantDocSettings{
+			HideOverviewByDefault: tenant.Settings.HideOverviewByDefault,
+		},
 		PlanStartedAt: tenant.PlanStartedAt,
 		PlanExpiresAt: tenant.PlanExpiresAt,
 		CreatedAt:     tenant.CreatedAt,
@@ -124,6 +135,9 @@ func (r *Repository) Update(ctx context.Context, tenant domaintenant.Tenant) (do
 		{Key: "$set", Value: bson.D{
 			{Key: "plan", Value: tenant.Plan},
 			{Key: "paymentStatus", Value: tenant.PaymentStatus},
+			{Key: "settings", Value: tenantDocSettings{
+				HideOverviewByDefault: tenant.Settings.HideOverviewByDefault,
+			}},
 			{Key: "planStartedAt", Value: tenant.PlanStartedAt},
 			{Key: "planExpiresAt", Value: tenant.PlanExpiresAt},
 			{Key: "updatedAt", Value: tenant.UpdatedAt},

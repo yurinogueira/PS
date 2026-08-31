@@ -26,24 +26,26 @@ var (
 )
 
 type CreateTenantInput struct {
-	Name          string
-	Plan          string
-	PaymentStatus string
+	Name                  string
+	Plan                  string
+	PaymentStatus         string
+	HideOverviewByDefault bool
 }
 
 type TenantStatusDTO struct {
-	Name                string     `json:"name"`
-	Plan                string     `json:"plan"`
-	PaymentStatus       string     `json:"paymentStatus"`
-	PlanStartedAt       *time.Time `json:"planStartedAt,omitempty"`
-	PlanExpiresAt       *time.Time `json:"planExpiresAt,omitempty"`
-	IsTrialExpired      bool       `json:"isTrialExpired"`
-	TrialDaysRemaining  int        `json:"trialDaysRemaining"`
-	IsUnpaid            bool       `json:"isUnpaid"`
-	ClientLimitExceeded bool       `json:"clientLimitExceeded"`
-	MaxClientsInSeason  int64      `json:"maxClientsInSeason"`
-	CreatedAt           time.Time  `json:"createdAt"`
-	UpdatedAt           time.Time  `json:"updatedAt,omitempty"`
+	Name                string                      `json:"name"`
+	Plan                string                      `json:"plan"`
+	PaymentStatus       string                      `json:"paymentStatus"`
+	Settings            domaintenant.TenantSettings `json:"settings"`
+	PlanStartedAt       *time.Time                  `json:"planStartedAt,omitempty"`
+	PlanExpiresAt       *time.Time                  `json:"planExpiresAt,omitempty"`
+	IsTrialExpired      bool                        `json:"isTrialExpired"`
+	TrialDaysRemaining  int                         `json:"trialDaysRemaining"`
+	IsUnpaid            bool                        `json:"isUnpaid"`
+	ClientLimitExceeded bool                        `json:"clientLimitExceeded"`
+	MaxClientsInSeason  int64                       `json:"maxClientsInSeason"`
+	CreatedAt           time.Time                   `json:"createdAt"`
+	UpdatedAt           time.Time                   `json:"updatedAt,omitempty"`
 }
 
 type Service struct {
@@ -101,6 +103,9 @@ func (s *Service) Create(ctx context.Context, input CreateTenantInput) (domainte
 		Name:          cleanName,
 		Plan:          plan,
 		PaymentStatus: paymentStatus,
+		Settings: domaintenant.TenantSettings{
+			HideOverviewByDefault: input.HideOverviewByDefault,
+		},
 		PlanStartedAt: planStartedAt,
 		PlanExpiresAt: planExpiresAt,
 		CreatedAt:     now,
@@ -165,6 +170,24 @@ func (s *Service) UpdatePaymentStatus(ctx context.Context, name string, status s
 	return s.repo.Update(ctx, t)
 }
 
+func (s *Service) UpdateSettings(ctx context.Context, name string, settings domaintenant.TenantSettings) (domaintenant.Tenant, error) {
+	cleanName := strings.TrimSpace(name)
+	if cleanName == "" {
+		return domaintenant.Tenant{}, ErrInvalidName
+	}
+
+	t, err := s.repo.FindByName(ctx, cleanName)
+	if err != nil {
+		return domaintenant.Tenant{}, err
+	}
+
+	now := time.Now().UTC()
+	t.Settings = settings
+	t.UpdatedAt = now
+
+	return s.repo.Update(ctx, t)
+}
+
 func (s *Service) List(ctx context.Context) ([]domaintenant.Tenant, error) {
 	return s.repo.List(ctx)
 }
@@ -206,6 +229,7 @@ func (s *Service) GetTenantStatus(ctx context.Context, tenantID string) (*Tenant
 		Name:                t.Name,
 		Plan:                t.Plan,
 		PaymentStatus:       t.PaymentStatus,
+		Settings:            t.Settings,
 		PlanStartedAt:       t.PlanStartedAt,
 		PlanExpiresAt:       t.PlanExpiresAt,
 		IsTrialExpired:      isTrialExpired,

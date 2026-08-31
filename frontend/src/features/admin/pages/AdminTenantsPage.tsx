@@ -27,6 +27,8 @@ import {
   MenuItem,
   IconButton,
   Tooltip,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
@@ -34,6 +36,7 @@ import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import PaymentRoundedIcon from "@mui/icons-material/PaymentRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import { adminService } from "../services/admin.service";
 import { Tenant } from "../types/admin.types";
 import { useDocumentTitle } from "../../shared/hooks/useDocumentTitle";
@@ -52,6 +55,8 @@ export const AdminTenantsPage = () => {
   const [createPaymentStatus, setCreatePaymentStatus] = useState<
     "paid" | "unpaid"
   >("paid");
+  const [createHideOverviewByDefault, setCreateHideOverviewByDefault] =
+    useState(false);
 
   // Plan Edit Modal
   const [planModalOpen, setPlanModalOpen] = useState(false);
@@ -63,6 +68,11 @@ export const AdminTenantsPage = () => {
   const [newPaymentStatus, setNewPaymentStatus] = useState<"paid" | "unpaid">(
     "paid",
   );
+
+  // Settings Edit Modal
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [newHideOverviewByDefault, setNewHideOverviewByDefault] =
+    useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -89,6 +99,7 @@ export const AdminTenantsPage = () => {
     setTenantName("");
     setCreatePlan("free");
     setCreatePaymentStatus("paid");
+    setCreateHideOverviewByDefault(false);
     setErrorMessage(null);
     setSuccessMessage(null);
     setOpenCreate(true);
@@ -114,6 +125,7 @@ export const AdminTenantsPage = () => {
         name: clean,
         plan: createPlan,
         paymentStatus: createPaymentStatus,
+        hideOverviewByDefault: createHideOverviewByDefault,
       });
       setSuccessMessage(`Organização "${clean}" criada com sucesso.`);
       setOpenCreate(false);
@@ -192,6 +204,41 @@ export const AdminTenantsPage = () => {
       setErrorMessage(
         error.response?.data?.message ||
           "Erro ao atualizar status de pagamento.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleOpenSettingsModal = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setNewHideOverviewByDefault(
+      Boolean(tenant.settings?.hideOverviewByDefault),
+    );
+    setSettingsModalOpen(true);
+  };
+
+  const handleUpdateSettings = async () => {
+    if (!selectedTenant) return;
+    setSubmitting(true);
+    setErrorMessage(null);
+    try {
+      await adminService.updateTenantSettings(selectedTenant.name, {
+        hideOverviewByDefault: newHideOverviewByDefault,
+      });
+      setSuccessMessage(
+        `Configurações da organização "${selectedTenant.name}" atualizadas com sucesso.`,
+      );
+      setSettingsModalOpen(false);
+      await loadTenants();
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Erro ao atualizar configurações da organização.",
       );
     } finally {
       setSubmitting(false);
@@ -330,6 +377,7 @@ export const AdminTenantsPage = () => {
               </TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Plano</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Pagamento</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Visão Geral</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Expiração Trial</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Data de Criação</TableCell>
               <TableCell sx={{ fontWeight: 600, textAlign: "right" }}>
@@ -340,7 +388,7 @@ export const AdminTenantsPage = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                   <CircularProgress size={32} />
                   <Typography
                     variant="body2"
@@ -353,7 +401,7 @@ export const AdminTenantsPage = () => {
               </TableRow>
             ) : filteredTenants.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
                   <BusinessRoundedIcon
                     sx={{ fontSize: 48, color: "text.disabled", mb: 1 }}
                   />
@@ -371,6 +419,9 @@ export const AdminTenantsPage = () => {
               filteredTenants.map((t) => {
                 const isFree = (t.plan || "free") === "free";
                 const isPaid = (t.paymentStatus || "paid") === "paid";
+                const isHiddenByDefault = Boolean(
+                  t.settings?.hideOverviewByDefault,
+                );
                 const expiresAt = t.planExpiresAt
                   ? new Date(t.planExpiresAt)
                   : null;
@@ -421,6 +472,19 @@ export const AdminTenantsPage = () => {
                       />
                     </TableCell>
                     <TableCell>
+                      <Chip
+                        label={
+                          isHiddenByDefault
+                            ? "Oculta por Padrão"
+                            : "Expandida por Padrão"
+                        }
+                        size="small"
+                        color={isHiddenByDefault ? "default" : "info"}
+                        variant="outlined"
+                        sx={{ fontWeight: 600 }}
+                      />
+                    </TableCell>
+                    <TableCell>
                       <Typography variant="body2" color="text.secondary">
                         {isFree
                           ? expiresAt
@@ -444,6 +508,15 @@ export const AdminTenantsPage = () => {
                           gap: 1,
                         }}
                       >
+                        <Tooltip title="Configurações da Organização">
+                          <IconButton
+                            size="small"
+                            color="default"
+                            onClick={() => handleOpenSettingsModal(t)}
+                          >
+                            <SettingsRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title="Alterar Plano">
                           <IconButton
                             size="small"
@@ -540,6 +613,19 @@ export const AdminTenantsPage = () => {
                 <MenuItem value="unpaid">Inadimplente (Não pago)</MenuItem>
               </Select>
             </FormControl>
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={createHideOverviewByDefault}
+                  onChange={(e) =>
+                    setCreateHideOverviewByDefault(e.target.checked)
+                  }
+                  disabled={submitting}
+                />
+              }
+              label="Ocultar Visão Geral por Padrão?"
+            />
           </DialogContent>
           <DialogActions sx={{ p: 2.5 }}>
             <Button
@@ -674,6 +760,65 @@ export const AdminTenantsPage = () => {
             sx={{ fontWeight: 600 }}
           >
             {submitting ? "Salvando..." : "Salvar Status"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog Alterar Configurações */}
+      <Dialog
+        open={settingsModalOpen}
+        onClose={() => !submitting && setSettingsModalOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          Configurações da Organização
+        </DialogTitle>
+        <DialogContent
+          sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Organização: <strong>{selectedTenant?.name}</strong>
+          </Typography>
+
+          <Alert severity="info" sx={{ fontSize: "0.85rem" }}>
+            Define o comportamento padrão de exibição do painel para todos os
+            usuários desta organização.
+          </Alert>
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={newHideOverviewByDefault}
+                onChange={(e) => setNewHideOverviewByDefault(e.target.checked)}
+                disabled={submitting}
+              />
+            }
+            label="Ocultar Visão Geral por Padrão?"
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button
+            onClick={() => setSettingsModalOpen(false)}
+            disabled={submitting}
+            color="inherit"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleUpdateSettings}
+            variant="contained"
+            disabled={submitting}
+            startIcon={
+              submitting ? (
+                <CircularProgress size={16} />
+              ) : (
+                <SettingsRoundedIcon />
+              )
+            }
+            sx={{ fontWeight: 600 }}
+          >
+            {submitting ? "Salvando..." : "Salvar Configurações"}
           </Button>
         </DialogActions>
       </Dialog>

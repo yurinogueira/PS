@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { DashboardPage } from "./DashboardPage";
 import { useSeasonStore } from "../../../store/seasonStore";
+import { useTenantStore } from "../../../store/tenantStore";
 import { clientService } from "../../../services/api/client.service";
 import { personService } from "../../../services/api/person.service";
 import { photographerService } from "../../../services/api/photographer.service";
@@ -12,6 +13,7 @@ describe("DashboardPage", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     useSeasonStore.setState({ activeSeason: null });
+    useTenantStore.setState({ tenantStatus: null });
     vi.spyOn(personService, "list").mockResolvedValue([]);
     vi.spyOn(clientService, "list").mockResolvedValue({
       data: [],
@@ -327,5 +329,70 @@ describe("DashboardPage", () => {
       expect(screen.getByText("Cadastrar Nova Pessoa")).toBeInTheDocument();
       expect(screen.getByText("Salvar e Editar Dados")).toBeInTheDocument();
     });
+  });
+
+  it("toggles overview visibility when clicking toggle button", async () => {
+    useSeasonStore.setState({
+      activeSeason: { id: "season-1", name: "Temporada 2026" },
+    });
+
+    render(
+      <BrowserRouter>
+        <DashboardPage />
+      </BrowserRouter>,
+    );
+
+    // Initial state: toggle button shows "Ocultar Visão Geral"
+    const toggleBtn = screen.getByRole("button", {
+      name: /Ocultar Visão Geral/i,
+    });
+    expect(toggleBtn).toBeInTheDocument();
+
+    // Click to hide
+    fireEvent.click(toggleBtn);
+
+    expect(
+      screen.getByRole("button", { name: /Exibir Visão Geral/i }),
+    ).toBeInTheDocument();
+
+    // Click to show again
+    fireEvent.click(
+      screen.getByRole("button", { name: /Exibir Visão Geral/i }),
+    );
+
+    expect(
+      screen.getByRole("button", { name: /Ocultar Visão Geral/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("starts with overview hidden when tenant has hideOverviewByDefault flag set to true", async () => {
+    useSeasonStore.setState({
+      activeSeason: { id: "season-1", name: "Temporada 2026" },
+    });
+    useTenantStore.setState({
+      tenantStatus: {
+        name: "test-org",
+        plan: "standard",
+        paymentStatus: "paid",
+        settings: { hideOverviewByDefault: true },
+        isTrialExpired: false,
+        trialDaysRemaining: 14,
+        isUnpaid: false,
+        clientLimitExceeded: false,
+        maxClientsInSeason: 10,
+        createdAt: "2026-08-30T00:00:00Z",
+      },
+    });
+
+    render(
+      <BrowserRouter>
+        <DashboardPage />
+      </BrowserRouter>,
+    );
+
+    // Button should initially be "Exibir Visão Geral"
+    expect(
+      screen.getByRole("button", { name: /Exibir Visão Geral/i }),
+    ).toBeInTheDocument();
   });
 });

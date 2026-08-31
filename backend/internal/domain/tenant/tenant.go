@@ -22,14 +22,19 @@ var (
 	ErrTrialExpired  = errors.New("O período de teste gratuito de 14 dias da sua organização encerrou. A edição de clientes e exportação de relatórios estão bloqueadas. Entre em contato com o suporte para assinar um plano.")
 )
 
+type TenantSettings struct {
+	HideOverviewByDefault bool `json:"hideOverviewByDefault" bson:"hideOverviewByDefault"`
+}
+
 type Tenant struct {
-	Name          string     `json:"name" bson:"_id"`
-	Plan          string     `json:"plan" bson:"plan"`
-	PaymentStatus string     `json:"paymentStatus" bson:"paymentStatus"`
-	PlanStartedAt *time.Time `json:"planStartedAt,omitempty" bson:"planStartedAt,omitempty"`
-	PlanExpiresAt *time.Time `json:"planExpiresAt,omitempty" bson:"planExpiresAt,omitempty"`
-	CreatedAt     time.Time  `json:"createdAt" bson:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
+	Name          string         `json:"name" bson:"_id"`
+	Plan          string         `json:"plan" bson:"plan"`
+	PaymentStatus string         `json:"paymentStatus" bson:"paymentStatus"`
+	Settings      TenantSettings `json:"settings" bson:"settings"`
+	PlanStartedAt *time.Time     `json:"planStartedAt,omitempty" bson:"planStartedAt,omitempty"`
+	PlanExpiresAt *time.Time     `json:"planExpiresAt,omitempty" bson:"planExpiresAt,omitempty"`
+	CreatedAt     time.Time      `json:"createdAt" bson:"createdAt"`
+	UpdatedAt     time.Time      `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
 }
 
 func (t Tenant) IsTrialExpired(now time.Time) bool {

@@ -30,6 +30,7 @@ import {
   ListItemIcon,
   Snackbar,
   Tooltip,
+  Collapse,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
@@ -46,6 +47,8 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
+import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
 import {
   clientService,
   SeasonClient,
@@ -105,6 +108,17 @@ export const DashboardPage = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  const [userToggledOverview, setUserToggledOverview] = useState(false);
+  const [showOverview, setShowOverview] = useState<boolean>(() => {
+    return tenantStatus ? !tenantStatus.settings?.hideOverviewByDefault : true;
+  });
+
+  useEffect(() => {
+    if (tenantStatus && !userToggledOverview) {
+      setShowOverview(!tenantStatus.settings?.hideOverviewByDefault);
+    }
+  }, [tenantStatus, userToggledOverview]);
 
   // Modals state
   const [linkModalOpen, setLinkModalOpen] = useState(false);
@@ -376,358 +390,436 @@ export const DashboardPage = () => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1600, margin: "0 auto" }}>
-      {/* Top Welcome & Season Header */}
-      <Paper
-        elevation={0}
+      {/* Top Header Row with Compact Overview Toggle */}
+      <Box
         sx={{
-          p: 3,
-          mb: 3,
-          borderRadius: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-          color: "white",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+          flexWrap: "wrap",
+          gap: 1.5,
         }}
       >
-        <Box
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: 800, color: "text.primary" }}
+          >
+            Painel do Evento
+          </Typography>
+          {activeSeason ? (
+            <Chip
+              icon={<EventNoteRoundedIcon style={{ color: "#0284c7" }} />}
+              label={activeSeason.name}
+              size="small"
+              variant="outlined"
+              color="primary"
+              sx={{ fontWeight: 600 }}
+            />
+          ) : (
+            <Chip
+              label="Sem evento ativo"
+              size="small"
+              color="warning"
+              variant="outlined"
+              sx={{ fontWeight: 600 }}
+            />
+          )}
+        </Box>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Tooltip
+            title={
+              showOverview
+                ? "Ocultar Visão Geral e Métricas"
+                : "Exibir Visão Geral e Métricas"
+            }
+          >
+            <Button
+              size="small"
+              variant={showOverview ? "outlined" : "contained"}
+              startIcon={
+                showOverview ? (
+                  <VisibilityOffRoundedIcon />
+                ) : (
+                  <VisibilityRoundedIcon />
+                )
+              }
+              onClick={() => {
+                setShowOverview((prev) => !prev);
+                setUserToggledOverview(true);
+              }}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                borderRadius: 2,
+                px: 1.5,
+              }}
+            >
+              {showOverview ? "Ocultar Visão Geral" : "Exibir Visão Geral"}
+            </Button>
+          </Tooltip>
+        </Box>
+      </Box>
+
+      {/* Overview Section (Welcome Header & Metrics Cards) */}
+      <Collapse in={showOverview} timeout="auto" unmountOnExit={false}>
+        {/* Top Welcome & Season Header */}
+        <Paper
+          elevation={0}
           sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 2,
+            p: 3,
+            mb: 3,
+            borderRadius: 3,
+            border: "1px solid",
+            borderColor: "divider",
+            background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+            color: "white",
           }}
         >
-          <Box>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 800,
-                fontSize: { xs: "1.5rem", sm: "2.125rem" },
-                letterSpacing: "-0.5px",
-                color: "#ffffff",
-              }}
-            >
-              Visão Geral
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: "grey.300",
-                mt: 0.5,
-                fontSize: { xs: "0.85rem", sm: "1rem" },
-              }}
-            >
-              {activeSeason
-                ? `Clientes, cães e fotos vinculados ao evento "${activeSeason.name}".`
-                : "Selecione um evento no cabeçalho para gerenciar os clientes e fotos."}
-            </Typography>
-          </Box>
-
           <Box
             sx={{
               display: "flex",
+              justifyContent: "space-between",
               alignItems: "center",
               flexWrap: "wrap",
-              gap: 1.5,
-              width: { xs: "100%", md: "auto" },
+              gap: 2,
             }}
           >
-            {activeSeason ? (
-              <Chip
-                icon={<EventNoteRoundedIcon style={{ color: "#38bdf8" }} />}
-                label={`Evento: ${activeSeason.name}`}
+            <Box>
+              <Typography
+                variant="h4"
                 sx={{
-                  bgcolor: "rgba(56, 189, 248, 0.15)",
-                  color: "#38bdf8",
-                  fontWeight: 700,
-                  fontSize: "0.95rem",
-                  py: 2.2,
-                  px: 1,
-                  borderRadius: 2,
-                  border: "1px solid rgba(56, 189, 248, 0.3)",
+                  fontWeight: 800,
+                  fontSize: { xs: "1.5rem", sm: "2.125rem" },
+                  letterSpacing: "-0.5px",
+                  color: "#ffffff",
                 }}
-              />
-            ) : (
-              <Chip
-                label="Selecione um evento no menu superior"
+              >
+                Visão Geral
+              </Typography>
+              <Typography
+                variant="body1"
                 sx={{
-                  bgcolor: "warning.main",
-                  color: "warning.contrastText",
-                  fontWeight: 700,
+                  color: "grey.300",
+                  mt: 0.5,
+                  fontSize: { xs: "0.85rem", sm: "1rem" },
                 }}
-              />
-            )}
-            <Tooltip title={isReportsBlocked ? getReportsBlockedReason() : ""}>
-              <span>
-                <Button
-                  variant="outlined"
-                  startIcon={
-                    exportingReport ? (
-                      <CircularProgress size={16} color="inherit" />
-                    ) : (
-                      <AssessmentIcon />
-                    )
-                  }
-                  endIcon={<ExpandMoreIcon />}
-                  onClick={(e) => setReportMenuAnchor(e.currentTarget)}
-                  disabled={exportingReport || isReportsBlocked}
-                  sx={{
-                    borderColor: "rgba(255,255,255,0.4)",
-                    color: "white",
-                    "&:hover": {
-                      borderColor: "white",
-                      bgcolor: "rgba(255,255,255,0.08)",
-                    },
-                    borderRadius: 2,
-                    textTransform: "none",
-                    fontWeight: 600,
-                  }}
-                >
-                  {exportingReport ? "Gerando..." : "Relatórios"}
-                </Button>
-              </span>
-            </Tooltip>
-            <Menu
-              anchorEl={reportMenuAnchor}
-              open={Boolean(reportMenuAnchor)}
-              onClose={() => setReportMenuAnchor(null)}
+              >
+                {activeSeason
+                  ? `Clientes, cães e fotos vinculados ao evento "${activeSeason.name}".`
+                  : "Selecione um evento no cabeçalho para gerenciar os clientes e fotos."}
+              </Typography>
+            </Box>
+
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 1.5,
+                width: { xs: "100%", md: "auto" },
+              }}
             >
-              <MenuItem onClick={handleExportClientsPdf}>
-                <ListItemIcon>
-                  <PictureAsPdfIcon fontSize="small" color="error" />
-                </ListItemIcon>
-                Exportar Relatório (.pdf)
-              </MenuItem>
-              <MenuItem onClick={handleExportClientsCsv}>
-                <ListItemIcon>
-                  <FileDownloadIcon fontSize="small" />
-                </ListItemIcon>
-                Exportar Clientes (.csv)
-              </MenuItem>
-              <MenuItem onClick={handleExportPaidClientsCsv}>
-                <ListItemIcon>
-                  <FileDownloadIcon fontSize="small" />
-                </ListItemIcon>
-                Exportar Pagos (.csv)
-              </MenuItem>
-              <MenuItem onClick={handleExportUnpaidClientsCsv}>
-                <ListItemIcon>
-                  <FileDownloadIcon fontSize="small" />
-                </ListItemIcon>
-                Exportar Não Pagos (.csv)
-              </MenuItem>
-            </Menu>
+              {activeSeason ? (
+                <Chip
+                  icon={<EventNoteRoundedIcon style={{ color: "#38bdf8" }} />}
+                  label={`Evento: ${activeSeason.name}`}
+                  sx={{
+                    bgcolor: "rgba(56, 189, 248, 0.15)",
+                    color: "#38bdf8",
+                    fontWeight: 700,
+                    fontSize: "0.95rem",
+                    py: 2.2,
+                    px: 1,
+                    borderRadius: 2,
+                    border: "1px solid rgba(56, 189, 248, 0.3)",
+                  }}
+                />
+              ) : (
+                <Chip
+                  label="Selecione um evento no menu superior"
+                  sx={{
+                    bgcolor: "warning.main",
+                    color: "warning.contrastText",
+                    fontWeight: 700,
+                  }}
+                />
+              )}
+              <Tooltip
+                title={isReportsBlocked ? getReportsBlockedReason() : ""}
+              >
+                <span>
+                  <Button
+                    variant="outlined"
+                    startIcon={
+                      exportingReport ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : (
+                        <AssessmentIcon />
+                      )
+                    }
+                    endIcon={<ExpandMoreIcon />}
+                    onClick={(e) => setReportMenuAnchor(e.currentTarget)}
+                    disabled={exportingReport || isReportsBlocked}
+                    sx={{
+                      borderColor: "rgba(255,255,255,0.4)",
+                      color: "white",
+                      "&:hover": {
+                        borderColor: "white",
+                        bgcolor: "rgba(255,255,255,0.08)",
+                      },
+                      borderRadius: 2,
+                      textTransform: "none",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {exportingReport ? "Gerando..." : "Relatórios"}
+                  </Button>
+                </span>
+              </Tooltip>
+              <Menu
+                anchorEl={reportMenuAnchor}
+                open={Boolean(reportMenuAnchor)}
+                onClose={() => setReportMenuAnchor(null)}
+              >
+                <MenuItem onClick={handleExportClientsPdf}>
+                  <ListItemIcon>
+                    <PictureAsPdfIcon fontSize="small" color="error" />
+                  </ListItemIcon>
+                  Exportar Relatório (.pdf)
+                </MenuItem>
+                <MenuItem onClick={handleExportClientsCsv}>
+                  <ListItemIcon>
+                    <FileDownloadIcon fontSize="small" />
+                  </ListItemIcon>
+                  Exportar Clientes (.csv)
+                </MenuItem>
+                <MenuItem onClick={handleExportPaidClientsCsv}>
+                  <ListItemIcon>
+                    <FileDownloadIcon fontSize="small" />
+                  </ListItemIcon>
+                  Exportar Pagos (.csv)
+                </MenuItem>
+                <MenuItem onClick={handleExportUnpaidClientsCsv}>
+                  <ListItemIcon>
+                    <FileDownloadIcon fontSize="small" />
+                  </ListItemIcon>
+                  Exportar Não Pagos (.csv)
+                </MenuItem>
+              </Menu>
+            </Box>
           </Box>
-        </Box>
-      </Paper>
+        </Paper>
 
-      {/* Metrics Cards */}
-      <Grid container spacing={2.5} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
-              background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-            }}
-          >
-            <CardContent sx={{ p: 2.5 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Box>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ fontWeight: 600, textTransform: "uppercase" }}
-                  >
-                    Total de Pessoas
-                  </Typography>
-                  <Typography
-                    variant="h4"
-                    sx={{ fontWeight: 800, mt: 0.5, color: "text.primary" }}
-                  >
-                    {metrics.totalPeople}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {metrics.activeSeasonClients} neste evento
-                  </Typography>
-                </Box>
-                <Avatar
+        {/* Metrics Cards */}
+        <Grid container spacing={2.5} sx={{ mb: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+              }}
+            >
+              <CardContent sx={{ p: 2.5 }}>
+                <Box
                   sx={{
-                    bgcolor: "primary.light",
-                    color: "primary.main",
-                    width: 48,
-                    height: 48,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
-                  <PeopleAltRoundedIcon />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
-              background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-            }}
-          >
-            <CardContent sx={{ p: 2.5 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Box>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ fontWeight: 600, textTransform: "uppercase" }}
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontWeight: 600, textTransform: "uppercase" }}
+                    >
+                      Total de Pessoas
+                    </Typography>
+                    <Typography
+                      variant="h4"
+                      sx={{ fontWeight: 800, mt: 0.5, color: "text.primary" }}
+                    >
+                      {metrics.totalPeople}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {metrics.activeSeasonClients} neste evento
+                    </Typography>
+                  </Box>
+                  <Avatar
+                    sx={{
+                      bgcolor: "primary.light",
+                      color: "primary.main",
+                      width: 48,
+                      height: 48,
+                    }}
                   >
-                    Cachorros no Evento
-                  </Typography>
-                  <Typography
-                    variant="h4"
-                    sx={{ fontWeight: 800, mt: 0.5, color: "text.primary" }}
-                  >
-                    {metrics.totalDogs}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Cadastrados no evento ativo
-                  </Typography>
+                    <PeopleAltRoundedIcon />
+                  </Avatar>
                 </Box>
-                <Avatar
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+              }}
+            >
+              <CardContent sx={{ p: 2.5 }}>
+                <Box
                   sx={{
-                    bgcolor: "#e0e7ff",
-                    color: "#4f46e5",
-                    width: 48,
-                    height: 48,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
-                  <PetsRoundedIcon />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
-              background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-            }}
-          >
-            <CardContent sx={{ p: 2.5 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Box>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ fontWeight: 600, textTransform: "uppercase" }}
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontWeight: 600, textTransform: "uppercase" }}
+                    >
+                      Cachorros no Evento
+                    </Typography>
+                    <Typography
+                      variant="h4"
+                      sx={{ fontWeight: 800, mt: 0.5, color: "text.primary" }}
+                    >
+                      {metrics.totalDogs}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Cadastrados no evento ativo
+                    </Typography>
+                  </Box>
+                  <Avatar
+                    sx={{
+                      bgcolor: "#e0e7ff",
+                      color: "#4f46e5",
+                      width: 48,
+                      height: 48,
+                    }}
                   >
-                    Fotos Registradas
-                  </Typography>
-                  <Typography
-                    variant="h4"
-                    sx={{ fontWeight: 800, mt: 0.5, color: "text.primary" }}
-                  >
-                    {metrics.totalPhotos}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Total neste evento
-                  </Typography>
+                    <PetsRoundedIcon />
+                  </Avatar>
                 </Box>
-                <Avatar
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+              }}
+            >
+              <CardContent sx={{ p: 2.5 }}>
+                <Box
                   sx={{
-                    bgcolor: "#ecfdf5",
-                    color: "#059669",
-                    width: 48,
-                    height: 48,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
-                  <PhotoCameraRoundedIcon />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
-              background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-            }}
-          >
-            <CardContent sx={{ p: 2.5 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Box>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ fontWeight: 600, textTransform: "uppercase" }}
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontWeight: 600, textTransform: "uppercase" }}
+                    >
+                      Fotos Registradas
+                    </Typography>
+                    <Typography
+                      variant="h4"
+                      sx={{ fontWeight: 800, mt: 0.5, color: "text.primary" }}
+                    >
+                      {metrics.totalPhotos}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Total neste evento
+                    </Typography>
+                  </Box>
+                  <Avatar
+                    sx={{
+                      bgcolor: "#ecfdf5",
+                      color: "#059669",
+                      width: 48,
+                      height: 48,
+                    }}
                   >
-                    Arrecadação Total
-                  </Typography>
-                  <Typography
-                    variant="h4"
-                    sx={{ fontWeight: 800, mt: 0.5, color: "success.main" }}
-                  >
-                    R$ {metrics.totalRevenue.toFixed(2)}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Fotos pagas
-                  </Typography>
+                    <PhotoCameraRoundedIcon />
+                  </Avatar>
                 </Box>
-                <Avatar
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+              }}
+            >
+              <CardContent sx={{ p: 2.5 }}>
+                <Box
                   sx={{
-                    bgcolor: "#fef3c7",
-                    color: "#d97706",
-                    width: 48,
-                    height: 48,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
-                  <AttachMoneyRoundedIcon />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontWeight: 600, textTransform: "uppercase" }}
+                    >
+                      Arrecadação Total
+                    </Typography>
+                    <Typography
+                      variant="h4"
+                      sx={{ fontWeight: 800, mt: 0.5, color: "success.main" }}
+                    >
+                      R$ {metrics.totalRevenue.toFixed(2)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Fotos pagas
+                    </Typography>
+                  </Box>
+                  <Avatar
+                    sx={{
+                      bgcolor: "#fef3c7",
+                      color: "#d97706",
+                      width: 48,
+                      height: 48,
+                    }}
+                  >
+                    <AttachMoneyRoundedIcon />
+                  </Avatar>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-      </Grid>
+      </Collapse>
 
       {/* Event Warning if None Active */}
       {!activeSeason ? (

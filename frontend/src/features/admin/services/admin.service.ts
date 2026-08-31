@@ -7,6 +7,7 @@ import {
   Tenant,
   UpdateTenantPaymentStatusPayload,
   UpdateTenantPlanPayload,
+  UpdateTenantSettingsPayload,
 } from "../types/admin.types";
 
 export const adminService = {
@@ -41,6 +42,17 @@ export const adminService = {
   ): Promise<Tenant> {
     const response = await apiClient.put<ApiEnvelope<{ tenant: Tenant }>>(
       `/admin/tenants/${encodeURIComponent(name)}/payment-status`,
+      payload,
+    );
+    return response.data.data.tenant;
+  },
+
+  async updateTenantSettings(
+    name: string,
+    payload: UpdateTenantSettingsPayload,
+  ): Promise<Tenant> {
+    const response = await apiClient.put<ApiEnvelope<{ tenant: Tenant }>>(
+      `/admin/tenants/${encodeURIComponent(name)}/settings`,
       payload,
     );
     return response.data.data.tenant;
