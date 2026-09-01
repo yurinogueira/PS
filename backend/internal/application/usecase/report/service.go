@@ -110,6 +110,18 @@ func NormalizePaymentMethod(method string) string {
 	}
 }
 
+// FormatPaidAmount formats the amount paid with the proper currency symbol ($ for USD, R$ for BRL / default)
+func FormatPaidAmount(amount *float64, currency string) string {
+	if amount == nil {
+		return ""
+	}
+	symbol := "R$"
+	if strings.ToUpper(strings.TrimSpace(currency)) == "USD" {
+		symbol = "$"
+	}
+	return fmt.Sprintf("%s %.2f", symbol, *amount)
+}
+
 // SanitizeCSVField prevents CSV Formula Injection (CWE-1236)
 func SanitizeCSVField(val string) string {
 	if len(val) == 0 {
@@ -303,9 +315,7 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, seasonID, us
 						photographerName = photo.PhotographerID
 					}
 					paymentMethod = NormalizePaymentMethod(photo.PaymentMethod)
-					if photo.AmountPaid != nil {
-						amountPaid = fmt.Sprintf("%.2f", *photo.AmountPaid)
-					}
+					amountPaid = FormatPaidAmount(photo.AmountPaid, photo.Currency)
 					photoDate = formatPhotoDate(&photo, c.CreatedAt)
 					if i < numPhotos {
 						judgeStr = formatJudges(&photo)
@@ -466,10 +476,7 @@ func (s *Service) GenerateUnpaidClientsCSV(ctx context.Context, tenantID, season
 					paymentStatus = "Não pago"
 				}
 
-				var amount string
-				if photo.AmountPaid != nil {
-					amount = fmt.Sprintf("%.2f", *photo.AmountPaid)
-				}
+				amount := FormatPaidAmount(photo.AmountPaid, photo.Currency)
 
 				judgeStr := formatJudges(&photo)
 
@@ -619,11 +626,7 @@ func (s *Service) GeneratePaidClientsCSV(ctx context.Context, tenantID, seasonID
 					photographerName = photo.PhotographerID
 				}
 
-				var amountPaid string
-				if photo.AmountPaid != nil {
-					amountPaid = fmt.Sprintf("%.2f", *photo.AmountPaid)
-				}
-
+				amountPaid := FormatPaidAmount(photo.AmountPaid, photo.Currency)
 				photoDate := formatPhotoDate(&photo, c.CreatedAt)
 				judgeStr := formatJudges(&photo)
 
@@ -932,9 +935,7 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string
 						photo := dog.Photos[rIdx]
 						colFile = photo.FileNumber
 						colPayment = NormalizePaymentMethod(photo.PaymentMethod)
-						if photo.AmountPaid != nil {
-							colAmount = fmt.Sprintf("R$ %.2f", *photo.AmountPaid)
-						}
+						colAmount = FormatPaidAmount(photo.AmountPaid, photo.Currency)
 						colDate = formatPhotoDate(&photo, client.CreatedAt)
 						colJudge = formatJudgesPDF(&photo)
 					}

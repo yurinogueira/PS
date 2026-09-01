@@ -395,4 +395,72 @@ describe("DashboardPage", () => {
       screen.getByRole("button", { name: /Exibir Visão Geral/i }),
     ).toBeInTheDocument();
   });
+
+  it("renders revenue separated into BRL and USD without summing them", async () => {
+    useSeasonStore.setState({
+      activeSeason: { id: "season-1", name: "Temporada 2026" },
+    });
+
+    vi.spyOn(clientService, "list").mockResolvedValue({
+      data: [
+        {
+          id: "client-1",
+          person_id: "person-1",
+          season_id: "season-1",
+          dogs: [
+            {
+              breed: "Border Collie",
+              competitions_won: 0,
+              photos: [
+                {
+                  file_number: "DSC_001",
+                  photographer_id: "photog-1",
+                  payment_method: "Pix",
+                  currency: "BRL",
+                  amount_paid: 250,
+                },
+                {
+                  file_number: "DSC_002",
+                  photographer_id: "photog-1",
+                  payment_method: "Cartão de Crédito",
+                  currency: "USD",
+                  amount_paid: 75,
+                },
+                {
+                  file_number: "DSC_003",
+                  photographer_id: "photog-1",
+                  payment_method: "Não pago",
+                  amount_paid: 100,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    });
+
+    vi.spyOn(personService, "list").mockResolvedValue([
+      {
+        id: "person-1",
+        name: "Carlos Ferreira",
+        email: "carlos@example.com",
+        alternative_email: "",
+        phone: "1199999999",
+      },
+    ]);
+
+    render(
+      <BrowserRouter>
+        <DashboardPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("R$ 250.00")).toBeInTheDocument();
+      expect(screen.getByText("$ 75.00")).toBeInTheDocument();
+    });
+  });
 });

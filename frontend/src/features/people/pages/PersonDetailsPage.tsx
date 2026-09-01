@@ -532,12 +532,24 @@ export const PersonDetailsPage = () => {
   }, [photographers]);
 
   const dogStats = useMemo(() => {
-    if (!selectedDog) return { totalPhotos: 0, totalPaid: 0 };
+    if (!selectedDog)
+      return { totalPhotos: 0, totalPaidBRL: 0, totalPaidUSD: 0 };
     const photos = selectedDog.photos || [];
-    const totalPaid = photos.reduce((sum, p) => sum + (p.amount_paid || 0), 0);
+    let totalPaidBRL = 0;
+    let totalPaidUSD = 0;
+    photos.forEach((p) => {
+      if (p.payment_method !== "Não pago" && p.amount_paid) {
+        if (p.currency === "USD") {
+          totalPaidUSD += p.amount_paid;
+        } else {
+          totalPaidBRL += p.amount_paid;
+        }
+      }
+    });
     return {
       totalPhotos: photos.length,
-      totalPaid,
+      totalPaidBRL,
+      totalPaidUSD,
     };
   }, [selectedDog]);
 
@@ -1068,17 +1080,44 @@ export const PersonDetailsPage = () => {
                     })}
                   </Typography>
                 </Box>
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  <Chip
-                    icon={<AttachMoneyIcon />}
-                    label={t("personDetails.totalCollected", {
-                      currency: "R$",
-                      amount: dogStats.totalPaid.toFixed(2),
-                    })}
-                    color="success"
-                    variant="outlined"
-                    sx={{ fontWeight: 700 }}
-                  />
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                  {dogStats.totalPaidUSD > 0 && (
+                    <Chip
+                      icon={<AttachMoneyIcon />}
+                      label={t("personDetails.totalCollected", {
+                        currency: "$",
+                        amount: dogStats.totalPaidUSD.toFixed(2),
+                      })}
+                      color="success"
+                      variant="outlined"
+                      sx={{ fontWeight: 700 }}
+                    />
+                  )}
+                  {dogStats.totalPaidBRL > 0 && (
+                    <Chip
+                      icon={<AttachMoneyIcon />}
+                      label={t("personDetails.totalCollected", {
+                        currency: "R$",
+                        amount: dogStats.totalPaidBRL.toFixed(2),
+                      })}
+                      color="success"
+                      variant="outlined"
+                      sx={{ fontWeight: 700 }}
+                    />
+                  )}
+                  {dogStats.totalPaidBRL === 0 &&
+                    dogStats.totalPaidUSD === 0 && (
+                      <Chip
+                        icon={<AttachMoneyIcon />}
+                        label={t("personDetails.totalCollected", {
+                          currency: "R$",
+                          amount: "0.00",
+                        })}
+                        color="success"
+                        variant="outlined"
+                        sx={{ fontWeight: 700 }}
+                      />
+                    )}
                 </Box>
               </Box>
 

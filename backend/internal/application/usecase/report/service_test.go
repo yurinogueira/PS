@@ -197,6 +197,7 @@ func TestGenerateClientsCSV_FullExpansionAndRules(t *testing.T) {
 								FileNumber:     "IMG_002",
 								PhotographerID: "photog-2",
 								PaymentMethod:  "Credit Card",
+								Currency:       "USD",
 								AmountPaid:     &amount200,
 								Judges:         []string{"Juiz Silva"},
 							},
@@ -319,11 +320,11 @@ func TestGenerateClientsCSV_FullExpansionAndRules(t *testing.T) {
 	// Check dog-1 rows (2 rows)
 	// Headers: Nome[0], Email[1], AltEmail[2], Phone[3], Dono[4], Raca[5], Juiz[6], Comp[7], Arquivo[8], Fotografo[9], Pagamento[10], Valor[11], Data[12]
 	row1 := records[1]
-	if row1[0] != "Maria Souza" || row1[3] != "(11) 99999-8888" || row1[4] != "Sim" || row1[5] != "Border Collie" || row1[6] != "Juiz Silva" || row1[7] != "Melhor da Raça" || row1[8] != "IMG_001" || row1[9] != "Fotógrafo Alpha" || row1[10] != "Pix" || row1[11] != "100.50" {
+	if row1[0] != "Maria Souza" || row1[3] != "(11) 99999-8888" || row1[4] != "Sim" || row1[5] != "Border Collie" || row1[6] != "Juiz Silva" || row1[7] != "Melhor da Raça" || row1[8] != "IMG_001" || row1[9] != "Fotógrafo Alpha" || row1[10] != "Pix" || row1[11] != "R$ 100.50" {
 		t.Fatalf("row 1 mismatch: %v", row1)
 	}
 	row2 := records[2]
-	if row2[3] != "(11) 99999-8888" || row2[7] != "Campeão Adulto" || row2[8] != "IMG_002" || row2[9] != "Fotógrafo Beta" || row2[10] != "Cartão de Crédito" || row2[11] != "200.00" {
+	if row2[3] != "(11) 99999-8888" || row2[7] != "Campeão Adulto" || row2[8] != "IMG_002" || row2[9] != "Fotógrafo Beta" || row2[10] != "Cartão de Crédito" || row2[11] != "$ 200.00" {
 		t.Fatalf("row 2 mismatch: %v", row2)
 	}
 
@@ -512,6 +513,32 @@ func TestNormalizePaymentMethod(t *testing.T) {
 	}
 }
 
+func TestFormatPaidAmount(t *testing.T) {
+	val100 := 100.50
+	valZero := 0.0
+	cases := []struct {
+		amount   *float64
+		currency string
+		expected string
+	}{
+		{nil, "BRL", ""},
+		{nil, "USD", ""},
+		{&val100, "USD", "$ 100.50"},
+		{&val100, "usd", "$ 100.50"},
+		{&val100, "BRL", "R$ 100.50"},
+		{&val100, "", "R$ 100.50"},
+		{&valZero, "USD", "$ 0.00"},
+		{&valZero, "BRL", "R$ 0.00"},
+	}
+
+	for _, tc := range cases {
+		got := FormatPaidAmount(tc.amount, tc.currency)
+		if got != tc.expected {
+			t.Errorf("FormatPaidAmount(%v, %q) = %q, expected %q", tc.amount, tc.currency, got, tc.expected)
+		}
+	}
+}
+
 func TestGenerateUnpaidClientsCSV(t *testing.T) {
 	tenantID := "tenant-456"
 	amount50 := 50.0
@@ -673,7 +700,7 @@ func TestGenerateUnpaidClientsCSV(t *testing.T) {
 
 	// Row 1: client-1 photo 2
 	row1 := records[1]
-	if row1[0] != "Carlos Lima" || row1[3] != "(11) 98888-7777" || row1[4] != "Golden" || row1[5] != "Juiz A" || row1[6] != "'=CMD_INJECTION" || row1[7] != "Fotógrafo Beta" || row1[8] != "Não pago" || row1[9] != "150.00" {
+	if row1[0] != "Carlos Lima" || row1[3] != "(11) 98888-7777" || row1[4] != "Golden" || row1[5] != "Juiz A" || row1[6] != "'=CMD_INJECTION" || row1[7] != "Fotógrafo Beta" || row1[8] != "Não pago" || row1[9] != "R$ 150.00" {
 		t.Fatalf("row 1 mismatch: %v", row1)
 	}
 
@@ -864,6 +891,7 @@ func TestGeneratePaidClientsCSV(t *testing.T) {
 								FileNumber:     "IMG_101",
 								PhotographerID: "photog-2",
 								PaymentMethod:  "Cartão de Crédito",
+								Currency:       "USD",
 								AmountPaid:     &amount250,
 								Judges:         []string{"Juiz Santos", "Juiz Oliveira"},
 							},
@@ -992,19 +1020,19 @@ func TestGeneratePaidClientsCSV(t *testing.T) {
 
 	// Row 1 (IMG_100): Pix
 	row1 := records[1]
-	if row1[0] != "Carlos Albuquerque" || row1[3] != "(11) 98888-9999" || row1[4] != "Sim" || row1[5] != "Golden Retriever" || row1[6] != "Juiz Santos" || row1[7] != "Campeão Jovem, Melhor da Raça" || row1[8] != "IMG_100" || row1[9] != "Fotógrafo Principal" || row1[10] != "Pix" || row1[11] != "100.00" {
+	if row1[0] != "Carlos Albuquerque" || row1[3] != "(11) 98888-9999" || row1[4] != "Sim" || row1[5] != "Golden Retriever" || row1[6] != "Juiz Santos" || row1[7] != "Campeão Jovem, Melhor da Raça" || row1[8] != "IMG_100" || row1[9] != "Fotógrafo Principal" || row1[10] != "Pix" || row1[11] != "R$ 100.00" {
 		t.Fatalf("unexpected row 1: %v", row1)
 	}
 
-	// Row 2 (IMG_101): Cartão de Crédito
+	// Row 2 (IMG_101): Cartão de Crédito (USD)
 	row2 := records[2]
-	if row2[8] != "IMG_101" || row2[9] != "Fotógrafo Secundário" || row2[10] != "Cartão de Crédito" || row2[11] != "250.50" || row2[6] != "Juiz Santos, Juiz Oliveira" {
+	if row2[8] != "IMG_101" || row2[9] != "Fotógrafo Secundário" || row2[10] != "Cartão de Crédito" || row2[11] != "$ 250.50" || row2[6] != "Juiz Santos, Juiz Oliveira" {
 		t.Fatalf("unexpected row 2: %v", row2)
 	}
 
 	// Row 3 (Malicious formula sanitized): Dinheiro
 	row3 := records[3]
-	if row3[4] != "Não" || row3[5] != "Border Collie" || row3[7] != "Sim" || row3[8] != "'=MALICIOUS_CMD" || row3[10] != "Dinheiro" || row3[11] != "50.00" {
+	if row3[4] != "Não" || row3[5] != "Border Collie" || row3[7] != "Sim" || row3[8] != "'=MALICIOUS_CMD" || row3[10] != "Dinheiro" || row3[11] != "R$ 50.00" {
 		t.Fatalf("unexpected row 3: %v", row3)
 	}
 
