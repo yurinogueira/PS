@@ -100,7 +100,7 @@ export const ClientDetailsPage = () => {
       await clientService.update(id, client);
       setSnackbar({
         open: true,
-        message: "Cliente atualizado com sucesso!",
+        message: t("clientDetails.successUpdate"),
         severity: "success",
       });
       load();
@@ -108,7 +108,7 @@ export const ClientDetailsPage = () => {
       console.error(e);
       setSnackbar({
         open: true,
-        message: "Erro ao salvar alterações do cliente.",
+        message: t("clientDetails.errorSave"),
         severity: "error",
       });
     }
@@ -123,7 +123,7 @@ export const ClientDetailsPage = () => {
       console.error(e);
       setSnackbar({
         open: true,
-        message: "Erro ao excluir cliente.",
+        message: t("clientDetails.errorDelete"),
         severity: "error",
       });
     }
@@ -283,16 +283,17 @@ export const ClientDetailsPage = () => {
       {person && (
         <Paper sx={{ p: 2, mb: 3 }}>
           <Typography variant="h6" gutterBottom>
-            Dados da Pessoa
+            {t("clientDetails.personData")}
           </Typography>
           <Typography variant="body1">
-            <strong>Nome:</strong> {person.name}
+            <strong>{t("clientDetails.name")}</strong> {person.name}
           </Typography>
           <Typography variant="body1">
-            <strong>E-mail:</strong> {person.email || "-"}
+            <strong>{t("clientDetails.email")}</strong> {person.email || "-"}
           </Typography>
           <Typography variant="body1">
-            <strong>Telefone:</strong> {formatPhone(person.phone) || "-"}
+            <strong>{t("clientDetails.phone")}</strong>{" "}
+            {formatPhone(person.phone) || "-"}
           </Typography>
         </Paper>
       )}
@@ -333,7 +334,7 @@ export const ClientDetailsPage = () => {
                   e.stopPropagation();
                   removeDog(dIdx);
                 }}
-                title="Excluir Cachorro"
+                title={t("clientDetails.confirmDeleteDog.confirm")}
               >
                 <DeleteIcon />
               </IconButton>
@@ -371,7 +372,7 @@ export const ClientDetailsPage = () => {
                     }
                   />
                 }
-                label="Dono?"
+                label={t("clientDetails.isOwner")}
               />
             </Box>
 
@@ -608,10 +609,10 @@ export const ClientDetailsPage = () => {
                         minWidth: "120px",
                       }}
                     >
-                      <InputLabel required>Moeda</InputLabel>
+                      <InputLabel required>{t("shared.currency")}</InputLabel>
                       <Select
                         value={photo.currency || "BRL"}
-                        label="Moeda *"
+                        label={`${t("shared.currency")} *`}
                         onChange={(e) =>
                           updatePhoto(dIdx, pIdx, "currency", e.target.value)
                         }
@@ -654,7 +655,7 @@ export const ClientDetailsPage = () => {
                   color="error"
                   size="small"
                   onClick={() => removePhoto(dIdx, pIdx)}
-                  title="Excluir Foto"
+                  title={t("clientDetails.confirmDeletePhoto.confirm")}
                   sx={{ ml: { xs: "auto", sm: 0 } }}
                 >
                   <DeleteIcon fontSize="small" />

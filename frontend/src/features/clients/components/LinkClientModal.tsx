@@ -319,7 +319,7 @@ export const LinkClientModal = ({
                     }
                   />
                 }
-                label="Dono?"
+                label={t("clientDetails.isOwner")}
               />
             </Box>
 
@@ -530,12 +530,12 @@ export const LinkClientModal = ({
                   <>
                     <FormControl size="small" sx={{ minWidth: 120 }}>
                       <InputLabel id={`currency-label-${dIdx}-${pIdx}`}>
-                        Moeda
+                        {t("shared.currency")}
                       </InputLabel>
                       <Select
                         labelId={`currency-label-${dIdx}-${pIdx}`}
                         value={photo.currency || "BRL"}
-                        label="Moeda"
+                        label={t("shared.currency")}
                         onChange={(e) =>
                           updatePhoto(dIdx, pIdx, "currency", e.target.value)
                         }

@@ -183,15 +183,12 @@ export function ProfilePage() {
     try {
       setResendingEmail(true);
       const res = await authService.resendVerification();
-      setEmailSuccess(
-        res.message || "E-mail de confirmação reenviado com sucesso!",
-      );
+      setEmailSuccess(res.message || t("profile.successResendEmail"));
       setCooldown(60); // 60s cooldown
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } } };
       setEmailError(
-        errorObj.response?.data?.message ||
-          "Não foi possível reenviar o e-mail de confirmação.",
+        errorObj.response?.data?.message || t("profile.errorResendEmail"),
       );
     } finally {
       setResendingEmail(false);
@@ -215,7 +212,7 @@ export function ProfilePage() {
           {t("profile.title")}
         </Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
-          Gerencie seus dados de acesso e status de e-mail.
+          {t("profile.subtitle")}
         </Typography>
       </Box>
 
@@ -247,7 +244,7 @@ export function ProfilePage() {
                   sx={{ color: "primary.main", fontSize: 28 }}
                 />
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Status do E-mail
+                  {t("profile.emailStatus")}
                 </Typography>
               </Stack>
 
@@ -274,8 +271,8 @@ export function ProfilePage() {
                   <Chip
                     label={
                       isEmailVerified
-                        ? "E-mail Verificado"
-                        : "E-mail Não Verificado"
+                        ? t("profile.emailVerified")
+                        : t("profile.emailUnverified")
                     }
                     color={isEmailVerified ? "success" : "warning"}
                     size="small"
@@ -290,8 +287,8 @@ export function ProfilePage() {
                   }}
                 >
                   {isEmailVerified
-                    ? "Seu endereço de e-mail está verificado e seguro."
-                    : "Você precisa confirmar seu e-mail para usar a plataforma completamente."}
+                    ? t("profile.emailVerifiedDescription")
+                    : t("profile.emailUnverifiedDescription")}
                 </Typography>
               </Box>
 
@@ -332,10 +329,10 @@ export function ProfilePage() {
                   sx={{ fontWeight: 600 }}
                 >
                   {cooldown > 0
-                    ? `Reenviar em ${cooldown}s`
+                    ? t("profile.resendCooldown", { seconds: cooldown })
                     : resendingEmail
-                      ? "Enviando..."
-                      : "Reenviar e-mail de confirmação"}
+                      ? t("profile.sending")
+                      : t("profile.resendEmailBtn")}
                 </Button>
               )}
             </CardContent>

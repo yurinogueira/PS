@@ -153,13 +153,17 @@ export const PeoplePage = () => {
               <TableCell sx={{ fontWeight: 600 }}>
                 {t("people.fields.name")}
               </TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>E-mail</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>E-mail Alternativo</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("people.fields.email")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("people.fields.alternativeEmail")}
+              </TableCell>
               <TableCell sx={{ fontWeight: 600 }}>
                 {t("people.fields.phone")}
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>
-                Ações
+                {t("shared.actions")}
               </TableCell>
             </TableRow>
           </TableHead>
@@ -178,7 +182,7 @@ export const PeoplePage = () => {
                   <TableCell>{p.alternative_email || "-"}</TableCell>
                   <TableCell>{formatPhone(p.phone) || "-"}</TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Cachorros & Fotos">
+                    <Tooltip title={t("dashboard.actions.dogsAndPhotos")}>
                       <IconButton
                         color="secondary"
                         size="small"
@@ -236,14 +240,14 @@ export const PeoplePage = () => {
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
           <TextField
-            label="E-mail (Opcional)"
+            label={t("people.fields.emailOptional")}
             fullWidth
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
           <TextField
-            label="E-mail Alternativo (Opcional)"
+            label={t("people.fields.alternativeEmailOptional")}
             fullWidth
             type="email"
             value={form.alternative_email}

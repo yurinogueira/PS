@@ -226,7 +226,7 @@ export const ClientsPage = () => {
 
   const getPersonName = (pId: string) => {
     const p = people.find((item) => item.id === pId);
-    return p ? p.name : "Desconhecido";
+    return p ? p.name : t("clients.unknownPerson");
   };
 
   const handleExportPdfReport = async () => {
@@ -237,9 +237,7 @@ export const ClientsPage = () => {
       const res = await reportService.exportClientsPdf(activeSeason.id);
       setSnackbar({
         open: true,
-        message:
-          res.message ||
-          "Processamento do relatório em PDF iniciado! O link para download será enviado por e-mail quando o arquivo estiver pronto.",
+        message: res.message || t("clients.reports.pdfProcessing"),
         severity: "success",
       });
     } catch (err: unknown) {
@@ -248,8 +246,7 @@ export const ClientsPage = () => {
       setSnackbar({
         open: true,
         message:
-          errorObj.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório PDF.",
+          errorObj.response?.data?.message || t("clients.reports.pdfError"),
         severity: "error",
       });
     } finally {
@@ -265,9 +262,7 @@ export const ClientsPage = () => {
       const res = await reportService.exportClientsCsv(activeSeason.id);
       setSnackbar({
         open: true,
-        message:
-          res.message ||
-          "Processamento do relatório iniciado! O link para download do CSV será enviado por e-mail quando o arquivo estiver pronto.",
+        message: res.message || t("clients.reports.csvProcessing"),
         severity: "success",
       });
     } catch (err: unknown) {
@@ -276,8 +271,7 @@ export const ClientsPage = () => {
       setSnackbar({
         open: true,
         message:
-          errorObj.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório CSV.",
+          errorObj.response?.data?.message || t("clients.reports.csvError"),
         severity: "error",
       });
     } finally {
@@ -293,9 +287,7 @@ export const ClientsPage = () => {
       const res = await reportService.exportUnpaidClientsCsv(activeSeason.id);
       setSnackbar({
         open: true,
-        message:
-          res.message ||
-          "Processamento do relatório iniciado! O link para download do CSV de não pagos será enviado por e-mail.",
+        message: res.message || t("clients.reports.unpaidProcessing"),
         severity: "success",
       });
     } catch (err: unknown) {
@@ -304,8 +296,7 @@ export const ClientsPage = () => {
       setSnackbar({
         open: true,
         message:
-          errorObj.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório.",
+          errorObj.response?.data?.message || t("clients.reports.unpaidError"),
         severity: "error",
       });
     } finally {
@@ -321,9 +312,7 @@ export const ClientsPage = () => {
       const res = await reportService.exportPaidClientsCsv(activeSeason.id);
       setSnackbar({
         open: true,
-        message:
-          res.message ||
-          "Processamento do relatório iniciado! O link para download do CSV de clientes pagos será enviado por e-mail.",
+        message: res.message || t("clients.reports.paidProcessing"),
         severity: "success",
       });
     } catch (err: unknown) {
@@ -332,8 +321,7 @@ export const ClientsPage = () => {
       setSnackbar({
         open: true,
         message:
-          errorObj.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório de clientes pagos.",
+          errorObj.response?.data?.message || t("clients.reports.paidError"),
         severity: "error",
       });
     } finally {
@@ -344,7 +332,7 @@ export const ClientsPage = () => {
   if (!activeSeason) {
     return (
       <Box sx={{ p: 3 }}>
-        <Typography variant="h6">Selecione um Evento no topo.</Typography>
+        <Typography variant="h6">{t("dashboard.noSeason")}</Typography>
       </Box>
     );
   }
@@ -393,7 +381,9 @@ export const ClientsPage = () => {
             disabled={exportingReport}
             sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
           >
-            {exportingReport ? "Gerando..." : "Relatórios"}
+            {exportingReport
+              ? t("clients.reports.generating")
+              : t("clients.reports.reportsButton")}
           </Button>
 
           <Menu
@@ -411,25 +401,25 @@ export const ClientsPage = () => {
               <ListItemIcon>
                 <PictureAsPdfIcon fontSize="small" color="error" />
               </ListItemIcon>
-              Exportar Relatório (.pdf)
+              {t("clients.reports.exportPdf")}
             </MenuItem>
             <MenuItem onClick={handleExportClientsCsvReport}>
               <ListItemIcon>
                 <FileDownloadIcon fontSize="small" color="primary" />
               </ListItemIcon>
-              Exportar Clientes (.csv)
+              {t("clients.reports.exportClientsCsv")}
             </MenuItem>
             <MenuItem onClick={handleExportPaidClientsCsvReport}>
               <ListItemIcon>
                 <FileDownloadIcon fontSize="small" color="success" />
               </ListItemIcon>
-              Exportar Pagos (.csv)
+              {t("clients.reports.exportPaidCsv")}
             </MenuItem>
             <MenuItem onClick={handleExportUnpaidClientsCsvReport}>
               <ListItemIcon>
                 <FileDownloadIcon fontSize="small" color="warning" />
               </ListItemIcon>
-              Exportar Não Pagos (.csv)
+              {t("clients.reports.exportUnpaidCsv")}
             </MenuItem>
           </Menu>
 
@@ -457,13 +447,17 @@ export const ClientsPage = () => {
         <Table sx={{ minWidth: 550 }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>Pessoa</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("clients.columns.name")}
+              </TableCell>
               <TableCell sx={{ fontWeight: 600 }}>
                 {t("clientDetails.dogs")}
               </TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Total de Fotos</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("clients.columns.photos")}
+              </TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>
-                Ações
+                {t("clients.columns.actions")}
               </TableCell>
             </TableRow>
           </TableHead>
@@ -580,13 +574,13 @@ export const ClientsPage = () => {
                       }
                     />
                   }
-                  label="Dono do Cachorro (Opcional)"
+                  label={t("linkClient.fields.isOwnerOptional")}
                   sx={{ width: { xs: "100%", sm: "auto" } }}
                 />
                 <IconButton
                   color="error"
                   onClick={() => removeDog(dIdx)}
-                  title="Excluir Cachorro"
+                  title={t("clientDetails.confirmDeleteDog.confirm")}
                   sx={{ ml: { xs: "auto", sm: 0 } }}
                 >
                   <DeleteIcon />
@@ -824,10 +818,10 @@ export const ClientsPage = () => {
                           minWidth: "120px",
                         }}
                       >
-                        <InputLabel required>Moeda</InputLabel>
+                        <InputLabel required>{t("shared.currency")}</InputLabel>
                         <Select
                           value={photo.currency || "BRL"}
-                          label="Moeda *"
+                          label={`${t("shared.currency")} *`}
                           onChange={(e) =>
                             updatePhoto(dIdx, pIdx, "currency", e.target.value)
                           }
@@ -870,7 +864,7 @@ export const ClientsPage = () => {
                     color="error"
                     size="small"
                     onClick={() => removePhoto(dIdx, pIdx)}
-                    title="Excluir Foto"
+                    title={t("clientDetails.confirmDeletePhoto.confirm")}
                     sx={{ ml: { xs: "auto", sm: 0 } }}
                   >
                     <DeleteIcon fontSize="small" />

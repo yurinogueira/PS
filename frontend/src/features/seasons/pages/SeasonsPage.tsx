@@ -68,13 +68,13 @@ export const SeasonsPage = () => {
 
   const getCreateBlockedReason = () => {
     if (tenantStatus?.isUnpaid) {
-      return "Acesso suspenso por pendência de pagamento.";
+      return t("shared.tenantBanner.unpaidShort");
     }
     if (tenantStatus?.isTrialExpired) {
-      return "Período de teste gratuito expirado.";
+      return t("shared.tenantBanner.trialExpiredShort");
     }
     if (tenantStatus?.clientLimitExceeded) {
-      return "Limite de clientes cadastrados no plano atual excedido.";
+      return t("shared.tenantBanner.clientLimitExceededShort");
     }
     return "";
   };
@@ -237,7 +237,7 @@ export const SeasonsPage = () => {
                 {t("seasons.fields.judges")}
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>
-                Ações
+                {t("shared.actions")}
               </TableCell>
             </TableRow>
           </TableHead>
@@ -257,8 +257,9 @@ export const SeasonsPage = () => {
                     <TableCell>{s.id}</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>{s.name}</TableCell>
                     <TableCell>
-                      {associatedPhotogs}{" "}
-                      {associatedPhotogs === 1 ? "associado" : "associados"}
+                      {t("seasons.associatedPhotographers", {
+                        count: associatedPhotogs,
+                      })}
                     </TableCell>
                     <TableCell>
                       {associatedJudges > 0 ? (
@@ -284,7 +285,7 @@ export const SeasonsPage = () => {
                         </Box>
                       ) : (
                         <Typography variant="caption" color="text.secondary">
-                          Nenhum juiz cadastrado
+                          {t("seasons.noJudges")}
                         </Typography>
                       )}
                     </TableCell>
@@ -292,13 +293,13 @@ export const SeasonsPage = () => {
                       <Tooltip
                         title={
                           isWriteBlocked
-                            ? "Ação bloqueada pelo status do plano/pagamento."
+                            ? t("seasons.blockedAction")
                             : t("seasons.edit")
                         }
                       >
                         <span>
                           <IconButton
-                            aria-label="Editar"
+                            aria-label={t("seasons.edit")}
                             color="primary"
                             size="small"
                             onClick={() => handleOpenEdit(s)}
@@ -312,13 +313,13 @@ export const SeasonsPage = () => {
                       <Tooltip
                         title={
                           isWriteBlocked
-                            ? "Ação bloqueada pelo status do plano/pagamento."
+                            ? t("seasons.blockedAction")
                             : t("seasons.delete")
                         }
                       >
                         <span>
                           <IconButton
-                            aria-label="Excluir"
+                            aria-label={t("seasons.delete")}
                             color="error"
                             size="small"
                             onClick={() => handleOpenDelete(s)}
@@ -366,7 +367,7 @@ export const SeasonsPage = () => {
           />
 
           <FormControl fullWidth>
-            <InputLabel>Fotógrafos Participantes (Opcional)</InputLabel>
+            <InputLabel>{t("seasons.fields.photographersOptional")}</InputLabel>
             <Select
               multiple
               value={selectedPhotographers}
@@ -378,7 +379,9 @@ export const SeasonsPage = () => {
                 )
               }
               input={
-                <OutlinedInput label="Fotógrafos Participantes (Opcional)" />
+                <OutlinedInput
+                  label={t("seasons.fields.photographersOptional")}
+                />
               }
               renderValue={(selected) => (
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
@@ -423,11 +426,11 @@ export const SeasonsPage = () => {
               }}
             >
               <GavelRoundedIcon fontSize="small" color="primary" />
-              Lista de Juízes do Evento
+              {t("seasons.fields.judgesList")}
             </Typography>
             <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
               <TextField
-                label="Nome do Juiz"
+                label={t("seasons.fields.judgeName")}
                 placeholder={t("seasons.fields.judgesPlaceholder")}
                 size="small"
                 fullWidth
@@ -465,8 +468,7 @@ export const SeasonsPage = () => {
               </Box>
             ) : (
               <Typography variant="caption" color="text.secondary">
-                Nenhum juiz adicionado a este evento ainda. Digite o nome e
-                clique em Adicionar.
+                {t("seasons.fields.noJudgesDescription")}
               </Typography>
             )}
           </Box>
@@ -494,9 +496,7 @@ export const SeasonsPage = () => {
         <DialogContent>
           <Typography>{t("seasons.confirmDelete")}</Typography>
           <Typography variant="body2" color="error.main" sx={{ mt: 1.5 }}>
-            Atenção: Ao excluir este evento, todas as entidades e registros
-            vinculados a ele (como vínculos de clientes, cães e fotos
-            participantes) serão removidos permanentemente em cascata.
+            {t("seasons.cascadeWarning")}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>

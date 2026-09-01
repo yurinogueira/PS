@@ -44,7 +44,7 @@ import { useDocumentTitle } from "../../shared/hooks/useDocumentTitle";
 
 export const AdminTenantsPage = () => {
   const { t } = useTranslation();
-  useDocumentTitle("Gestão de Tenants - Admin");
+  useDocumentTitle(t("admin.tenants.docTitle"));
 
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,9 +113,7 @@ export const AdminTenantsPage = () => {
     if (!clean) return;
 
     if (!/^[a-zA-Z0-9_-]+$/.test(clean)) {
-      setErrorMessage(
-        "Nome de organização inválido. Use apenas letras, números, traços e underscores.",
-      );
+      setErrorMessage(t("admin.tenants.invalidName"));
       return;
     }
 
@@ -161,7 +159,7 @@ export const AdminTenantsPage = () => {
         plan: newPlan,
       });
       setSuccessMessage(
-        `Plano da organização "${selectedTenant.name}" atualizado com sucesso.`,
+        t("admin.tenants.planUpdated", { name: selectedTenant.name }),
       );
       setPlanModalOpen(false);
       await loadTenants();
@@ -171,7 +169,7 @@ export const AdminTenantsPage = () => {
         message?: string;
       };
       setErrorMessage(
-        error.response?.data?.message || "Erro ao atualizar plano do tenant.",
+        error.response?.data?.message || t("admin.tenants.errorLoad"),
       );
     } finally {
       setSubmitting(false);
@@ -193,7 +191,7 @@ export const AdminTenantsPage = () => {
         paymentStatus: newPaymentStatus,
       });
       setSuccessMessage(
-        `Status de pagamento da organização "${selectedTenant.name}" atualizado com sucesso.`,
+        t("admin.tenants.paymentUpdated", { name: selectedTenant.name }),
       );
       setPaymentModalOpen(false);
       await loadTenants();
@@ -203,8 +201,7 @@ export const AdminTenantsPage = () => {
         message?: string;
       };
       setErrorMessage(
-        error.response?.data?.message ||
-          "Erro ao atualizar status de pagamento.",
+        error.response?.data?.message || t("admin.tenants.errorLoad"),
       );
     } finally {
       setSubmitting(false);
@@ -228,7 +225,7 @@ export const AdminTenantsPage = () => {
         hideOverviewByDefault: newHideOverviewByDefault,
       });
       setSuccessMessage(
-        `Configurações da organização "${selectedTenant.name}" atualizadas com sucesso.`,
+        t("admin.tenants.settingsUpdated", { name: selectedTenant.name }),
       );
       setSettingsModalOpen(false);
       await loadTenants();
@@ -238,8 +235,7 @@ export const AdminTenantsPage = () => {
         message?: string;
       };
       setErrorMessage(
-        error.response?.data?.message ||
-          "Erro ao atualizar configurações da organização.",
+        error.response?.data?.message || t("admin.tenants.errorSettings"),
       );
     } finally {
       setSubmitting(false);
@@ -276,8 +272,7 @@ export const AdminTenantsPage = () => {
             {t("admin.tenants.title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Gerencie organizações, planos de assinatura (Gratuito/Padrão),
-            expirações de trial e status financeiro.
+            {t("admin.tenants.subtitle")}
           </Typography>
         </Box>
         <Button
@@ -322,7 +317,7 @@ export const AdminTenantsPage = () => {
         <Card elevation={0} sx={{ flex: 1, border: "1px solid #E2E8F0" }}>
           <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
             <Typography variant="body2" color="text.secondary">
-              Total de Organizações
+              {t("admin.tenants.totalTenants")}
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
               {tenants.length}
@@ -342,7 +337,7 @@ export const AdminTenantsPage = () => {
         }}
       >
         <TextField
-          placeholder="Buscar organização por nome..."
+          placeholder={t("admin.tenants.searchPlaceholder")}
           size="small"
           fullWidth
           value={searchTerm}
@@ -382,11 +377,15 @@ export const AdminTenantsPage = () => {
               <TableCell sx={{ fontWeight: 600 }}>
                 {t("admin.tenants.columns.payment")}
               </TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Visão Geral</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("admin.tenants.visibilityOverview")}
+              </TableCell>
               <TableCell sx={{ fontWeight: 600 }}>
                 {t("admin.tenants.columns.trial")}
               </TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Data de Criação</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("admin.tenants.creationDate")}
+              </TableCell>
               <TableCell sx={{ fontWeight: 600, textAlign: "right" }}>
                 {t("admin.tenants.columns.actions")}
               </TableCell>
@@ -417,8 +416,8 @@ export const AdminTenantsPage = () => {
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {searchTerm
-                      ? "Tente refinar seu termo de busca."
-                      : "Clique em 'Nova Organização' para criar o primeiro tenant."}
+                      ? t("admin.tenants.searchRefine")
+                      : t("admin.tenants.emptyCreateFirst")}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -490,8 +489,8 @@ export const AdminTenantsPage = () => {
                       <Chip
                         label={
                           isHiddenByDefault
-                            ? "Oculta por Padrão"
-                            : "Expandida por Padrão"
+                            ? t("admin.tenants.hiddenByDefault")
+                            : t("admin.tenants.expandedByDefault")
                         }
                         size="small"
                         color={isHiddenByDefault ? "default" : "info"}
@@ -503,9 +502,9 @@ export const AdminTenantsPage = () => {
                       <Typography variant="body2" color="text.secondary">
                         {isFree
                           ? expiresAt
-                            ? `${expiresAt.toLocaleDateString("pt-BR")} ${isExpired ? "(Expirado)" : ""}`
+                            ? `${expiresAt.toLocaleDateString("pt-BR")} ${isExpired ? `(${t("admin.tenants.trial.expired")})` : ""}`
                             : "14 dias (Trial)"
-                          : "Sem expiração"}
+                          : t("admin.tenants.noExpiration")}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -582,9 +581,7 @@ export const AdminTenantsPage = () => {
               icon={<InfoOutlinedIcon fontSize="inherit" />}
               severity="info"
             >
-              O nome da organização será utilizado como chave única de
-              isolamento de dados e <strong>não poderá ser editado</strong> após
-              a criação.
+              {t("admin.tenants.uniqueKeyWarning")}
             </Alert>
 
             {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
@@ -598,7 +595,7 @@ export const AdminTenantsPage = () => {
               disabled={submitting}
               value={tenantName}
               onChange={(e) => setTenantName(e.target.value.toLowerCase())}
-              helperText="Apenas letras, números, hífens (-) e underscores (_)."
+              helperText={t("admin.tenants.nameHelper")}
             />
 
             <FormControl fullWidth size="small">
