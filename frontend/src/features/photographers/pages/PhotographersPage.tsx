@@ -145,7 +145,7 @@ export const PhotographersPage = () => {
                 {t("photographers.fields.name")}
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>
-                Ações
+                {t("shared.actions")}
               </TableCell>
             </TableRow>
           </TableHead>

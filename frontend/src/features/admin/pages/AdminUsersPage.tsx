@@ -42,7 +42,7 @@ import { useDocumentTitle } from "../../shared/hooks/useDocumentTitle";
 
 export const AdminUsersPage = () => {
   const { t } = useTranslation();
-  useDocumentTitle("Gestão de Usuários - Admin");
+  useDocumentTitle(t("admin.users.docTitle"));
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -102,7 +102,7 @@ export const AdminUsersPage = () => {
       setSuccessMessage(
         selectedTenant
           ? t("admin.users.successAssign")
-          : `Organização desvinculada do usuário ${selectedUser.name}.`,
+          : t("admin.users.successAssign"),
       );
       setOpenAssign(false);
       setSelectedUser(null);
@@ -161,8 +161,7 @@ export const AdminUsersPage = () => {
             {t("admin.users.title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Aprove e vincule novos usuários aos seus respectivos tenants para
-            liberar o acesso ao sistema.
+            {t("admin.users.subtitle")}
           </Typography>
         </Box>
       </Box>
@@ -199,7 +198,7 @@ export const AdminUsersPage = () => {
         <Card elevation={0} sx={{ flex: 1, border: "1px solid #E2E8F0" }}>
           <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
             <Typography variant="body2" color="text.secondary">
-              Total de Usuários
+              {t("admin.users.totalUsers")}
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
               {users.length}
@@ -217,7 +216,7 @@ export const AdminUsersPage = () => {
         >
           <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
             <Typography variant="body2" color="warning.dark">
-              Aguardando Aprovação (Sem Tenant)
+              {t("admin.users.pendingApprovalKpi")}
             </Typography>
             <Typography
               variant="h5"
@@ -235,7 +234,7 @@ export const AdminUsersPage = () => {
         <Card elevation={0} sx={{ flex: 1, border: "1px solid #E2E8F0" }}>
           <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
             <Typography variant="body2" color="text.secondary">
-              Usuários Vinculados
+              {t("admin.users.assignedUsersKpi")}
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
               {assignedCount}
@@ -263,7 +262,7 @@ export const AdminUsersPage = () => {
           }}
         >
           <TextField
-            placeholder="Buscar por nome, e-mail ou tenant..."
+            placeholder={t("admin.users.searchPlaceholder")}
             size="small"
             fullWidth
             value={searchTerm}
@@ -286,12 +285,14 @@ export const AdminUsersPage = () => {
             size="small"
             sx={{ flexShrink: 0 }}
           >
-            <ToggleButton value="all">Todos ({users.length})</ToggleButton>
+            <ToggleButton value="all">
+              {t("admin.users.filterAll", { count: users.length })}
+            </ToggleButton>
             <ToggleButton value="pending">
-              Pendentes ({pendingCount})
+              {t("admin.users.filterPending", { count: pendingCount })}
             </ToggleButton>
             <ToggleButton value="assigned">
-              Vinculados ({assignedCount})
+              {t("admin.users.filterAssigned", { count: assignedCount })}
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>
@@ -352,7 +353,7 @@ export const AdminUsersPage = () => {
                     {t("admin.users.noData")}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Tente alterar os termos de busca ou o filtro aplicado.
+                    {t("admin.users.searchEmptyHint")}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -388,10 +389,13 @@ export const AdminUsersPage = () => {
                           {u.name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Criado em:{" "}
-                          {u.createdAt
-                            ? new Date(u.createdAt).toLocaleDateString("pt-BR")
-                            : "-"}
+                          {t("admin.users.createdAt", {
+                            date: u.createdAt
+                              ? new Date(u.createdAt).toLocaleDateString(
+                                  "pt-BR",
+                                )
+                              : "-",
+                          })}
                         </Typography>
                       </Box>
                     </Box>
@@ -411,7 +415,7 @@ export const AdminUsersPage = () => {
                           sx={{ fontSize: 14, color: "success.main" }}
                         />
                         <Typography variant="caption" color="success.main">
-                          E-mail verificado
+                          {t("admin.users.emailVerified")}
                         </Typography>
                       </Box>
                     ) : (
@@ -427,7 +431,7 @@ export const AdminUsersPage = () => {
                           sx={{ fontSize: 14, color: "warning.main" }}
                         />
                         <Typography variant="caption" color="warning.main">
-                          Pendente de verificação
+                          {t("admin.users.pendingVerification")}
                         </Typography>
                       </Box>
                     )}
@@ -435,14 +439,18 @@ export const AdminUsersPage = () => {
                   <TableCell>
                     {u.superAdmin ? (
                       <Chip
-                        label="SuperAdmin"
+                        label={t("admin.users.superAdminBadge")}
                         size="small"
                         color="secondary"
                         variant="filled"
                         sx={{ fontWeight: 600 }}
                       />
                     ) : (
-                      <Chip label="Usuário" size="small" variant="outlined" />
+                      <Chip
+                        label={t("admin.users.userBadge")}
+                        size="small"
+                        variant="outlined"
+                      />
                     )}
                   </TableCell>
                   <TableCell>

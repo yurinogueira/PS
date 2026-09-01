@@ -122,13 +122,13 @@ export const ClientDetailsModal = ({
         })
         .catch((err) => {
           console.error("Erro ao carregar dados do cliente:", err);
-          setError("Não foi possível carregar os dados do cliente.");
+          setError(t("clientDetails.errorLoad"));
         })
         .finally(() => {
           setLoading(false);
         });
     }
-  }, [open, clientId]);
+  }, [open, clientId, t]);
 
   const handleSave = async () => {
     if (!client || !clientId) return;
@@ -140,7 +140,7 @@ export const ClientDetailsModal = ({
       onClose();
     } catch (err) {
       console.error("Erro ao salvar alterações do cliente:", err);
-      setError("Erro ao salvar alterações do cliente.");
+      setError(t("clientDetails.errorSave"));
     } finally {
       setSaving(false);
     }
@@ -156,7 +156,7 @@ export const ClientDetailsModal = ({
       onClose();
     } catch (err) {
       console.error("Erro ao excluir cliente:", err);
-      setError("Erro ao excluir cliente.");
+      setError(t("clientDetails.errorDelete"));
     } finally {
       setDeleting(false);
     }
@@ -292,11 +292,13 @@ export const ClientDetailsModal = ({
                     {person.name}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {person.email ? `E-mail: ${person.email}` : ""}
+                    {person.email
+                      ? `${t("clientDetails.email")} ${person.email}`
+                      : ""}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {person.phone
-                      ? `Telefone: ${formatPhone(person.phone)}`
+                      ? `${t("clientDetails.phone")} ${formatPhone(person.phone)}`
                       : ""}
                   </Typography>
                 </Paper>
@@ -390,7 +392,7 @@ export const ClientDetailsModal = ({
                             }
                           />
                         }
-                        label="Dono?"
+                        label={t("clientDetails.isOwner")}
                       />
                     </Box>
 
@@ -623,12 +625,12 @@ export const ClientDetailsModal = ({
                               <InputLabel
                                 id={`modal-currency-label-${dIdx}-${pIdx}`}
                               >
-                                Moeda
+                                {t("shared.currency")}
                               </InputLabel>
                               <Select
                                 labelId={`modal-currency-label-${dIdx}-${pIdx}`}
                                 value={photo.currency || "BRL"}
-                                label="Moeda"
+                                label={t("shared.currency")}
                                 onChange={(e) =>
                                   updatePhoto(
                                     dIdx,
@@ -718,7 +720,7 @@ export const ClientDetailsModal = ({
             variant="contained"
             disabled={deleting}
           >
-            {deleting ? "Excluindo..." : t("shared.delete")}
+            {deleting ? t("shared.deleting") : t("shared.delete")}
           </Button>
         </DialogActions>
       </Dialog>

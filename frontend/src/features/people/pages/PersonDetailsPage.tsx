@@ -44,6 +44,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import { useTranslation } from "react-i18next";
 import {
   clientService,
   SeasonClient,
@@ -89,6 +90,7 @@ const getPaymentColor = (
 };
 
 export const PersonDetailsPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { activeSeason } = useSeasonStore();
@@ -221,11 +223,11 @@ export const PersonDetailsPage = () => {
       }
     } catch (err) {
       console.error("Erro ao carregar dados da pessoa:", err);
-      showNotification("Erro ao carregar os dados.", "error");
+      showNotification(t("shared.error"), "error");
     } finally {
       setLoading(false);
     }
-  }, [id, activeSeason]);
+  }, [id, activeSeason, t]);
 
   useEffect(() => {
     loadData();
@@ -244,10 +246,7 @@ export const PersonDetailsPage = () => {
   // Persist helper for client updates
   const saveClientData = async (updatedDogs: Dog[]) => {
     if (!id || !activeSeason) {
-      showNotification(
-        "Selecione um evento ativo para salvar alterações.",
-        "warning",
-      );
+      showNotification(t("personDetails.selectSeasonWarning"), "warning");
       return;
     }
 
@@ -266,10 +265,10 @@ export const PersonDetailsPage = () => {
         });
         setClient(created);
       }
-      showNotification("Alterações salvas com sucesso!");
+      showNotification(t("personDetails.successSave"));
     } catch (err) {
       console.error("Erro ao salvar dados do cliente:", err);
-      showNotification("Falha ao salvar as alterações.", "error");
+      showNotification(t("personDetails.failSave"), "error");
     }
   };
 
@@ -321,7 +320,7 @@ export const PersonDetailsPage = () => {
 
   const handleSaveDog = async () => {
     if (!dogForm.breed.trim()) {
-      showNotification("Por favor, preencha a raça do cachorro.", "warning");
+      showNotification(t("personDetails.fillBreedWarning"), "warning");
       return;
     }
 
@@ -372,10 +371,7 @@ export const PersonDetailsPage = () => {
   // Photo Handlers
   const handleOpenAddPhoto = () => {
     if (!selectedDog) {
-      showNotification(
-        "Selecione ou cadastre um cachorro primeiro.",
-        "warning",
-      );
+      showNotification(t("personDetails.selectDogFirstWarning"), "warning");
       return;
     }
     const defaultPhotog = photographers[0]?.id || "";
@@ -414,10 +410,7 @@ export const PersonDetailsPage = () => {
         .filter((n) => n.length > 0);
 
       if (numbers.length === 0) {
-        showNotification(
-          "Digite ao menos um número de arquivo de foto.",
-          "warning",
-        );
+        showNotification(t("personDetails.atLeastOneFileWarning"), "warning");
         return;
       }
 
@@ -439,7 +432,7 @@ export const PersonDetailsPage = () => {
       currentPhotos.unshift(...newPhotos);
     } else {
       if (!singlePhotoForm.file_number.trim()) {
-        showNotification("Digite o número do arquivo da foto.", "warning");
+        showNotification(t("personDetails.enterFileNumberWarning"), "warning");
         return;
       }
 
@@ -485,7 +478,7 @@ export const PersonDetailsPage = () => {
   const handleSaveEditPhoto = async () => {
     if (editingPhotoIndex === null || !selectedDog) return;
     if (!editPhotoForm.file_number.trim()) {
-      showNotification("Digite o número do arquivo da foto.", "warning");
+      showNotification(t("personDetails.enterFileNumberWarning"), "warning");
       return;
     }
 
@@ -567,14 +560,14 @@ export const PersonDetailsPage = () => {
     return (
       <Box sx={{ p: 4, textAlign: "center" }}>
         <Typography variant="h5" color="error" gutterBottom>
-          Pessoa não encontrada
+          {t("personDetails.notFound")}
         </Typography>
         <Button
           variant="contained"
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate("/dashboard")}
         >
-          Voltar para a Visão Geral
+          {t("personDetails.backToOverview")}
         </Button>
       </Box>
     );
@@ -665,14 +658,14 @@ export const PersonDetailsPage = () => {
             {activeSeason ? (
               <Chip
                 icon={<EventNoteIcon />}
-                label={`Evento: ${activeSeason.name}`}
+                label={t("dashboard.eventLabel", { name: activeSeason.name })}
                 color="primary"
                 variant="outlined"
                 sx={{ fontWeight: 600, px: 1, py: 2.2, borderRadius: 2 }}
               />
             ) : (
               <Chip
-                label="Nenhum evento selecionado"
+                label={t("personDetails.noEventSelected")}
                 color="warning"
                 variant="filled"
                 sx={{ fontWeight: 600 }}
@@ -685,8 +678,7 @@ export const PersonDetailsPage = () => {
       {/* Event Warning Banner if not selected */}
       {!activeSeason && (
         <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
-          Por favor, selecione um evento no topo da página para cadastrar e
-          gerenciar os cachorros e fotos de competições desta pessoa.
+          {t("personDetails.eventWarning")}
         </Alert>
       )}
 
@@ -717,7 +709,7 @@ export const PersonDetailsPage = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <PetsIcon color="primary" />
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Cachorros
+                  {t("personDetails.dogs")}
                 </Typography>
                 <Chip
                   label={dogsList.length}
@@ -738,7 +730,7 @@ export const PersonDetailsPage = () => {
                   fontWeight: 600,
                 }}
               >
-                Adicionar
+                {t("shared.add")}
               </Button>
             </Box>
 
@@ -771,11 +763,10 @@ export const PersonDetailsPage = () => {
                   variant="subtitle1"
                   sx={{ fontWeight: 600, color: "text.primary" }}
                 >
-                  Nenhum cachorro cadastrado
+                  {t("personDetails.noDogsRegistered")}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Adicione o primeiro cachorro para registrar fotos neste
-                  evento.
+                  {t("personDetails.noDogsRegisteredDesc")}
                 </Typography>
                 <Button
                   variant="outlined"
@@ -784,7 +775,7 @@ export const PersonDetailsPage = () => {
                   disabled={!activeSeason}
                   sx={{ mt: 1, borderRadius: 2, textTransform: "none" }}
                 >
-                  Cadastrar Cachorro
+                  {t("personDetails.registerDogBtn")}
                 </Button>
               </Box>
             ) : (
@@ -838,11 +829,15 @@ export const PersonDetailsPage = () => {
                                 : "text.primary",
                             }}
                           >
-                            {dog.breed || "Sem raça definida"}
+                            {dog.breed || t("personDetails.noDefinedBreed")}
                           </Typography>
                           <Chip
                             size="small"
-                            label={dog.is_owner ? "Dono" : "Apresentador"}
+                            label={
+                              dog.is_owner
+                                ? t("personDetails.owner")
+                                : t("personDetails.handler")
+                            }
                             color={dog.is_owner ? "success" : "default"}
                             variant="outlined"
                             sx={{ fontSize: "0.75rem", height: 22 }}
@@ -859,13 +854,15 @@ export const PersonDetailsPage = () => {
                         >
                           <Chip
                             icon={<PhotoCameraIcon style={{ fontSize: 14 }} />}
-                            label={`${photoCount} ${photoCount === 1 ? "foto" : "fotos"}`}
+                            label={t("dashboard.photoCount", {
+                              count: photoCount,
+                            })}
                             size="small"
                             color={photoCount > 0 ? "primary" : "default"}
                             sx={{ fontWeight: 600, fontSize: "0.75rem" }}
                           />
                           <Box sx={{ display: "flex", gap: 0.5 }}>
-                            <Tooltip title="Editar Cão">
+                            <Tooltip title={t("personDetails.editDog")}>
                               <IconButton
                                 size="small"
                                 onClick={(e) => {
@@ -876,7 +873,7 @@ export const PersonDetailsPage = () => {
                                 <EditIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Excluir Cão">
+                            <Tooltip title={t("personDetails.deleteDog")}>
                               <IconButton
                                 size="small"
                                 color="error"
@@ -941,13 +938,13 @@ export const PersonDetailsPage = () => {
                     }}
                   >
                     <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                      {selectedDog.breed || "Cachorro Selecionado"}
+                      {selectedDog.breed || t("personDetails.selectedDog")}
                     </Typography>
                     <Chip
                       label={
                         selectedDog.is_owner
-                          ? "Proprietário Registrado"
-                          : "Apresentador"
+                          ? t("personDetails.registeredOwner")
+                          : t("personDetails.handler")
                       }
                       color={selectedDog.is_owner ? "success" : "default"}
                       size="small"
@@ -974,7 +971,7 @@ export const PersonDetailsPage = () => {
                     >
                       <EmojiEventsIcon fontSize="small" color="warning" />
                       <Typography variant="body2">
-                        <strong>Vitórias:</strong>{" "}
+                        <strong>{t("personDetails.victories")}</strong>{" "}
                         {selectedDog.competitions_won || 0}
                       </Typography>
                     </Box>
@@ -999,7 +996,9 @@ export const PersonDetailsPage = () => {
                             letterSpacing: "0.5px",
                           }}
                         >
-                          Competições Ganhas:
+                          {t("personDetails.wonCompetitionsTitle", {
+                            count: selectedDog.won_competitions.length,
+                          })}
                         </Typography>
                         {selectedDog.won_competitions.map((comp, cIdx) => (
                           <Chip
@@ -1032,7 +1031,7 @@ export const PersonDetailsPage = () => {
                     onClick={() => handleOpenEditDog(selectedDogIndex)}
                     sx={{ borderRadius: 2, textTransform: "none" }}
                   >
-                    Editar Dados
+                    {t("personDetails.editDogData")}
                   </Button>
                   <Button
                     variant="contained"
@@ -1045,7 +1044,7 @@ export const PersonDetailsPage = () => {
                       fontWeight: 600,
                     }}
                   >
-                    Adicionar Fotos
+                    {t("personDetails.addPhotosBtn")}
                   </Button>
                 </Box>
               </Box>
@@ -1064,13 +1063,18 @@ export const PersonDetailsPage = () => {
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <PhotoCameraIcon color="primary" />
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    Fotos Cadastradas ({dogStats.totalPhotos})
+                    {t("personDetails.photosRegistered", {
+                      count: dogStats.totalPhotos,
+                    })}
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", gap: 1 }}>
                   <Chip
                     icon={<AttachMoneyIcon />}
-                    label={`Total Arrecadado: R$ ${dogStats.totalPaid.toFixed(2)}`}
+                    label={t("personDetails.totalCollected", {
+                      currency: "R$",
+                      amount: dogStats.totalPaid.toFixed(2),
+                    })}
                     color="success"
                     variant="outlined"
                     sx={{ fontWeight: 700 }}
@@ -1104,15 +1108,14 @@ export const PersonDetailsPage = () => {
                     <PhotoCameraIcon fontSize="large" />
                   </Avatar>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    Nenhuma foto cadastrada para este cachorro
+                    {t("personDetails.noPhotosForDog")}
                   </Typography>
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{ maxWidth: 400 }}
                   >
-                    Clique no botão abaixo para adicionar fotos individualmente
-                    ou em lote informando os números dos arquivos.
+                    {t("personDetails.noPhotosForDogDesc")}
                   </Typography>
                   <Button
                     variant="contained"
@@ -1126,7 +1129,7 @@ export const PersonDetailsPage = () => {
                       fontWeight: 600,
                     }}
                   >
-                    Adicionar Fotos Agora
+                    {t("personDetails.addPhotosNow")}
                   </Button>
                 </Box>
               ) : (
@@ -1134,7 +1137,7 @@ export const PersonDetailsPage = () => {
                   {selectedDog.photos.map((photo, pIdx) => {
                     const photogName =
                       photographerMap.get(photo.photographer_id) ||
-                      "Não atribuído";
+                      t("personDetails.unassignedPhotographer");
                     const paymentColor = getPaymentColor(photo.payment_method);
                     return (
                       <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={pIdx}>
@@ -1184,7 +1187,9 @@ export const PersonDetailsPage = () => {
                                   variant="subtitle2"
                                   sx={{ fontWeight: 700 }}
                                 >
-                                  Arquivo: {photo.file_number}
+                                  {t("personDetails.file", {
+                                    number: photo.file_number,
+                                  })}
                                 </Typography>
                                 <Typography
                                   variant="caption"
@@ -1196,7 +1201,7 @@ export const PersonDetailsPage = () => {
                             </Box>
 
                             <Box sx={{ display: "flex", gap: 0.5 }}>
-                              <Tooltip title="Editar Foto">
+                              <Tooltip title={t("personDetails.editPhoto")}>
                                 <IconButton
                                   size="small"
                                   onClick={() => handleOpenEditPhoto(pIdx)}
@@ -1204,7 +1209,7 @@ export const PersonDetailsPage = () => {
                                   <EditIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title="Excluir Foto">
+                              <Tooltip title={t("personDetails.deletePhoto")}>
                                 <IconButton
                                   size="small"
                                   color="error"
@@ -1235,7 +1240,7 @@ export const PersonDetailsPage = () => {
                               {photo.judges.map((j) => (
                                 <Chip
                                   key={j}
-                                  label={`Juiz: ${j}`}
+                                  label={`${t("seasons.fields.judgeName")}: ${j}`}
                                   size="small"
                                   variant="outlined"
                                   sx={{ fontSize: "0.7rem", height: 20 }}
@@ -1253,7 +1258,12 @@ export const PersonDetailsPage = () => {
                             }}
                           >
                             <Chip
-                              label={photo.payment_method || "Pendente"}
+                              label={
+                                photo.payment_method === "Não pago"
+                                  ? t("personDetails.unpaid")
+                                  : photo.payment_method ||
+                                    t("personDetails.pendingPayment")
+                              }
                               size="small"
                               color={paymentColor}
                               sx={{ fontWeight: 600, fontSize: "0.75rem" }}
@@ -1263,7 +1273,7 @@ export const PersonDetailsPage = () => {
                               sx={{ fontWeight: 700, color: "text.primary" }}
                             >
                               {photo.payment_method === "Não pago"
-                                ? "Não pago"
+                                ? t("personDetails.unpaid")
                                 : photo.amount_paid !== undefined
                                   ? `${photo.currency === "USD" ? "$" : "R$"} ${Number(photo.amount_paid).toFixed(2)}`
                                   : `${photo.currency === "USD" ? "$" : "R$"} 0.00`}
@@ -1283,14 +1293,14 @@ export const PersonDetailsPage = () => {
                             >
                               <AccessTimeIcon sx={{ fontSize: 13 }} />
                               <span>
-                                Registrada em:{" "}
-                                {new Date(photo.created_at).toLocaleString(
-                                  "pt-BR",
-                                  {
+                                {t("personDetails.registeredAt", {
+                                  date: new Date(
+                                    photo.created_at,
+                                  ).toLocaleString("pt-BR", {
                                     dateStyle: "short",
                                     timeStyle: "short",
-                                  },
-                                )}
+                                  }),
+                                })}
                               </span>
                             </Box>
                           )}
@@ -1329,15 +1339,14 @@ export const PersonDetailsPage = () => {
                 <PetsIcon sx={{ fontSize: 40 }} />
               </Avatar>
               <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                Nenhum cachorro selecionado
+                {t("personDetails.noSelectedDog")}
               </Typography>
               <Typography
                 variant="body2"
                 color="text.secondary"
                 sx={{ maxWidth: 450 }}
               >
-                Selecione um cachorro na lista à esquerda ou cadastre um novo
-                cachorro para gerenciar suas fotos e informações.
+                {t("personDetails.noSelectedDogDesc")}
               </Typography>
               <Button
                 variant="contained"
@@ -1351,7 +1360,7 @@ export const PersonDetailsPage = () => {
                   mt: 1,
                 }}
               >
-                Cadastrar Cachorro
+                {t("personDetails.registerDogBtn")}
               </Button>
             </Paper>
           )}
@@ -1367,15 +1376,15 @@ export const PersonDetailsPage = () => {
       >
         <DialogTitle sx={{ fontWeight: 700 }}>
           {editingDogIndex !== null
-            ? "Editar Cachorro"
-            : "Cadastrar Novo Cachorro"}
+            ? t("personDetails.editDogTitle")
+            : t("personDetails.newDogTitle")}
         </DialogTitle>
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", gap: 2.5, pt: 2 }}
         >
           <TextField
-            label="Raça do Cão"
-            placeholder="Ex: Golden Retriever, Pastor Alemão..."
+            label={t("clients.fields.breed")}
+            placeholder={t("personDetails.breedPlaceholder")}
             fullWidth
             required
             autoFocus
@@ -1383,7 +1392,7 @@ export const PersonDetailsPage = () => {
             onChange={(e) => setDogForm({ ...dogForm, breed: e.target.value })}
           />
           <TextField
-            label="Competições Ganhas"
+            label={t("personDetails.fields.competitions")}
             type="number"
             fullWidth
             value={dogForm.competitions_won}
@@ -1422,14 +1431,15 @@ export const PersonDetailsPage = () => {
                 }}
               >
                 <EmojiEventsIcon fontSize="small" color="warning" />
-                Nomes das Competições Vencidas (
-                {dogForm.won_competitions?.length || 0})
+                {t("personDetails.wonCompetitionsTitle", {
+                  count: dogForm.won_competitions?.length || 0,
+                })}
               </Typography>
               <Box sx={{ display: "flex", gap: 1 }}>
                 <TextField
                   size="small"
                   fullWidth
-                  placeholder="Nome da competição (ex: Best in Show, Especializada...)"
+                  placeholder={t("personDetails.competitionPlaceholder")}
                   value={newCompetitionInput}
                   onChange={(e) => setNewCompetitionInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -1447,7 +1457,7 @@ export const PersonDetailsPage = () => {
                   startIcon={<AddIcon />}
                   sx={{ textTransform: "none", whiteSpace: "nowrap" }}
                 >
-                  Adicionar
+                  {t("shared.add")}
                 </Button>
               </Box>
 
@@ -1491,7 +1501,7 @@ export const PersonDetailsPage = () => {
                 color="primary"
               />
             }
-            label="A pessoa é a proprietária (dona) deste cão?"
+            label={t("personDetails.isOwnerLabel")}
           />
         </DialogContent>
         <DialogActions sx={{ p: 2.5 }}>
@@ -1499,7 +1509,7 @@ export const PersonDetailsPage = () => {
             onClick={() => setDogDialogOpen(false)}
             sx={{ textTransform: "none" }}
           >
-            Cancelar
+            {t("personDetails.cancel")}
           </Button>
           <Button
             onClick={handleSaveDog}
@@ -1507,7 +1517,7 @@ export const PersonDetailsPage = () => {
             disabled={!dogForm.breed.trim()}
             sx={{ textTransform: "none", fontWeight: 600 }}
           >
-            Salvar Cachorro
+            {t("personDetails.saveDog")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1520,7 +1530,9 @@ export const PersonDetailsPage = () => {
         fullWidth
       >
         <DialogTitle sx={{ fontWeight: 700 }}>
-          Adicionar Fotos para {selectedDog?.breed || "o cão"}
+          {t("personDetails.addPhotosForDog", {
+            dog: selectedDog?.breed || "",
+          })}
         </DialogTitle>
         <Box sx={{ borderBottom: 1, borderColor: "divider", px: 3 }}>
           <Tabs
@@ -1530,12 +1542,12 @@ export const PersonDetailsPage = () => {
             indicatorColor="primary"
           >
             <Tab
-              label="Inserção em Lote (Ágil)"
+              label={t("personDetails.batchTab")}
               value="batch"
               sx={{ textTransform: "none", fontWeight: 600 }}
             />
             <Tab
-              label="Inserção Individual"
+              label={t("personDetails.singleTab")}
               value="single"
               sx={{ textTransform: "none", fontWeight: 600 }}
             />
@@ -1547,8 +1559,8 @@ export const PersonDetailsPage = () => {
           {photoTab === "batch" ? (
             <>
               <TextField
-                label="Números dos Arquivos das Fotos"
-                placeholder="Ex: 0101, 0102, 0103, 0104 (separados por vírgula ou linhas)"
+                label={t("personDetails.batchFileNumbers")}
+                placeholder={t("personDetails.batchPlaceholder")}
                 multiline
                 rows={3}
                 fullWidth
@@ -1561,13 +1573,15 @@ export const PersonDetailsPage = () => {
                     fileNumbersText: e.target.value,
                   })
                 }
-                helperText="Você pode colar vários números de uma vez."
+                helperText={t("personDetails.batchHelper")}
               />
               <FormControl fullWidth size="small">
-                <InputLabel>Fotógrafo</InputLabel>
+                <InputLabel>
+                  {t("personDetails.fields.photographer")}
+                </InputLabel>
                 <Select
                   value={batchPhotoForm.photographer_id}
-                  label="Fotógrafo"
+                  label={t("personDetails.fields.photographer")}
                   onChange={(e) =>
                     setBatchPhotoForm({
                       ...batchPhotoForm,
@@ -1576,7 +1590,7 @@ export const PersonDetailsPage = () => {
                   }
                 >
                   <MenuItem value="">
-                    <em>Nenhum / Não informado</em>
+                    <em>{t("personDetails.fields.noneInformed")}</em>
                   </MenuItem>
                   {photographers.map((p) => (
                     <MenuItem key={p.id} value={p.id}>
@@ -1599,18 +1613,18 @@ export const PersonDetailsPage = () => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Juízes da Foto"
+                    label={t("personDetails.fields.judges")}
                     placeholder={
                       batchPhotoForm.judges?.length
                         ? ""
                         : activeSeason?.judges?.length
-                          ? "Selecione os juízes"
-                          : "Nenhum juiz cadastrado no evento"
+                          ? t("personDetails.fields.judgesPlaceholder")
+                          : t("personDetails.fields.noJudges")
                     }
                     helperText={
                       activeSeason?.judges?.length
-                        ? "Selecione os juízes do evento vinculados a estas fotos."
-                        : "Cadastre juízes no evento para poder selecioná-los aqui."
+                        ? t("personDetails.fields.judgesHelper")
+                        : t("personDetails.fields.judgesNoEventHelper")
                     }
                   />
                 )}
@@ -1623,10 +1637,12 @@ export const PersonDetailsPage = () => {
                   }}
                 >
                   <FormControl fullWidth size="small">
-                    <InputLabel>Forma de Pagamento</InputLabel>
+                    <InputLabel>
+                      {t("personDetails.fields.paymentMethod")}
+                    </InputLabel>
                     <Select
                       value={batchPhotoForm.payment_method}
-                      label="Forma de Pagamento"
+                      label={t("personDetails.fields.paymentMethod")}
                       onChange={(e) => {
                         const newMethod = e.target.value;
                         setBatchPhotoForm({
@@ -1651,10 +1667,10 @@ export const PersonDetailsPage = () => {
                   <>
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <FormControl fullWidth size="small">
-                        <InputLabel>Moeda</InputLabel>
+                        <InputLabel>{t("shared.currency")}</InputLabel>
                         <Select
                           value={batchPhotoForm.currency || "BRL"}
-                          label="Moeda"
+                          label={t("shared.currency")}
                           onChange={(e) =>
                             setBatchPhotoForm({
                               ...batchPhotoForm,
@@ -1672,7 +1688,7 @@ export const PersonDetailsPage = () => {
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <TextField
-                        label="Valor por Foto"
+                        label={t("personDetails.valuePerPhoto")}
                         type="number"
                         size="small"
                         fullWidth
@@ -1696,8 +1712,8 @@ export const PersonDetailsPage = () => {
           ) : (
             <>
               <TextField
-                label="Número do Arquivo da Foto"
-                placeholder="Ex: DSC_0142"
+                label={t("personDetails.singleFileNumber")}
+                placeholder={t("personDetails.singleFilePlaceholder")}
                 fullWidth
                 required
                 autoFocus
@@ -1710,10 +1726,12 @@ export const PersonDetailsPage = () => {
                 }
               />
               <FormControl fullWidth size="small">
-                <InputLabel>Fotógrafo</InputLabel>
+                <InputLabel>
+                  {t("personDetails.fields.photographer")}
+                </InputLabel>
                 <Select
                   value={singlePhotoForm.photographer_id}
-                  label="Fotógrafo"
+                  label={t("personDetails.fields.photographer")}
                   onChange={(e) =>
                     setSinglePhotoForm({
                       ...singlePhotoForm,
@@ -1722,7 +1740,7 @@ export const PersonDetailsPage = () => {
                   }
                 >
                   <MenuItem value="">
-                    <em>Nenhum / Não informado</em>
+                    <em>{t("personDetails.fields.noneInformed")}</em>
                   </MenuItem>
                   {photographers.map((p) => (
                     <MenuItem key={p.id} value={p.id}>
@@ -1745,18 +1763,18 @@ export const PersonDetailsPage = () => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Juízes da Foto"
+                    label={t("personDetails.fields.judges")}
                     placeholder={
                       singlePhotoForm.judges?.length
                         ? ""
                         : activeSeason?.judges?.length
-                          ? "Selecione os juízes"
-                          : "Nenhum juiz cadastrado no evento"
+                          ? t("personDetails.fields.judgesPlaceholder")
+                          : t("personDetails.fields.noJudges")
                     }
                     helperText={
                       activeSeason?.judges?.length
-                        ? "Selecione os juízes do evento vinculados a esta foto."
-                        : "Cadastre juízes no evento para poder selecioná-los aqui."
+                        ? t("personDetails.fields.judgesHelper")
+                        : t("personDetails.fields.judgesNoEventHelper")
                     }
                   />
                 )}
@@ -1769,10 +1787,12 @@ export const PersonDetailsPage = () => {
                   }}
                 >
                   <FormControl fullWidth size="small">
-                    <InputLabel>Forma de Pagamento</InputLabel>
+                    <InputLabel>
+                      {t("personDetails.fields.paymentMethod")}
+                    </InputLabel>
                     <Select
                       value={singlePhotoForm.payment_method}
-                      label="Forma de Pagamento"
+                      label={t("personDetails.fields.paymentMethod")}
                       onChange={(e) => {
                         const newMethod = e.target.value;
                         setSinglePhotoForm({
@@ -1797,10 +1817,10 @@ export const PersonDetailsPage = () => {
                   <>
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <FormControl fullWidth size="small">
-                        <InputLabel>Moeda</InputLabel>
+                        <InputLabel>{t("shared.currency")}</InputLabel>
                         <Select
                           value={singlePhotoForm.currency || "BRL"}
-                          label="Moeda"
+                          label={t("shared.currency")}
                           onChange={(e) =>
                             setSinglePhotoForm({
                               ...singlePhotoForm,
@@ -1818,7 +1838,7 @@ export const PersonDetailsPage = () => {
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <TextField
-                        label="Valor Pago"
+                        label={t("linkClient.fields.amountPaid")}
                         type="number"
                         size="small"
                         fullWidth
@@ -1846,14 +1866,14 @@ export const PersonDetailsPage = () => {
             onClick={() => setAddPhotoDialogOpen(false)}
             sx={{ textTransform: "none" }}
           >
-            Cancelar
+            {t("personDetails.cancel")}
           </Button>
           <Button
             onClick={handleSaveAddPhotos}
             variant="contained"
             sx={{ textTransform: "none", fontWeight: 600 }}
           >
-            Adicionar Fotos
+            {t("personDetails.addPhotosAction")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1865,12 +1885,14 @@ export const PersonDetailsPage = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 700 }}>Editar Foto</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          {t("personDetails.editPhotoTitle")}
+        </DialogTitle>
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", gap: 2.5, pt: 2 }}
         >
           <TextField
-            label="Número do Arquivo da Foto"
+            label={t("personDetails.singleFileNumber")}
             fullWidth
             required
             autoFocus
@@ -1883,10 +1905,10 @@ export const PersonDetailsPage = () => {
             }
           />
           <FormControl fullWidth size="small">
-            <InputLabel>Fotógrafo</InputLabel>
+            <InputLabel>{t("personDetails.fields.photographer")}</InputLabel>
             <Select
               value={editPhotoForm.photographer_id}
-              label="Fotógrafo"
+              label={t("personDetails.fields.photographer")}
               onChange={(e) =>
                 setEditPhotoForm({
                   ...editPhotoForm,
@@ -1895,7 +1917,7 @@ export const PersonDetailsPage = () => {
               }
             >
               <MenuItem value="">
-                <em>Nenhum / Não informado</em>
+                <em>{t("personDetails.fields.noneInformed")}</em>
               </MenuItem>
               {photographers.map((p) => (
                 <MenuItem key={p.id} value={p.id}>
@@ -1918,18 +1940,18 @@ export const PersonDetailsPage = () => {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Juízes da Foto"
+                label={t("personDetails.fields.judges")}
                 placeholder={
                   editPhotoForm.judges?.length
                     ? ""
                     : activeSeason?.judges?.length
-                      ? "Selecione os juízes"
-                      : "Nenhum juiz cadastrado no evento"
+                      ? t("personDetails.fields.judgesPlaceholder")
+                      : t("personDetails.fields.noJudges")
                 }
                 helperText={
                   activeSeason?.judges?.length
-                    ? "Selecione os juízes do evento vinculados a esta foto."
-                    : "Cadastre juízes no evento para poder selecioná-los aqui."
+                    ? t("personDetails.fields.judgesHelper")
+                    : t("personDetails.fields.judgesNoEventHelper")
                 }
               />
             )}
@@ -1942,10 +1964,12 @@ export const PersonDetailsPage = () => {
               }}
             >
               <FormControl fullWidth size="small">
-                <InputLabel>Forma de Pagamento</InputLabel>
+                <InputLabel>
+                  {t("personDetails.fields.paymentMethod")}
+                </InputLabel>
                 <Select
                   value={editPhotoForm.payment_method}
-                  label="Forma de Pagamento"
+                  label={t("personDetails.fields.paymentMethod")}
                   onChange={(e) => {
                     const newMethod = e.target.value;
                     setEditPhotoForm({
@@ -1970,10 +1994,10 @@ export const PersonDetailsPage = () => {
               <>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <FormControl fullWidth size="small">
-                    <InputLabel>Moeda</InputLabel>
+                    <InputLabel>{t("shared.currency")}</InputLabel>
                     <Select
                       value={editPhotoForm.currency || "BRL"}
-                      label="Moeda"
+                      label={t("shared.currency")}
                       onChange={(e) =>
                         setEditPhotoForm({
                           ...editPhotoForm,
@@ -1991,7 +2015,7 @@ export const PersonDetailsPage = () => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField
-                    label="Valor Pago"
+                    label={t("linkClient.fields.amountPaid")}
                     type="number"
                     size="small"
                     fullWidth
@@ -2017,7 +2041,7 @@ export const PersonDetailsPage = () => {
             onClick={() => setEditPhotoDialogOpen(false)}
             sx={{ textTransform: "none" }}
           >
-            Cancelar
+            {t("personDetails.cancel")}
           </Button>
           <Button
             onClick={handleSaveEditPhoto}
@@ -2025,7 +2049,7 @@ export const PersonDetailsPage = () => {
             disabled={!editPhotoForm.file_number.trim()}
             sx={{ textTransform: "none", fontWeight: 600 }}
           >
-            Salvar Foto
+            {t("personDetails.savePhotoAction")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -2036,20 +2060,17 @@ export const PersonDetailsPage = () => {
         onClose={() => setDeleteDogConfirm({ open: false, index: null })}
       >
         <DialogTitle sx={{ fontWeight: 700 }}>
-          Confirmar Exclusão de Cachorro
+          {t("personDetails.deleteDog")}
         </DialogTitle>
         <DialogContent>
-          <Typography>
-            Tem certeza que deseja excluir este cachorro e todas as suas fotos
-            associadas neste evento?
-          </Typography>
+          <Typography>{t("personDetails.confirmDeleteDog")}</Typography>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button
             onClick={() => setDeleteDogConfirm({ open: false, index: null })}
             sx={{ textTransform: "none" }}
           >
-            Cancelar
+            {t("personDetails.cancel")}
           </Button>
           <Button
             onClick={handleConfirmDeleteDog}
@@ -2057,7 +2078,7 @@ export const PersonDetailsPage = () => {
             variant="contained"
             sx={{ textTransform: "none" }}
           >
-            Excluir Cachorro
+            {t("personDetails.deleteDog")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -2068,17 +2089,17 @@ export const PersonDetailsPage = () => {
         onClose={() => setDeletePhotoConfirm({ open: false, index: null })}
       >
         <DialogTitle sx={{ fontWeight: 700 }}>
-          Confirmar Exclusão de Foto
+          {t("personDetails.deletePhoto")}
         </DialogTitle>
         <DialogContent>
-          <Typography>Tem certeza que deseja remover esta foto?</Typography>
+          <Typography>{t("personDetails.confirmDeletePhoto")}</Typography>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button
             onClick={() => setDeletePhotoConfirm({ open: false, index: null })}
             sx={{ textTransform: "none" }}
           >
-            Cancelar
+            {t("personDetails.cancel")}
           </Button>
           <Button
             onClick={handleConfirmDeletePhoto}
@@ -2086,7 +2107,7 @@ export const PersonDetailsPage = () => {
             variant="contained"
             sx={{ textTransform: "none" }}
           >
-            Excluir Foto
+            {t("personDetails.deletePhoto")}
           </Button>
         </DialogActions>
       </Dialog>

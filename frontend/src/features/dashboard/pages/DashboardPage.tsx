@@ -80,23 +80,23 @@ export const DashboardPage = () => {
 
   const getWriteBlockedReason = () => {
     if (tenantStatus?.isUnpaid) {
-      return "Acesso suspenso por pendência de pagamento.";
+      return t("shared.tenantBanner.unpaidShort");
     }
     if (tenantStatus?.isTrialExpired) {
-      return "Período de teste gratuito expirado.";
+      return t("shared.tenantBanner.trialExpiredShort");
     }
     return "";
   };
 
   const getReportsBlockedReason = () => {
     if (tenantStatus?.isUnpaid) {
-      return "Acesso suspenso por pendência de pagamento.";
+      return t("shared.tenantBanner.unpaidShort");
     }
     if (tenantStatus?.isTrialExpired) {
-      return "Período de teste gratuito expirado.";
+      return t("shared.tenantBanner.trialExpiredShort");
     }
     if (tenantStatus?.clientLimitExceeded) {
-      return "Limite de clientes cadastrados no plano atual excedido.";
+      return t("shared.tenantBanner.clientLimitExceededShort");
     }
     return "";
   };
@@ -170,9 +170,7 @@ export const DashboardPage = () => {
       const res = await reportService.exportClientsPdf(seasonId);
       setSnackbar({
         open: true,
-        message:
-          res.message ||
-          "Processamento do relatório em PDF iniciado! O link para download será enviado por e-mail quando o arquivo estiver pronto.",
+        message: res.message || t("clients.reports.pdfProcessing"),
         severity: "success",
       });
     } catch (err: unknown) {
@@ -181,8 +179,7 @@ export const DashboardPage = () => {
       setSnackbar({
         open: true,
         message:
-          errorObj.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório PDF.",
+          errorObj.response?.data?.message || t("clients.reports.pdfError"),
         severity: "error",
       });
     } finally {
@@ -198,9 +195,7 @@ export const DashboardPage = () => {
       const res = await reportService.exportClientsCsv(seasonId);
       setSnackbar({
         open: true,
-        message:
-          res.message ||
-          "Processamento do relatório iniciado! O link para download do CSV será enviado por e-mail quando o arquivo estiver pronto.",
+        message: res.message || t("clients.reports.csvProcessing"),
         severity: "success",
       });
     } catch (err: unknown) {
@@ -209,8 +204,7 @@ export const DashboardPage = () => {
       setSnackbar({
         open: true,
         message:
-          errorObj.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório CSV.",
+          errorObj.response?.data?.message || t("clients.reports.csvError"),
         severity: "error",
       });
     } finally {
@@ -226,9 +220,7 @@ export const DashboardPage = () => {
       const res = await reportService.exportPaidClientsCsv(seasonId);
       setSnackbar({
         open: true,
-        message:
-          res.message ||
-          "Processamento do relatório iniciado! O link para download do CSV de clientes pagos será enviado por e-mail.",
+        message: res.message || t("clients.reports.paidProcessing"),
         severity: "success",
       });
     } catch (err: unknown) {
@@ -237,8 +229,7 @@ export const DashboardPage = () => {
       setSnackbar({
         open: true,
         message:
-          errorObj.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório de clientes pagos.",
+          errorObj.response?.data?.message || t("clients.reports.paidError"),
         severity: "error",
       });
     } finally {
@@ -254,9 +245,7 @@ export const DashboardPage = () => {
       const res = await reportService.exportUnpaidClientsCsv(seasonId);
       setSnackbar({
         open: true,
-        message:
-          res.message ||
-          "Processamento do relatório iniciado! O link para download do CSV de não pagos será enviado por e-mail.",
+        message: res.message || t("clients.reports.unpaidProcessing"),
         severity: "success",
       });
     } catch (err: unknown) {
@@ -265,8 +254,7 @@ export const DashboardPage = () => {
       setSnackbar({
         open: true,
         message:
-          errorObj.response?.data?.message ||
-          "Erro ao solicitar exportação do relatório.",
+          errorObj.response?.data?.message || t("clients.reports.unpaidError"),
         severity: "error",
       });
     } finally {
@@ -431,8 +419,8 @@ export const DashboardPage = () => {
           <Tooltip
             title={
               showOverview
-                ? "Ocultar Visão Geral e Métricas"
-                : "Exibir Visão Geral e Métricas"
+                ? t("dashboard.overviewToggle.hideTooltip")
+                : t("dashboard.overviewToggle.showTooltip")
             }
           >
             <Button
@@ -456,7 +444,9 @@ export const DashboardPage = () => {
                 px: 1.5,
               }}
             >
-              {showOverview ? "Ocultar Visão Geral" : "Exibir Visão Geral"}
+              {showOverview
+                ? t("dashboard.overviewToggle.hide")
+                : t("dashboard.overviewToggle.show")}
             </Button>
           </Tooltip>
         </Box>
@@ -507,7 +497,9 @@ export const DashboardPage = () => {
                 }}
               >
                 {activeSeason
-                  ? `Clientes, cães e fotos vinculados ao evento "${activeSeason.name}".`
+                  ? t("dashboard.activeSeasonSubtitle", {
+                      name: activeSeason.name,
+                    })
                   : t("dashboard.subtitle")}
               </Typography>
             </Box>
@@ -524,7 +516,9 @@ export const DashboardPage = () => {
               {activeSeason ? (
                 <Chip
                   icon={<EventNoteRoundedIcon style={{ color: "#38bdf8" }} />}
-                  label={`Evento: ${activeSeason.name}`}
+                  label={t("dashboard.eventLabel", {
+                    name: activeSeason.name,
+                  })}
                   sx={{
                     bgcolor: "rgba(56, 189, 248, 0.15)",
                     color: "#38bdf8",
@@ -574,7 +568,9 @@ export const DashboardPage = () => {
                       fontWeight: 600,
                     }}
                   >
-                    {exportingReport ? "Gerando..." : "Relatórios"}
+                    {exportingReport
+                      ? t("dashboard.generating")
+                      : t("dashboard.reportsButton")}
                   </Button>
                 </span>
               </Tooltip>
@@ -587,25 +583,25 @@ export const DashboardPage = () => {
                   <ListItemIcon>
                     <PictureAsPdfIcon fontSize="small" color="error" />
                   </ListItemIcon>
-                  Exportar Relatório (.pdf)
+                  {t("clients.reports.exportPdf")}
                 </MenuItem>
                 <MenuItem onClick={handleExportClientsCsv}>
                   <ListItemIcon>
                     <FileDownloadIcon fontSize="small" />
                   </ListItemIcon>
-                  Exportar Clientes (.csv)
+                  {t("clients.reports.exportClientsCsv")}
                 </MenuItem>
                 <MenuItem onClick={handleExportPaidClientsCsv}>
                   <ListItemIcon>
                     <FileDownloadIcon fontSize="small" />
                   </ListItemIcon>
-                  Exportar Pagos (.csv)
+                  {t("clients.reports.exportPaidCsv")}
                 </MenuItem>
                 <MenuItem onClick={handleExportUnpaidClientsCsv}>
                   <ListItemIcon>
                     <FileDownloadIcon fontSize="small" />
                   </ListItemIcon>
-                  Exportar Não Pagos (.csv)
+                  {t("clients.reports.exportUnpaidCsv")}
                 </MenuItem>
               </Menu>
             </Box>
@@ -647,7 +643,8 @@ export const DashboardPage = () => {
                       {metrics.totalPeople}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {metrics.activeSeasonClients} neste evento
+                      {metrics.activeSeasonClients}{" "}
+                      {t("dashboard.kpiDescriptions.inThisEvent")}
                     </Typography>
                   </Box>
                   <Avatar
@@ -698,7 +695,7 @@ export const DashboardPage = () => {
                       {metrics.totalDogs}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Cadastrados no evento ativo
+                      {t("dashboard.kpiDescriptions.registeredInActiveSeason")}
                     </Typography>
                   </Box>
                   <Avatar
@@ -749,7 +746,7 @@ export const DashboardPage = () => {
                       {metrics.totalPhotos}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Total neste evento
+                      {t("dashboard.kpiDescriptions.totalInThisEvent")}
                     </Typography>
                   </Box>
                   <Avatar
@@ -800,7 +797,7 @@ export const DashboardPage = () => {
                       R$ {metrics.totalRevenue.toFixed(2)}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Fotos pagas
+                      {t("dashboard.kpiDescriptions.paidPhotos")}
                     </Typography>
                   </Box>
                   <Avatar
@@ -868,8 +865,7 @@ export const DashboardPage = () => {
                 {t("clients.title")}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Selecione uma pessoa para visualizar e cadastrar seus cachorros
-                e fotos.
+                {t("dashboard.tableHint")}
               </Typography>
             </Box>
 
@@ -967,8 +963,9 @@ export const DashboardPage = () => {
                     {t("dashboard.noClientsFound")}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Nenhum cliente corresponde ao termo pesquisado &ldquo;
-                    {debouncedSearch}&rdquo;.
+                    {t("dashboard.noClientsFoundDescription", {
+                      term: debouncedSearch,
+                    })}
                   </Typography>
                 </>
               ) : (
@@ -1003,7 +1000,9 @@ export const DashboardPage = () => {
                       <TableCell sx={{ fontWeight: 700 }}>
                         {t("clients.columns.name")}
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>Contato</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>
+                        {t("shared.contact")}
+                      </TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>
                         {t("clientDetails.dogs")}
                       </TableCell>
@@ -1069,7 +1068,7 @@ export const DashboardPage = () => {
                                     color: "text.primary",
                                   }}
                                 >
-                                  {person?.name || "Desconhecido"}
+                                  {person?.name || t("clients.unknownPerson")}
                                 </Typography>
                                 <Typography
                                   variant="caption"
@@ -1091,14 +1090,14 @@ export const DashboardPage = () => {
                             >
                               {person?.phone
                                 ? formatPhone(person.phone)
-                                : "Sem telefone"}
+                                : t("dashboard.noPhone")}
                             </Typography>
                           </TableCell>
 
                           <TableCell>
                             {dogs.length === 0 ? (
                               <Chip
-                                label="Nenhum cão"
+                                label={t("dashboard.noDogs")}
                                 size="small"
                                 variant="outlined"
                                 sx={{ color: "text.secondary" }}
@@ -1116,7 +1115,9 @@ export const DashboardPage = () => {
                                   icon={
                                     <PetsRoundedIcon style={{ fontSize: 14 }} />
                                   }
-                                  label={`${dogs.length} ${dogs.length === 1 ? "cão" : "cães"}`}
+                                  label={t("dashboard.dogCount", {
+                                    count: dogs.length,
+                                  })}
                                   size="small"
                                   color="primary"
                                   sx={{ fontWeight: 600 }}
@@ -1124,7 +1125,7 @@ export const DashboardPage = () => {
                                 {dogs.slice(0, 2).map((d, i) => (
                                   <Chip
                                     key={i}
-                                    label={d.breed || "Sem raça"}
+                                    label={d.breed || t("dashboard.noBreed")}
                                     size="small"
                                     variant="outlined"
                                     sx={{ fontSize: "0.75rem" }}
@@ -1135,7 +1136,9 @@ export const DashboardPage = () => {
                                     variant="caption"
                                     color="text.secondary"
                                   >
-                                    +{dogs.length - 2} mais
+                                    {t("dashboard.moreDogs", {
+                                      count: dogs.length - 2,
+                                    })}
                                   </Typography>
                                 )}
                               </Box>
@@ -1149,7 +1152,9 @@ export const DashboardPage = () => {
                                   style={{ fontSize: 14 }}
                                 />
                               }
-                              label={`${totalPhotos} ${totalPhotos === 1 ? "foto" : "fotos"}`}
+                              label={t("dashboard.photoCount", {
+                                count: totalPhotos,
+                              })}
                               size="small"
                               color={totalPhotos > 0 ? "success" : "default"}
                               variant={totalPhotos > 0 ? "filled" : "outlined"}
@@ -1215,9 +1220,13 @@ export const DashboardPage = () => {
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleRowsPerPageChange}
                 rowsPerPageOptions={[5, 10, 25, 50]}
-                labelRowsPerPage="Itens por página:"
+                labelRowsPerPage={t("dashboard.rowsPerPage")}
                 labelDisplayedRows={({ from, to, count }) =>
-                  `${from}–${to} de ${count !== -1 ? count : `mais de ${to}`}`
+                  t("dashboard.displayedRows", {
+                    from,
+                    to,
+                    count: count !== -1 ? count : `>${to}`,
+                  })
                 }
               />
             </>
@@ -1269,7 +1278,7 @@ export const DashboardPage = () => {
             }
           />
           <TextField
-            label="E-mail"
+            label={t("people.fields.email")}
             fullWidth
             type="email"
             value={newPersonForm.email}
@@ -1278,7 +1287,7 @@ export const DashboardPage = () => {
             }
           />
           <TextField
-            label="E-mail Alternativo"
+            label={t("people.fields.alternativeEmail")}
             fullWidth
             type="email"
             value={newPersonForm.alternative_email}
