@@ -352,7 +352,8 @@ export const DashboardPage = () => {
   const metrics = useMemo(() => {
     let totalDogs = 0;
     let totalPhotos = 0;
-    let totalRevenue = 0;
+    let totalRevenueBRL = 0;
+    let totalRevenueUSD = 0;
 
     allSeasonClients.forEach((c) => {
       const dogs = c.dogs || [];
@@ -361,7 +362,13 @@ export const DashboardPage = () => {
         const photos = d.photos || [];
         totalPhotos += photos.length;
         photos.forEach((p) => {
-          totalRevenue += p.amount_paid || 0;
+          if (p.payment_method !== "Não pago" && p.amount_paid) {
+            if (p.currency === "USD") {
+              totalRevenueUSD += p.amount_paid;
+            } else {
+              totalRevenueBRL += p.amount_paid;
+            }
+          }
         });
       });
     });
@@ -371,7 +378,8 @@ export const DashboardPage = () => {
       activeSeasonClients: allSeasonClients.length,
       totalDogs,
       totalPhotos,
-      totalRevenue,
+      totalRevenueBRL,
+      totalRevenueUSD,
     };
   }, [people.length, allSeasonClients]);
 
@@ -790,12 +798,35 @@ export const DashboardPage = () => {
                     >
                       {t("dashboard.kpi.totalRevenue")}
                     </Typography>
-                    <Typography
-                      variant="h4"
-                      sx={{ fontWeight: 800, mt: 0.5, color: "success.main" }}
+                    <Box
+                      sx={{
+                        mt: 0.5,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 0.25,
+                      }}
                     >
-                      R$ {metrics.totalRevenue.toFixed(2)}
-                    </Typography>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          fontWeight: 800,
+                          color: "success.main",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        R$ {metrics.totalRevenueBRL.toFixed(2)}
+                      </Typography>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 800,
+                          color: "success.main",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        $ {metrics.totalRevenueUSD.toFixed(2)}
+                      </Typography>
+                    </Box>
                     <Typography variant="caption" color="text.secondary">
                       {t("dashboard.kpiDescriptions.paidPhotos")}
                     </Typography>

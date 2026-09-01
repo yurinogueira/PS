@@ -160,4 +160,55 @@ describe("PersonDetailsPage", () => {
     expect(screen.getByText("$ 25.50")).toBeInTheDocument();
     expect(screen.getByText("Arquivo: DSC_0002")).toBeInTheDocument();
   });
+
+  it("renders separate total collected chips for USD and BRL on a dog", async () => {
+    vi.mocked(clientService.list).mockResolvedValue({
+      data: [
+        {
+          id: "client-1",
+          person_id: "p123",
+          season_id: "s1",
+          dogs: [
+            {
+              breed: "Pug",
+              is_owner: true,
+              competitions_won: 0,
+              photos: [
+                {
+                  file_number: "DSC_1001",
+                  photographer_id: "ph1",
+                  payment_method: "Pix",
+                  currency: "BRL",
+                  amount_paid: 120,
+                },
+                {
+                  file_number: "DSC_1002",
+                  photographer_id: "ph1",
+                  payment_method: "Cartão de Crédito",
+                  currency: "USD",
+                  amount_paid: 40,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/people/p123"]}>
+        <Routes>
+          <Route path="/people/:id" element={<PersonDetailsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByText("Total Arrecadado: R$ 120.00"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Total Arrecadado: $ 40.00")).toBeInTheDocument();
+  });
 });
