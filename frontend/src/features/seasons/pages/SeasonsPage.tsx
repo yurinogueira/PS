@@ -23,11 +23,15 @@ import {
   OutlinedInput,
   IconButton,
   Tooltip,
+  Avatar,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
+import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 import { useTranslation } from "react-i18next";
 import { seasonService, Season } from "../../../services/api/season.service";
 import {
@@ -223,18 +227,23 @@ export const SeasonsPage = () => {
           overflowX: "auto",
         }}
       >
-        <Table sx={{ minWidth: 600 }}>
-          <TableHead>
+        <Table sx={{ minWidth: 700 }}>
+          <TableHead sx={{ bgcolor: "grey.50" }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>
                 {t("seasons.fields.name")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("seasons.status")}
               </TableCell>
               <TableCell sx={{ fontWeight: 600 }}>
                 {t("photographers.title")}
               </TableCell>
               <TableCell sx={{ fontWeight: 600 }}>
                 {t("seasons.fields.judges")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("seasons.fields.createdAt")}
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>
                 {t("shared.actions")}
@@ -244,22 +253,123 @@ export const SeasonsPage = () => {
           <TableBody>
             {seasons.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                   {t("seasons.noData")}
                 </TableCell>
               </TableRow>
             ) : (
               seasons.map((s) => {
+                const isActive = activeSeason?.id === s.id;
                 const associatedPhotogs = s.photographer_ids?.length || 0;
                 const associatedJudges = s.judges?.length || 0;
                 return (
-                  <TableRow key={s.id} hover>
-                    <TableCell>{s.id}</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>{s.name}</TableCell>
+                  <TableRow
+                    key={s.id}
+                    hover
+                    sx={{
+                      bgcolor: isActive ? "rgba(2, 132, 199, 0.04)" : "inherit",
+                    }}
+                  >
                     <TableCell>
-                      {t("seasons.associatedPhotographers", {
-                        count: associatedPhotogs,
-                      })}
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                      >
+                        <Avatar
+                          sx={{
+                            bgcolor: isActive ? "primary.main" : "grey.200",
+                            color: isActive
+                              ? "primary.contrastText"
+                              : "text.secondary",
+                            width: 36,
+                            height: 36,
+                          }}
+                        >
+                          <EventNoteRoundedIcon fontSize="small" />
+                        </Avatar>
+                        <Box>
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ fontWeight: 700, color: "text.primary" }}
+                          >
+                            {s.name}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      {isActive ? (
+                        <Chip
+                          icon={<CheckCircleRoundedIcon fontSize="small" />}
+                          label={t("seasons.activeBadge")}
+                          size="small"
+                          color="success"
+                          sx={{ fontWeight: 700 }}
+                        />
+                      ) : (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="inherit"
+                          onClick={() => setActiveSeason(s)}
+                          sx={{
+                            textTransform: "none",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            borderRadius: 1.5,
+                            borderColor: "divider",
+                            py: 0.25,
+                            px: 1,
+                          }}
+                        >
+                          {t("seasons.selectActive")}
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {associatedPhotogs > 0 ? (
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
+                        >
+                          {s.photographer_ids?.slice(0, 2).map((pid) => {
+                            const photog = photographers.find(
+                              (p) => p.id === pid,
+                            );
+                            return (
+                              <Chip
+                                key={pid}
+                                label={photog?.name || pid}
+                                size="small"
+                                variant="outlined"
+                                icon={
+                                  <PhotoCameraRoundedIcon fontSize="small" />
+                                }
+                              />
+                            );
+                          })}
+                          {associatedPhotogs > 2 && (
+                            <Tooltip
+                              title={s.photographer_ids
+                                ?.slice(2)
+                                .map(
+                                  (pid) =>
+                                    photographers.find((p) => p.id === pid)
+                                      ?.name || pid,
+                                )
+                                .join(", ")}
+                            >
+                              <Chip
+                                label={`+${associatedPhotogs - 2}`}
+                                size="small"
+                                variant="outlined"
+                              />
+                            </Tooltip>
+                          )}
+                        </Box>
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          {t("seasons.noPhotographers")}
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell>
                       {associatedJudges > 0 ? (
@@ -288,6 +398,13 @@ export const SeasonsPage = () => {
                           {t("seasons.noJudges")}
                         </Typography>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {s.created_at
+                          ? new Date(s.created_at).toLocaleDateString()
+                          : "-"}
+                      </Typography>
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip

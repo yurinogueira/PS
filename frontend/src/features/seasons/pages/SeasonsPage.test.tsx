@@ -5,6 +5,7 @@ import { SeasonsPage } from "./SeasonsPage";
 import { seasonService, Season } from "../../../services/api/season.service";
 import { photographerService } from "../../../services/api/photographer.service";
 import { useSeasonStore } from "../../../store/seasonStore";
+import i18n from "../../../i18n";
 
 describe("SeasonsPage", () => {
   const mockSeasons: Season[] = [
@@ -22,8 +23,9 @@ describe("SeasonsPage", () => {
     },
   ];
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.restoreAllMocks();
+    await i18n.changeLanguage("pt-BR");
     useSeasonStore.setState({ activeSeason: null });
     vi.spyOn(seasonService, "list").mockResolvedValue(mockSeasons);
     vi.spyOn(photographerService, "list").mockResolvedValue([]);
@@ -96,5 +98,51 @@ describe("SeasonsPage", () => {
       expect(seasonService.delete).toHaveBeenCalledWith("season-1");
       expect(useSeasonStore.getState().activeSeason?.id).toBe("season-2");
     });
+  });
+
+  it("renders enriched seasons table without raw UUID column", async () => {
+    render(
+      <BrowserRouter>
+        <SeasonsPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Dog Show 2026")).toBeInTheDocument();
+    });
+
+    // Check that ID column header is NOT present
+    expect(
+      screen.queryByRole("columnheader", { name: /^ID$/i }),
+    ).not.toBeInTheDocument();
+    // Raw UUID values should not be directly displayed
+    expect(screen.queryByText("season-1")).not.toBeInTheDocument();
+    expect(screen.queryByText("season-2")).not.toBeInTheDocument();
+
+    // Verify enriched columns
+    expect(screen.getByText("Status")).toBeInTheDocument();
+    expect(screen.getByText("Juízes")).toBeInTheDocument();
+    expect(screen.getByText("Data de Criação")).toBeInTheDocument();
+    expect(screen.getByText("Juiz A")).toBeInTheDocument();
+    expect(screen.getByText("Juiz B")).toBeInTheDocument();
+  });
+
+  it("allows setting a season as active from the table", async () => {
+    render(
+      <BrowserRouter>
+        <SeasonsPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Dog Show 2026")).toBeInTheDocument();
+    });
+
+    const setAsActiveButtons = screen.getAllByRole("button", {
+      name: /definir como ativo/i,
+    });
+    fireEvent.click(setAsActiveButtons[0]);
+
+    expect(useSeasonStore.getState().activeSeason?.id).toBe("season-1");
   });
 });

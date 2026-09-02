@@ -545,5 +545,8 @@ describe("DashboardPage", () => {
       expect(screen.getByText("R$ 250.00")).toBeInTheDocument();
       expect(screen.getByText("$ 75.00")).toBeInTheDocument();
     });
+
+    // Check that internal database client IDs are not rendered
+    expect(screen.queryByText(/ID: client-1/i)).not.toBeInTheDocument();
   });
 });

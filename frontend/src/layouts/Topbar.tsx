@@ -136,7 +136,11 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
           }}
         >
           <FormControl fullWidth size="small">
-            <InputLabel id="active-season-select-label" shrink>
+            <InputLabel
+              id="active-season-select-label"
+              shrink
+              sx={{ bgcolor: "background.paper", px: 0.5, zIndex: 1 }}
+            >
               {t("layout.activeSeason")}
             </InputLabel>
             <Select
