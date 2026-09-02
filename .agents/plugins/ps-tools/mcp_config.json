@@ -1,12 +1,5 @@
 {
   "mcpServers": {
-    "puppeteer": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-puppeteer"
-      ]
-    },
     "github": {
       "command": "sh",
       "args": [
@@ -18,10 +11,15 @@
       "command": "npx",
       "args": [
         "-y",
+        "-q",
         "brave-mcp@latest",
         "--slim",
         "--headless",
-        "--isolated"
+        "--isolated",
+        "--brave-arg=--no-sandbox",
+        "--brave-arg=--disable-setuid-sandbox",
+        "--brave-arg=--disable-dev-shm-usage",
+        "--brave-arg=--disable-gpu"
       ],
       "env": {
         "BRAVE_PATH": "/usr/bin/brave-origin"

@@ -384,7 +384,7 @@ export const DashboardPage = () => {
   }, [people.length, allSeasonClients]);
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1600, margin: "0 auto" }}>
+    <Box sx={{ maxWidth: 1600, margin: "0 auto", width: "100%" }}>
       {/* Top Header Row with Compact Overview Toggle */}
       <Box
         sx={{
@@ -881,7 +881,7 @@ export const DashboardPage = () => {
           {/* Table Toolbar */}
           <Box
             sx={{
-              p: 2.5,
+              p: { xs: 2, sm: 2.5 },
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -891,7 +891,7 @@ export const DashboardPage = () => {
               borderColor: "divider",
             }}
           >
-            <Box>
+            <Box sx={{ width: { xs: "100%", md: "auto" } }}>
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 {t("clients.title")}
               </Typography>
@@ -914,7 +914,10 @@ export const DashboardPage = () => {
                 placeholder={t("dashboard.searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                sx={{ width: { xs: "100%", sm: 280, md: 340 } }}
+                sx={{
+                  width: { xs: "100%", sm: 280, md: 340 },
+                  flex: { xs: "1 1 100%", sm: "0 0 auto" },
+                }}
                 slotProps={{
                   input: {
                     startAdornment: (
@@ -925,46 +928,59 @@ export const DashboardPage = () => {
                   },
                 }}
               />
-              <Tooltip title={isWriteBlocked ? getWriteBlockedReason() : ""}>
-                <span>
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => setLinkModalOpen(true)}
-                    disabled={!activeSeason || isWriteBlocked}
-                    sx={{
-                      bgcolor: "primary.main",
-                      "&:hover": { bgcolor: "primary.dark" },
-                      borderRadius: 2,
-                      textTransform: "none",
-                      fontWeight: 700,
-                      px: 2,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {t("dashboard.actions.addClient")}
-                  </Button>
-                </span>
-              </Tooltip>
-              <Tooltip title={isWriteBlocked ? getWriteBlockedReason() : ""}>
-                <span>
-                  <Button
-                    variant="outlined"
-                    startIcon={<PersonAddAlt1Icon />}
-                    onClick={() => setNewPersonOpen(true)}
-                    disabled={isWriteBlocked}
-                    sx={{
-                      borderRadius: 2,
-                      textTransform: "none",
-                      fontWeight: 600,
-                      px: 2,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {t("dashboard.actions.addPerson")}
-                  </Button>
-                </span>
-              </Tooltip>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 1.5,
+                  width: { xs: "100%", sm: "auto" },
+                  flexWrap: { xs: "wrap", sm: "nowrap" },
+                }}
+              >
+                <Tooltip title={isWriteBlocked ? getWriteBlockedReason() : ""}>
+                  <span style={{ width: "100%" }}>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      startIcon={<AddIcon />}
+                      onClick={() => setLinkModalOpen(true)}
+                      disabled={!activeSeason || isWriteBlocked}
+                      sx={{
+                        bgcolor: "primary.main",
+                        "&:hover": { bgcolor: "primary.dark" },
+                        borderRadius: 2,
+                        textTransform: "none",
+                        fontWeight: 700,
+                        px: 2,
+                        whiteSpace: "nowrap",
+                        minHeight: 40,
+                      }}
+                    >
+                      {t("dashboard.actions.addClient")}
+                    </Button>
+                  </span>
+                </Tooltip>
+                <Tooltip title={isWriteBlocked ? getWriteBlockedReason() : ""}>
+                  <span style={{ width: "100%" }}>
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      startIcon={<PersonAddAlt1Icon />}
+                      onClick={() => setNewPersonOpen(true)}
+                      disabled={isWriteBlocked}
+                      sx={{
+                        borderRadius: 2,
+                        textTransform: "none",
+                        fontWeight: 600,
+                        px: 2,
+                        whiteSpace: "nowrap",
+                        minHeight: 40,
+                      }}
+                    >
+                      {t("dashboard.actions.addPerson")}
+                    </Button>
+                  </span>
+                </Tooltip>
+              </Box>
             </Box>
           </Box>
 
@@ -1024,7 +1040,14 @@ export const DashboardPage = () => {
             </Box>
           ) : (
             <>
-              <TableContainer sx={{ width: "100%", overflowX: "auto" }}>
+              {/* Desktop Table View (>= 900px) */}
+              <TableContainer
+                sx={{
+                  width: "100%",
+                  overflowX: "auto",
+                  display: { xs: "none", md: "block" },
+                }}
+              >
                 <Table sx={{ minWidth: 650 }}>
                   <TableHead sx={{ bgcolor: "grey.50" }}>
                     <TableRow>
@@ -1243,6 +1266,297 @@ export const DashboardPage = () => {
                 </Table>
               </TableContainer>
 
+              {/* Mobile & Tablet Responsive Cards View (< 900px) */}
+              <Box
+                sx={{
+                  display: { xs: "flex", md: "none" },
+                  flexDirection: "column",
+                  gap: 2,
+                  p: { xs: 1.5, sm: 2 },
+                }}
+              >
+                {clients.map((client) => {
+                  const person = getPerson(client.person_id);
+                  const dogs = client.dogs || [];
+                  const totalPhotos = dogs.reduce(
+                    (acc, d) => acc + (d.photos?.length || 0),
+                    0,
+                  );
+
+                  return (
+                    <Paper
+                      key={client.id}
+                      elevation={0}
+                      onClick={() => {
+                        if (client.person_id) {
+                          navigate(`/people/${client.person_id}`);
+                        } else {
+                          handleOpenDetails(client.id);
+                        }
+                      }}
+                      sx={{
+                        p: 2,
+                        borderRadius: 2.5,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        bgcolor: "background.paper",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease-in-out",
+                        "&:hover": {
+                          borderColor: "primary.main",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                        },
+                      }}
+                    >
+                      {/* Card Header: Avatar, Name & ID */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 1.5,
+                          mb: 1.5,
+                        }}
+                      >
+                        <Avatar
+                          sx={{
+                            bgcolor: "primary.main",
+                            width: 44,
+                            height: 44,
+                            fontSize: "1.1rem",
+                            fontWeight: 700,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {person?.name
+                            ? person.name.charAt(0).toUpperCase()
+                            : "P"}
+                        </Avatar>
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography
+                            variant="subtitle1"
+                            sx={{
+                              fontWeight: 700,
+                              color: "text.primary",
+                              lineHeight: 1.3,
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {person?.name || t("clients.unknownPerson")}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ display: "block", mt: 0.25 }}
+                          >
+                            ID: {client.id.substring(0, 8)}...
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Contact Info */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: { xs: "column", sm: "row" },
+                          gap: { xs: 0.5, sm: 2 },
+                          mb: 1.5,
+                          p: 1.25,
+                          borderRadius: 2,
+                          bgcolor: "grey.50",
+                        }}
+                      >
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ fontWeight: 600, display: "block" }}
+                          >
+                            {t("people.fields.email")}:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "text.primary",
+                              wordBreak: "break-all",
+                            }}
+                          >
+                            {person?.email || "-"}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ fontWeight: 600, display: "block" }}
+                          >
+                            {t("people.fields.phone")}:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.primary" }}
+                          >
+                            {person?.phone
+                              ? formatPhone(person.phone)
+                              : t("dashboard.noPhone")}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Dogs and Photos Badges */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 1,
+                          mb: 2,
+                        }}
+                      >
+                        {/* Dogs */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ fontWeight: 600 }}
+                          >
+                            {t("clientDetails.dogs")}:
+                          </Typography>
+                          {dogs.length === 0 ? (
+                            <Chip
+                              label={t("dashboard.noDogs")}
+                              size="small"
+                              variant="outlined"
+                              sx={{ color: "text.secondary" }}
+                            />
+                          ) : (
+                            <>
+                              <Chip
+                                icon={
+                                  <PetsRoundedIcon style={{ fontSize: 14 }} />
+                                }
+                                label={t("dashboard.dogCount", {
+                                  count: dogs.length,
+                                })}
+                                size="small"
+                                color="primary"
+                                sx={{ fontWeight: 600 }}
+                              />
+                              {dogs.slice(0, 2).map((d, i) => (
+                                <Chip
+                                  key={i}
+                                  label={d.breed || t("dashboard.noBreed")}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{ fontSize: "0.75rem" }}
+                                />
+                              ))}
+                              {dogs.length > 2 && (
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {t("dashboard.moreDogs", {
+                                    count: dogs.length - 2,
+                                  })}
+                                </Typography>
+                              )}
+                            </>
+                          )}
+                        </Box>
+
+                        {/* Photos */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ fontWeight: 600 }}
+                          >
+                            {t("clientDetails.photos")}:
+                          </Typography>
+                          <Chip
+                            icon={
+                              <PhotoCameraRoundedIcon
+                                style={{ fontSize: 14 }}
+                              />
+                            }
+                            label={t("dashboard.photoCount", {
+                              count: totalPhotos,
+                            })}
+                            size="small"
+                            color={totalPhotos > 0 ? "success" : "default"}
+                            variant={totalPhotos > 0 ? "filled" : "outlined"}
+                            sx={{ fontWeight: 600 }}
+                          />
+                        </Box>
+                      </Box>
+
+                      {/* Action Buttons */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: { xs: "column", sm: "row" },
+                          gap: 1,
+                          pt: 1.5,
+                          borderTop: "1px solid",
+                          borderColor: "divider",
+                        }}
+                      >
+                        <Button
+                          variant="contained"
+                          fullWidth
+                          size="medium"
+                          endIcon={<ArrowForwardIcon />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (client.person_id) {
+                              navigate(`/people/${client.person_id}`);
+                            }
+                          }}
+                          sx={{
+                            borderRadius: 2,
+                            textTransform: "none",
+                            fontWeight: 600,
+                            minHeight: 42,
+                          }}
+                        >
+                          {t("dashboard.actions.dogsAndPhotos")}
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          fullWidth
+                          size="medium"
+                          startIcon={<EditRoundedIcon />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDetails(client.id);
+                          }}
+                          sx={{
+                            borderRadius: 2,
+                            textTransform: "none",
+                            fontWeight: 600,
+                            minHeight: 42,
+                          }}
+                        >
+                          {t("dashboard.actions.editData")}
+                        </Button>
+                      </Box>
+                    </Paper>
+                  );
+                })}
+              </Box>
+
               <TablePagination
                 component="div"
                 count={total}
@@ -1259,6 +1573,20 @@ export const DashboardPage = () => {
                     count: count !== -1 ? count : `>${to}`,
                   })
                 }
+                sx={{
+                  borderTop: "1px solid",
+                  borderColor: "divider",
+                  "& .MuiTablePagination-toolbar": {
+                    flexWrap: "wrap",
+                    justifyContent: { xs: "center", sm: "space-between" },
+                    gap: 1,
+                    py: 1,
+                    px: { xs: 1, sm: 2 },
+                  },
+                  "& .MuiTablePagination-actions": {
+                    ml: { xs: 0, sm: 2 },
+                  },
+                }}
               />
             </>
           )}
