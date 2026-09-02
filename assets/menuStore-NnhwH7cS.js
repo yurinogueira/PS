@@ -1,0 +1,1 @@
+import{r as e}from"./client-CXgNyz2t.js";var t=e((e,t)=>({activeMenuId:null,openMenu:t=>e({activeMenuId:t}),closeMenu:n=>{let r=t().activeMenuId;(!n||r===n)&&e({activeMenuId:null})},closeAll:()=>e({activeMenuId:null}),isMenuOpen:e=>t().activeMenuId===e}));export{t};
