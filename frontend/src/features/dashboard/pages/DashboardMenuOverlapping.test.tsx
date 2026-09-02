@@ -86,17 +86,17 @@ describe("Dashboard and Topbar Menu Overlapping (Issue #64)", () => {
     // 4. Verify User Profile menu opened and Reports menu closed automatically!
     await waitFor(() => {
       expect(screen.getByText("Meu Perfil")).toBeInTheDocument();
+      expect(
+        screen.queryByText("Exportar Clientes (.csv)"),
+      ).not.toBeInTheDocument();
     });
-    expect(
-      screen.queryByText("Exportar Clientes (.csv)"),
-    ).not.toBeInTheDocument();
 
     // 5. Click Reports button again -> User menu closes and Reports menu opens!
     fireEvent.click(reportsBtn);
 
     await waitFor(() => {
       expect(screen.getByText("Exportar Clientes (.csv)")).toBeInTheDocument();
+      expect(screen.queryByText("Meu Perfil")).not.toBeInTheDocument();
     });
-    expect(screen.queryByText("Meu Perfil")).not.toBeInTheDocument();
   });
 });
