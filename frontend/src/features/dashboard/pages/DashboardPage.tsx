@@ -58,6 +58,7 @@ import { personService, Person } from "../../../services/api/person.service";
 import { reportService } from "../../../services/api/report.service";
 import { useSeasonStore } from "../../../store/seasonStore";
 import { useTenantStore } from "../../../store/tenantStore";
+import { useMenuAnchor } from "../../../hooks/useMenuAnchor";
 import { LinkClientModal } from "../../clients/components/LinkClientModal";
 import { ClientDetailsModal } from "../../clients/components/ClientDetailsModal";
 import { formatPhone, maskPhone } from "../../../utils/phone";
@@ -137,9 +138,12 @@ export const DashboardPage = () => {
   });
 
   // Report Export Menu & Snackbar state
-  const [reportMenuAnchor, setReportMenuAnchor] = useState<null | HTMLElement>(
-    null,
-  );
+  const {
+    anchorEl: reportMenuAnchor,
+    isOpen: isReportMenuOpen,
+    handleOpen: handleOpenReportMenu,
+    handleClose: handleCloseReportMenu,
+  } = useMenuAnchor("dashboard-reports-menu");
   const [exportingReport, setExportingReport] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -164,7 +168,7 @@ export const DashboardPage = () => {
 
   const handleExportClientsPdf = async () => {
     if (!seasonId) return;
-    setReportMenuAnchor(null);
+    handleCloseReportMenu();
     setExportingReport(true);
     try {
       const res = await reportService.exportClientsPdf(seasonId);
@@ -189,7 +193,7 @@ export const DashboardPage = () => {
 
   const handleExportClientsCsv = async () => {
     if (!seasonId) return;
-    setReportMenuAnchor(null);
+    handleCloseReportMenu();
     setExportingReport(true);
     try {
       const res = await reportService.exportClientsCsv(seasonId);
@@ -214,7 +218,7 @@ export const DashboardPage = () => {
 
   const handleExportPaidClientsCsv = async () => {
     if (!seasonId) return;
-    setReportMenuAnchor(null);
+    handleCloseReportMenu();
     setExportingReport(true);
     try {
       const res = await reportService.exportPaidClientsCsv(seasonId);
@@ -239,7 +243,7 @@ export const DashboardPage = () => {
 
   const handleExportUnpaidClientsCsv = async () => {
     if (!seasonId) return;
-    setReportMenuAnchor(null);
+    handleCloseReportMenu();
     setExportingReport(true);
     try {
       const res = await reportService.exportUnpaidClientsCsv(seasonId);
@@ -562,7 +566,7 @@ export const DashboardPage = () => {
                       )
                     }
                     endIcon={<ExpandMoreIcon />}
-                    onClick={(e) => setReportMenuAnchor(e.currentTarget)}
+                    onClick={handleOpenReportMenu}
                     disabled={exportingReport || isReportsBlocked}
                     sx={{
                       borderColor: "rgba(255,255,255,0.4)",
@@ -584,8 +588,8 @@ export const DashboardPage = () => {
               </Tooltip>
               <Menu
                 anchorEl={reportMenuAnchor}
-                open={Boolean(reportMenuAnchor)}
-                onClose={() => setReportMenuAnchor(null)}
+                open={isReportMenuOpen}
+                onClose={handleCloseReportMenu}
               >
                 <MenuItem onClick={handleExportClientsPdf}>
                   <ListItemIcon>

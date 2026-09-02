@@ -24,6 +24,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../features/auth/state/auth.store";
 import { useSeasonStore } from "../store/seasonStore";
+import { useMenuStore } from "../store/menuStore";
+import { useMenuAnchor } from "../hooks/useMenuAnchor";
 import { seasonService, Season } from "../services/api/season.service";
 import { LanguageSelector } from "../components/LanguageSelector";
 
@@ -33,7 +35,12 @@ interface TopbarProps {
 
 export function Topbar({ onDrawerToggle }: TopbarProps) {
   const { t } = useTranslation();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const {
+    anchorEl,
+    isOpen: isUserMenuOpen,
+    handleOpen: handleMenu,
+    handleClose,
+  } = useMenuAnchor("topbar-user-menu");
   const [seasons, setSeasons] = useState<Season[]>([]);
   const navigate = useNavigate();
   const { user, clear } = useAuthStore();
@@ -67,14 +74,6 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
         setActiveSeason(null);
       });
   }, [setActiveSeason]);
-
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
 
   const handleLogout = () => {
     handleClose();
@@ -149,6 +148,7 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
               label={t("layout.activeSeason")}
               notched
               displayEmpty
+              onOpen={() => useMenuStore.getState().closeAll()}
               renderValue={(selected) => {
                 if (!selected || seasons.length === 0) {
                   return (
@@ -245,14 +245,20 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
           >
             {user?.name || t("layout.user")}
           </Typography>
-          <IconButton onClick={handleMenu} size="small" sx={{ ml: 1 }}>
+          <IconButton
+            onClick={handleMenu}
+            size="small"
+            sx={{ ml: 1 }}
+            aria-label={t("layout.user")}
+            data-testid="topbar-avatar-btn"
+          >
             <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.main" }}>
               {user?.name?.charAt(0).toUpperCase() || <AccountCircleIcon />}
             </Avatar>
           </IconButton>
           <Menu
             anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
+            open={isUserMenuOpen}
             onClose={handleClose}
             transformOrigin={{ horizontal: "right", vertical: "top" }}
             anchorOrigin={{ horizontal: "right", vertical: "bottom" }}

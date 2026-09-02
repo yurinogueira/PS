@@ -7,6 +7,7 @@ import {
   SelectChangeEvent,
   Tooltip,
 } from "@mui/material";
+import { useMenuStore } from "../store/menuStore";
 import { BrazilFlag } from "./flags/BrazilFlag";
 import { USAFlag } from "./flags/USAFlag";
 
@@ -44,6 +45,7 @@ export function LanguageSelector({
         <Select
           value={currentLanguageCode}
           onChange={handleChange}
+          onOpen={() => useMenuStore.getState().closeAll()}
           size="small"
           variant="outlined"
           inputProps={{ "aria-label": t("language.select") }}

@@ -1,18 +1,24 @@
 import { useState, useEffect } from "react";
 import { Box } from "@mui/material";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { useAuthStore } from "../features/auth/state/auth.store";
 import { useTenantStore } from "../store/tenantStore";
+import { useMenuStore } from "../store/menuStore";
 import { TenantStatusBanner } from "../features/shared";
 
 export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const drawerWidth = 280;
+  const location = useLocation();
 
   const { user } = useAuthStore();
   const { fetchTenantStatus } = useTenantStore();
+
+  useEffect(() => {
+    useMenuStore.getState().closeAll();
+  }, [location.pathname]);
 
   useEffect(() => {
     if (user?.tenantId) {
