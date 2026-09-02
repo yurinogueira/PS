@@ -53,6 +53,7 @@ import {
 } from "../../../services/api/photographer.service";
 import { reportService } from "../../../services/api/report.service";
 import { useSeasonStore } from "../../../store/seasonStore";
+import { useMenuAnchor } from "../../../hooks/useMenuAnchor";
 
 const PAYMENT_METHODS = [
   "Pix",
@@ -74,9 +75,12 @@ export const ClientsPage = () => {
   const [personId, setPersonId] = useState("");
   const [dogs, setDogs] = useState<Omit<Dog, "id">[]>([]);
 
-  const [reportMenuAnchor, setReportMenuAnchor] = useState<null | HTMLElement>(
-    null,
-  );
+  const {
+    anchorEl: reportMenuAnchor,
+    isOpen: isReportMenuOpen,
+    handleOpen: handleOpenReportMenu,
+    handleClose: handleCloseReportMenu,
+  } = useMenuAnchor("clients-reports-menu");
   const [exportingReport, setExportingReport] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -231,7 +235,7 @@ export const ClientsPage = () => {
 
   const handleExportPdfReport = async () => {
     if (!activeSeason) return;
-    setReportMenuAnchor(null);
+    handleCloseReportMenu();
     setExportingReport(true);
     try {
       const res = await reportService.exportClientsPdf(activeSeason.id);
@@ -256,7 +260,7 @@ export const ClientsPage = () => {
 
   const handleExportClientsCsvReport = async () => {
     if (!activeSeason) return;
-    setReportMenuAnchor(null);
+    handleCloseReportMenu();
     setExportingReport(true);
     try {
       const res = await reportService.exportClientsCsv(activeSeason.id);
@@ -281,7 +285,7 @@ export const ClientsPage = () => {
 
   const handleExportUnpaidClientsCsvReport = async () => {
     if (!activeSeason) return;
-    setReportMenuAnchor(null);
+    handleCloseReportMenu();
     setExportingReport(true);
     try {
       const res = await reportService.exportUnpaidClientsCsv(activeSeason.id);
@@ -306,7 +310,7 @@ export const ClientsPage = () => {
 
   const handleExportPaidClientsCsvReport = async () => {
     if (!activeSeason) return;
-    setReportMenuAnchor(null);
+    handleCloseReportMenu();
     setExportingReport(true);
     try {
       const res = await reportService.exportPaidClientsCsv(activeSeason.id);
@@ -377,7 +381,7 @@ export const ClientsPage = () => {
               )
             }
             endIcon={<ExpandMoreIcon />}
-            onClick={(e) => setReportMenuAnchor(e.currentTarget)}
+            onClick={handleOpenReportMenu}
             disabled={exportingReport}
             sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
           >
@@ -388,8 +392,8 @@ export const ClientsPage = () => {
 
           <Menu
             anchorEl={reportMenuAnchor}
-            open={Boolean(reportMenuAnchor)}
-            onClose={() => setReportMenuAnchor(null)}
+            open={isReportMenuOpen}
+            onClose={handleCloseReportMenu}
             slotProps={{
               paper: {
                 elevation: 3,
