@@ -17,19 +17,25 @@ import {
   TextField,
   IconButton,
   Tooltip,
+  Avatar,
+  Chip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
+import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
 import { useTranslation } from "react-i18next";
 import {
   photographerService,
   Photographer,
 } from "../../../services/api/photographer.service";
+import { seasonService, Season } from "../../../services/api/season.service";
 
 export const PhotographersPage = () => {
   const { t } = useTranslation();
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([]);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -40,8 +46,12 @@ export const PhotographersPage = () => {
 
   const load = async () => {
     try {
-      const data = await photographerService.list();
-      setPhotographers(data || []);
+      const [pData, sData] = await Promise.all([
+        photographerService.list(),
+        seasonService.list(),
+      ]);
+      setPhotographers(pData || []);
+      setSeasons(sData || []);
     } catch (err) {
       console.error("Erro ao carregar fotógrafos:", err);
     }
@@ -137,12 +147,17 @@ export const PhotographersPage = () => {
           overflowX: "auto",
         }}
       >
-        <Table sx={{ minWidth: 450 }}>
-          <TableHead>
+        <Table sx={{ minWidth: 600 }}>
+          <TableHead sx={{ bgcolor: "grey.50" }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>
                 {t("photographers.fields.name")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("photographers.fields.associatedEvents")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>
+                {t("photographers.fields.createdAt")}
               </TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>
                 {t("shared.actions")}
@@ -152,38 +167,113 @@ export const PhotographersPage = () => {
           <TableBody>
             {photographers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} align="center">
+                <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
                   {t("photographers.noData")}
                 </TableCell>
               </TableRow>
             ) : (
-              photographers.map((p) => (
-                <TableRow key={p.id} hover>
-                  <TableCell>{p.id}</TableCell>
-                  <TableCell>{p.name}</TableCell>
-                  <TableCell align="right">
-                    <Tooltip title={t("photographers.edit")}>
-                      <IconButton
-                        color="primary"
-                        size="small"
-                        onClick={() => handleOpenEdit(p)}
-                        sx={{ mr: 1 }}
+              photographers.map((p) => {
+                const linkedSeasons = seasons.filter((s) =>
+                  s.photographer_ids?.includes(p.id),
+                );
+                return (
+                  <TableRow key={p.id} hover>
+                    <TableCell>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
                       >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title={t("photographers.delete")}>
-                      <IconButton
-                        color="error"
-                        size="small"
-                        onClick={() => handleOpenDelete(p)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))
+                        <Avatar
+                          sx={{
+                            bgcolor: "primary.main",
+                            color: "primary.contrastText",
+                            width: 36,
+                            height: 36,
+                            fontSize: "0.9rem",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {p.name ? (
+                            p.name.charAt(0).toUpperCase()
+                          ) : (
+                            <PhotoCameraRoundedIcon fontSize="small" />
+                          )}
+                        </Avatar>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: 700, color: "text.primary" }}
+                        >
+                          {p.name}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      {linkedSeasons.length > 0 ? (
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
+                        >
+                          {linkedSeasons.slice(0, 2).map((s) => (
+                            <Chip
+                              key={s.id}
+                              label={s.name}
+                              size="small"
+                              variant="outlined"
+                              icon={<EventNoteRoundedIcon fontSize="small" />}
+                            />
+                          ))}
+                          {linkedSeasons.length > 2 && (
+                            <Tooltip
+                              title={linkedSeasons
+                                .slice(2)
+                                .map((s) => s.name)
+                                .join(", ")}
+                            >
+                              <Chip
+                                label={`+${linkedSeasons.length - 2}`}
+                                size="small"
+                                variant="outlined"
+                              />
+                            </Tooltip>
+                          )}
+                        </Box>
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          {t("photographers.noEvents")}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {p.created_at
+                          ? new Date(p.created_at).toLocaleDateString()
+                          : "-"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title={t("photographers.edit")}>
+                        <IconButton
+                          aria-label={t("photographers.edit")}
+                          color="primary"
+                          size="small"
+                          onClick={() => handleOpenEdit(p)}
+                          sx={{ mr: 1 }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title={t("photographers.delete")}>
+                        <IconButton
+                          aria-label={t("photographers.delete")}
+                          color="error"
+                          size="small"
+                          onClick={() => handleOpenDelete(p)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -229,7 +319,7 @@ export const PhotographersPage = () => {
         open={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
       >
-        <DialogTitle>{t("photographers.confirmDelete")}</DialogTitle>
+        <DialogTitle>{t("photographers.delete")}</DialogTitle>
         <DialogContent>
           <Typography>
             {t("photographers.confirmDelete")}{" "}

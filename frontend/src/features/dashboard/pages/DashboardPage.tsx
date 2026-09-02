@@ -1124,12 +1124,6 @@ export const DashboardPage = () => {
                                 >
                                   {person?.name || t("clients.unknownPerson")}
                                 </Typography>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  ID: {client.id.substring(0, 8)}...
-                                </Typography>
                               </Box>
                             </Box>
                           </TableCell>
@@ -1342,13 +1336,6 @@ export const DashboardPage = () => {
                             }}
                           >
                             {person?.name || t("clients.unknownPerson")}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ display: "block", mt: 0.25 }}
-                          >
-                            ID: {client.id.substring(0, 8)}...
                           </Typography>
                         </Box>
                       </Box>
