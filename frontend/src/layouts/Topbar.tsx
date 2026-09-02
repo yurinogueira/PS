@@ -14,6 +14,8 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
 import MenuIcon from "@mui/icons-material/Menu";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -52,12 +54,17 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
             const found = seasonList.find((x) => x.id === currentActive.id);
             if (found) {
               setActiveSeason(found);
+            } else {
+              setActiveSeason(seasonList[0]);
             }
           }
+        } else {
+          setActiveSeason(null);
         }
       })
       .catch(() => {
         setSeasons([]);
+        setActiveSeason(null);
       });
   }, [setActiveSeason]);
 
@@ -76,6 +83,10 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
   };
 
   const handleChangeSeason = (id: string) => {
+    if (id === "__manage_seasons__") {
+      navigate("/seasons");
+      return;
+    }
     const s = seasons.find((x) => x.id === id);
     if (s) {
       setActiveSeason(s);
@@ -119,24 +130,102 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
 
         <Box
           sx={{
-            minWidth: { xs: 130, sm: 180, md: 220 },
-            maxWidth: { xs: 170, sm: 260 },
+            minWidth: { xs: 140, sm: 190, md: 230 },
+            maxWidth: { xs: 180, sm: 270 },
             mr: { xs: 1, sm: 2, md: 3 },
           }}
         >
           <FormControl fullWidth size="small">
-            <InputLabel>{t("layout.activeSeason")}</InputLabel>
+            <InputLabel id="active-season-select-label" shrink>
+              {t("layout.activeSeason")}
+            </InputLabel>
             <Select
+              labelId="active-season-select-label"
               value={activeSeason?.id || ""}
               label={t("layout.activeSeason")}
+              notched
+              displayEmpty
+              renderValue={(selected) => {
+                if (!selected || seasons.length === 0) {
+                  return (
+                    <Typography
+                      variant="body2"
+                      component="span"
+                      sx={{
+                        color: "text.secondary",
+                        fontStyle: "italic",
+                        fontSize: { xs: "0.8rem", sm: "0.875rem" },
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                      }}
+                    >
+                      <EventNoteRoundedIcon
+                        sx={{ fontSize: { xs: 14, sm: 16 } }}
+                      />
+                      {t("layout.noSeason")}
+                    </Typography>
+                  );
+                }
+                const current = seasons.find((s) => s.id === selected);
+                return current ? current.name : selected;
+              }}
               onChange={(e) => handleChangeSeason(e.target.value)}
               sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
             >
-              {(seasons || []).map((s) => (
-                <MenuItem key={s.id} value={s.id}>
-                  {s.name}
-                </MenuItem>
-              ))}
+              {seasons.length === 0
+                ? [
+                    <MenuItem
+                      key="empty"
+                      value=""
+                      disabled
+                      sx={{
+                        fontStyle: "italic",
+                        color: "text.secondary",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      {t("layout.noSeasonsRegistered")}
+                    </MenuItem>,
+                    <Divider key="div-empty" sx={{ my: 0.5 }} />,
+                    <MenuItem
+                      key="create"
+                      value="__manage_seasons__"
+                      sx={{
+                        color: "primary.main",
+                        fontWeight: 600,
+                        fontSize: "0.875rem",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <AddRoundedIcon fontSize="small" />
+                      {t("layout.createSeason")}
+                    </MenuItem>,
+                  ]
+                : [
+                    ...seasons.map((s) => (
+                      <MenuItem key={s.id} value={s.id}>
+                        {s.name}
+                      </MenuItem>
+                    )),
+                    <Divider key="div-seasons" sx={{ my: 0.5 }} />,
+                    <MenuItem
+                      key="manage"
+                      value="__manage_seasons__"
+                      sx={{
+                        color: "primary.main",
+                        fontSize: "0.85rem",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <AddRoundedIcon fontSize="small" />
+                      {t("layout.manageSeasons")}
+                    </MenuItem>,
+                  ]}
             </Select>
           </FormControl>
         </Box>

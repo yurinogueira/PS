@@ -9,9 +9,12 @@ import { personService } from "../../../services/api/person.service";
 import { photographerService } from "../../../services/api/photographer.service";
 import { reportService } from "../../../services/api/report.service";
 
+import i18n from "../../../i18n";
+
 describe("DashboardPage", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.restoreAllMocks();
+    await i18n.changeLanguage("pt-BR");
     useSeasonStore.setState({ activeSeason: null });
     useTenantStore.setState({ tenantStatus: null });
     vi.spyOn(personService, "list").mockResolvedValue([]);
@@ -123,7 +126,9 @@ describe("DashboardPage", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Carlos Ferreira")).toBeInTheDocument();
+      expect(
+        screen.getAllByText("Carlos Ferreira").length,
+      ).toBeGreaterThanOrEqual(1);
     });
 
     expect(screen.getByText("Total de Pessoas")).toBeInTheDocument();
@@ -131,8 +136,86 @@ describe("DashboardPage", () => {
       screen.getAllByText("Cachorros no Evento").length,
     ).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Fotos Registradas")).toBeInTheDocument();
-    expect(screen.getByText("Cachorros & Fotos")).toBeInTheDocument();
-    expect(screen.getByText("Editar Dados")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Cachorros & Fotos").length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Editar Dados").length).toBeGreaterThanOrEqual(
+      1,
+    );
+  });
+
+  it("renders responsive mobile card and handles client detail actions", async () => {
+    useSeasonStore.setState({
+      activeSeason: { id: "season-1", name: "Temporada 2026" },
+    });
+
+    vi.spyOn(clientService, "list").mockResolvedValue({
+      data: [
+        {
+          id: "client-12345678",
+          person_id: "person-1",
+          season_id: "season-1",
+          dogs: [
+            {
+              breed: "Golden Retriever",
+              judge: "Juiz Silva",
+              competitions_won: 2,
+              won_competitions: ["Best in Show"],
+              photos: [
+                {
+                  file_number: "DSC_999",
+                  photographer_id: "photog-1",
+                  payment_method: "Pix",
+                  amount_paid: 100,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    });
+
+    vi.spyOn(personService, "list").mockResolvedValue([
+      {
+        id: "person-1",
+        name: "Ana Silva",
+        email: "ana@example.com",
+        alternative_email: "",
+        phone: "21988888888",
+      },
+    ]);
+
+    render(
+      <BrowserRouter>
+        <DashboardPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Ana Silva").length).toBeGreaterThanOrEqual(1);
+    });
+
+    expect(
+      screen.getAllByText("Golden Retriever").length,
+    ).toBeGreaterThanOrEqual(1);
+
+    // Test clicking Cachorros & Fotos button
+    const dogBtns = screen.getAllByRole("button", {
+      name: /Cachorros & Fotos/i,
+    });
+    expect(dogBtns.length).toBeGreaterThanOrEqual(2);
+
+    // Test clicking Editar Dados in card/table opens modal
+    const editBtns = screen.getAllByRole("button", { name: /Editar Dados/i });
+    expect(editBtns.length).toBeGreaterThanOrEqual(2);
+    fireEvent.click(editBtns[1]); // Mobile card button
+
+    await waitFor(() => {
+      expect(screen.getByText("Detalhes do Cliente")).toBeInTheDocument();
+    });
   });
 
   it("triggers search and shows empty search state when no results", async () => {
