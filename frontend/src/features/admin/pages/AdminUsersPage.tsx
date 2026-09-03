@@ -27,6 +27,7 @@ import {
   ToggleButton,
   Card,
   CardContent,
+  Tooltip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
@@ -312,19 +313,22 @@ export const AdminUsersPage = () => {
         <Table sx={{ minWidth: 680 }}>
           <TableHead sx={{ bgcolor: "grey.50" }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>
+              <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                 {t("admin.users.columns.name")}
               </TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>
+              <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                 {t("admin.users.columns.email")}
               </TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>
+              <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                 {t("admin.users.columns.superAdmin")}
               </TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>
+              <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                 {t("admin.users.columns.tenant")}
               </TableCell>
-              <TableCell align="right" sx={{ fontWeight: 600 }}>
+              <TableCell
+                align="right"
+                sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+              >
                 {t("admin.users.columns.actions")}
               </TableCell>
             </TableRow>
@@ -360,9 +364,14 @@ export const AdminUsersPage = () => {
             ) : (
               filteredUsers.map((u) => (
                 <TableRow key={u.id} hover>
-                  <TableCell>
+                  <TableCell sx={{ maxWidth: { xs: 160, sm: 200 } }}>
                     <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        minWidth: 0,
+                      }}
                     >
                       <Box
                         sx={{
@@ -373,6 +382,7 @@ export const AdminUsersPage = () => {
                           p: 0.8,
                           borderRadius: "50%",
                           display: "inline-flex",
+                          flexShrink: 0,
                         }}
                       >
                         {u.superAdmin ? (
@@ -381,14 +391,27 @@ export const AdminUsersPage = () => {
                           <PersonRoundedIcon fontSize="small" />
                         )}
                       </Box>
-                      <Box>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Tooltip title={u.name} arrow placement="top-start">
+                          <Typography
+                            variant="subtitle2"
+                            noWrap
+                            sx={{
+                              fontWeight: 600,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {u.name}
+                          </Typography>
+                        </Tooltip>
                         <Typography
-                          variant="subtitle2"
-                          sx={{ fontWeight: 600 }}
+                          variant="caption"
+                          color="text.secondary"
+                          noWrap
+                          sx={{ display: "block" }}
                         >
-                          {u.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
                           {t("admin.users.createdAt", {
                             date: u.createdAt
                               ? new Date(u.createdAt).toLocaleDateString(
@@ -400,8 +423,20 @@ export const AdminUsersPage = () => {
                       </Box>
                     </Box>
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">{u.email}</Typography>
+                  <TableCell sx={{ maxWidth: { xs: 180, sm: 240, md: 280 } }}>
+                    <Tooltip title={u.email} arrow placement="top-start">
+                      <Typography
+                        variant="body2"
+                        noWrap
+                        sx={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {u.email}
+                      </Typography>
+                    </Tooltip>
                     {u.emailVerified ? (
                       <Box
                         sx={{
@@ -409,14 +444,34 @@ export const AdminUsersPage = () => {
                           alignItems: "center",
                           gap: 0.5,
                           mt: 0.5,
+                          minWidth: 0,
                         }}
                       >
                         <CheckCircleRoundedIcon
-                          sx={{ fontSize: 14, color: "success.main" }}
+                          sx={{
+                            fontSize: 14,
+                            color: "success.main",
+                            flexShrink: 0,
+                          }}
                         />
-                        <Typography variant="caption" color="success.main">
-                          {t("admin.users.emailVerified")}
-                        </Typography>
+                        <Tooltip
+                          title={t("admin.users.emailVerified")}
+                          arrow
+                          placement="top-start"
+                        >
+                          <Typography
+                            variant="caption"
+                            color="success.main"
+                            noWrap
+                            sx={{
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {t("admin.users.emailVerified")}
+                          </Typography>
+                        </Tooltip>
                       </Box>
                     ) : (
                       <Box
@@ -425,18 +480,38 @@ export const AdminUsersPage = () => {
                           alignItems: "center",
                           gap: 0.5,
                           mt: 0.5,
+                          minWidth: 0,
                         }}
                       >
                         <WarningRoundedIcon
-                          sx={{ fontSize: 14, color: "warning.main" }}
+                          sx={{
+                            fontSize: 14,
+                            color: "warning.main",
+                            flexShrink: 0,
+                          }}
                         />
-                        <Typography variant="caption" color="warning.main">
-                          {t("admin.users.pendingVerification")}
-                        </Typography>
+                        <Tooltip
+                          title={t("admin.users.pendingVerification")}
+                          arrow
+                          placement="top-start"
+                        >
+                          <Typography
+                            variant="caption"
+                            color="warning.main"
+                            noWrap
+                            sx={{
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {t("admin.users.pendingVerification")}
+                          </Typography>
+                        </Tooltip>
                       </Box>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>
                     {u.superAdmin ? (
                       <Chip
                         label={t("admin.users.superAdminBadge")}
@@ -453,18 +528,34 @@ export const AdminUsersPage = () => {
                       />
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ maxWidth: { xs: 140, sm: 180 } }}>
                     {u.tenantId ? (
                       <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          minWidth: 0,
+                        }}
                       >
                         <BusinessRoundedIcon
                           fontSize="small"
-                          sx={{ color: "primary.main" }}
+                          sx={{ color: "primary.main", flexShrink: 0 }}
                         />
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {u.tenantId}
-                        </Typography>
+                        <Tooltip title={u.tenantId} arrow placement="top-start">
+                          <Typography
+                            variant="body2"
+                            noWrap
+                            sx={{
+                              fontWeight: 600,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {u.tenantId}
+                          </Typography>
+                        </Tooltip>
                       </Box>
                     ) : (
                       <Chip
@@ -476,13 +567,13 @@ export const AdminUsersPage = () => {
                       />
                     )}
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
                     <Button
                       variant="outlined"
                       size="small"
                       startIcon={<EditRoundedIcon />}
                       onClick={() => handleOpenAssign(u)}
-                      sx={{ fontWeight: 600 }}
+                      sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
                     >
                       {u.tenantId
                         ? t("admin.users.changeTenant")

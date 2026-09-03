@@ -57,4 +57,37 @@ describe("AdminUsersPage", () => {
       expect(screen.getByText("Pendente de Aprovação")).toBeInTheDocument();
     });
   });
+
+  it("renders email addresses with ellipsis and nowrap styling to avoid text cutoff", async () => {
+    vi.mocked(adminService.getUsers).mockResolvedValueOnce([
+      {
+        id: "u3",
+        name: "Developer Long Name",
+        email: "super.long.email.address.example.tenant@domain.com.br",
+        superAdmin: false,
+        emailVerified: true,
+        tenantId: "long-tenant-id",
+        createdAt: "2026-08-28T00:00:00Z",
+      },
+    ]);
+    vi.mocked(adminService.getTenants).mockResolvedValueOnce([]);
+
+    render(
+      <BrowserRouter>
+        <AdminUsersPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      const emailEl = screen.getByText(
+        "super.long.email.address.example.tenant@domain.com.br",
+      );
+      expect(emailEl).toBeInTheDocument();
+      expect(emailEl).toHaveStyle({
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+      });
+    });
+  });
 });

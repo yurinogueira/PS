@@ -638,23 +638,42 @@ export const DashboardPage = () => {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    gap: 1.5,
                   }}
                 >
-                  <Box>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography
                       variant="body2"
                       color="text.secondary"
+                      noWrap
                       sx={{ fontWeight: 600, textTransform: "uppercase" }}
                     >
                       {t("dashboard.kpi.totalClients")}
                     </Typography>
                     <Typography
                       variant="h4"
-                      sx={{ fontWeight: 800, mt: 0.5, color: "text.primary" }}
+                      noWrap
+                      sx={{
+                        fontWeight: 800,
+                        mt: 0.5,
+                        color: "text.primary",
+                        fontSize: {
+                          xs: "1.5rem",
+                          sm: "1.75rem",
+                          md: "1.45rem",
+                          lg: "1.85rem",
+                          xl: "2.125rem",
+                        },
+                      }}
                     >
                       {metrics.totalPeople}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      noWrap
+                      sx={{ display: "block" }}
+                    >
                       {metrics.activeSeasonClients}{" "}
                       {t("dashboard.kpiDescriptions.inThisEvent")}
                     </Typography>
@@ -665,6 +684,7 @@ export const DashboardPage = () => {
                       color: "primary.main",
                       width: 48,
                       height: 48,
+                      flexShrink: 0,
                     }}
                   >
                     <PeopleAltRoundedIcon />
@@ -690,23 +710,42 @@ export const DashboardPage = () => {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    gap: 1.5,
                   }}
                 >
-                  <Box>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography
                       variant="body2"
                       color="text.secondary"
+                      noWrap
                       sx={{ fontWeight: 600, textTransform: "uppercase" }}
                     >
                       {t("dashboard.kpi.dogs")}
                     </Typography>
                     <Typography
                       variant="h4"
-                      sx={{ fontWeight: 800, mt: 0.5, color: "text.primary" }}
+                      noWrap
+                      sx={{
+                        fontWeight: 800,
+                        mt: 0.5,
+                        color: "text.primary",
+                        fontSize: {
+                          xs: "1.5rem",
+                          sm: "1.75rem",
+                          md: "1.45rem",
+                          lg: "1.85rem",
+                          xl: "2.125rem",
+                        },
+                      }}
                     >
                       {metrics.totalDogs}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      noWrap
+                      sx={{ display: "block" }}
+                    >
                       {t("dashboard.kpiDescriptions.registeredInActiveSeason")}
                     </Typography>
                   </Box>
@@ -716,6 +755,7 @@ export const DashboardPage = () => {
                       color: "#4f46e5",
                       width: 48,
                       height: 48,
+                      flexShrink: 0,
                     }}
                   >
                     <PetsRoundedIcon />
@@ -741,23 +781,42 @@ export const DashboardPage = () => {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    gap: 1.5,
                   }}
                 >
-                  <Box>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography
                       variant="body2"
                       color="text.secondary"
+                      noWrap
                       sx={{ fontWeight: 600, textTransform: "uppercase" }}
                     >
                       {t("dashboard.kpi.totalPhotos")}
                     </Typography>
                     <Typography
                       variant="h4"
-                      sx={{ fontWeight: 800, mt: 0.5, color: "text.primary" }}
+                      noWrap
+                      sx={{
+                        fontWeight: 800,
+                        mt: 0.5,
+                        color: "text.primary",
+                        fontSize: {
+                          xs: "1.5rem",
+                          sm: "1.75rem",
+                          md: "1.45rem",
+                          lg: "1.85rem",
+                          xl: "2.125rem",
+                        },
+                      }}
                     >
                       {metrics.totalPhotos}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      noWrap
+                      sx={{ display: "block" }}
+                    >
                       {t("dashboard.kpiDescriptions.totalInThisEvent")}
                     </Typography>
                   </Box>
@@ -767,6 +826,7 @@ export const DashboardPage = () => {
                       color: "#059669",
                       width: 48,
                       height: 48,
+                      flexShrink: 0,
                     }}
                   >
                     <PhotoCameraRoundedIcon />
@@ -792,12 +852,14 @@ export const DashboardPage = () => {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    gap: 1.5,
                   }}
                 >
-                  <Box>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography
                       variant="body2"
                       color="text.secondary"
+                      noWrap
                       sx={{ fontWeight: 600, textTransform: "uppercase" }}
                     >
                       {t("dashboard.kpi.totalRevenue")}
@@ -808,30 +870,54 @@ export const DashboardPage = () => {
                         display: "flex",
                         flexDirection: "column",
                         gap: 0.25,
+                        minWidth: 0,
                       }}
                     >
                       <Typography
                         variant="h5"
+                        noWrap
                         sx={{
                           fontWeight: 800,
                           color: "success.main",
                           whiteSpace: "nowrap",
+                          fontSize: {
+                            xs: "1.2rem",
+                            sm: "1.35rem",
+                            md: "1.15rem",
+                            lg: "1.35rem",
+                            xl: "1.5rem",
+                          },
+                          letterSpacing: "-0.5px",
                         }}
                       >
                         R$ {metrics.totalRevenueBRL.toFixed(2)}
                       </Typography>
                       <Typography
                         variant="h6"
+                        noWrap
                         sx={{
                           fontWeight: 800,
                           color: "success.main",
                           whiteSpace: "nowrap",
+                          fontSize: {
+                            xs: "0.95rem",
+                            sm: "1.1rem",
+                            md: "0.95rem",
+                            lg: "1.1rem",
+                            xl: "1.25rem",
+                          },
+                          letterSpacing: "-0.5px",
                         }}
                       >
                         $ {metrics.totalRevenueUSD.toFixed(2)}
                       </Typography>
                     </Box>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      noWrap
+                      sx={{ display: "block" }}
+                    >
                       {t("dashboard.kpiDescriptions.paidPhotos")}
                     </Typography>
                   </Box>
@@ -841,6 +927,7 @@ export const DashboardPage = () => {
                       color: "#d97706",
                       width: 48,
                       height: 48,
+                      flexShrink: 0,
                     }}
                   >
                     <AttachMoneyRoundedIcon />
@@ -1055,19 +1142,22 @@ export const DashboardPage = () => {
                 <Table sx={{ minWidth: 650 }}>
                   <TableHead sx={{ bgcolor: "grey.50" }}>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 700 }}>
+                      <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
                         {t("clients.columns.name")}
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>
+                      <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
                         {t("shared.contact")}
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>
+                      <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
                         {t("clientDetails.dogs")}
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>
+                      <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
                         {t("clientDetails.photos")}
                       </TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 700 }}>
+                      <TableCell
+                        align="right"
+                        sx={{ fontWeight: 700, whiteSpace: "nowrap" }}
+                      >
                         {t("clients.columns.actions")}
                       </TableCell>
                     </TableRow>

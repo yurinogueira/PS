@@ -13,6 +13,7 @@ import {
   Select,
   FormControl,
   InputLabel,
+  Tooltip,
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
@@ -102,7 +103,7 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
         color: "text.primary",
       }}
     >
-      <Toolbar>
+      <Toolbar sx={{ px: { xs: 1, sm: 2 } }}>
         <IconButton
           color="inherit"
           aria-label={t("layout.openMenu")}
@@ -111,12 +112,19 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
             (e.currentTarget as HTMLElement)?.blur();
             onDrawerToggle();
           }}
-          sx={{ mr: 2, display: { md: "none" } }}
+          sx={{ mr: { xs: 1, sm: 2 }, display: { md: "none" } }}
         >
           <MenuIcon />
         </IconButton>
 
-        <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: "flex",
+            alignItems: "center",
+            minWidth: 0,
+          }}
+        >
           <Typography
             variant="h6"
             noWrap
@@ -129,9 +137,9 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
 
         <Box
           sx={{
-            minWidth: { xs: 140, sm: 190, md: 230 },
-            maxWidth: { xs: 180, sm: 270 },
-            mr: { xs: 1, sm: 2, md: 3 },
+            minWidth: { xs: 130, sm: 180, md: 220 },
+            maxWidth: { xs: 165, sm: 240, md: 270 },
+            mr: { xs: 0.75, sm: 1.5, md: 2 },
           }}
         >
           <FormControl fullWidth size="small">
@@ -152,27 +160,75 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
               renderValue={(selected) => {
                 if (!selected || seasons.length === 0) {
                   return (
-                    <Typography
-                      variant="body2"
-                      component="span"
+                    <Box
                       sx={{
-                        color: "text.secondary",
-                        fontStyle: "italic",
-                        fontSize: { xs: "0.8rem", sm: "0.875rem" },
                         display: "flex",
                         alignItems: "center",
-                        gap: 0.5,
+                        gap: 0.75,
+                        minWidth: 0,
+                        overflow: "hidden",
                       }}
                     >
                       <EventNoteRoundedIcon
-                        sx={{ fontSize: { xs: 14, sm: 16 } }}
+                        sx={{
+                          fontSize: { xs: 15, sm: 16 },
+                          color: "text.secondary",
+                          flexShrink: 0,
+                        }}
                       />
-                      {t("layout.noSeason")}
-                    </Typography>
+                      <Typography
+                        variant="body2"
+                        component="span"
+                        noWrap
+                        sx={{
+                          color: "text.secondary",
+                          fontStyle: "italic",
+                          fontSize: { xs: "0.8rem", sm: "0.875rem" },
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {t("layout.noSeason")}
+                      </Typography>
+                    </Box>
                   );
                 }
                 const current = seasons.find((s) => s.id === selected);
-                return current ? current.name : selected;
+                const seasonName = current ? current.name : selected;
+                return (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.75,
+                      minWidth: 0,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <EventNoteRoundedIcon
+                      sx={{
+                        fontSize: { xs: 15, sm: 16 },
+                        color: "primary.main",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Tooltip title={seasonName} arrow placement="bottom-start">
+                      <Typography
+                        variant="body2"
+                        component="span"
+                        noWrap
+                        sx={{
+                          fontSize: { xs: "0.8rem", sm: "0.875rem" },
+                          fontWeight: 500,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {seasonName}
+                      </Typography>
+                    </Tooltip>
+                  </Box>
+                );
               }}
               onChange={(e) => handleChangeSeason(e.target.value)}
               sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
@@ -234,21 +290,37 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
           </FormControl>
         </Box>
 
-        <Box sx={{ mr: { xs: 1, sm: 2 } }}>
+        <Box sx={{ mr: { xs: 0.5, sm: 1.5 } }}>
           <LanguageSelector />
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Typography
-            variant="body2"
-            sx={{ display: { xs: "none", sm: "block" }, fontWeight: 500 }}
-          >
-            {user?.name || t("layout.user")}
-          </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: { xs: 0.5, sm: 1 },
+          }}
+        >
+          <Tooltip title={user?.name || t("layout.user")} arrow>
+            <Typography
+              variant="body2"
+              noWrap
+              sx={{
+                display: { xs: "none", sm: "block" },
+                fontWeight: 500,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                maxWidth: { sm: 110, md: 160, lg: 240 },
+              }}
+            >
+              {user?.name || t("layout.user")}
+            </Typography>
+          </Tooltip>
           <IconButton
             onClick={handleMenu}
             size="small"
-            sx={{ ml: 1 }}
+            sx={{ ml: { xs: 0.5, sm: 1 } }}
             aria-label={t("layout.user")}
             data-testid="topbar-avatar-btn"
           >
