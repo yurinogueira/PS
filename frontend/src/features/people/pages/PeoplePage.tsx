@@ -18,11 +18,15 @@ import {
   TextField,
   IconButton,
   Tooltip,
+  InputAdornment,
+  TablePagination,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import PetsIcon from "@mui/icons-material/Pets";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
 import { useTranslation } from "react-i18next";
 import { personService, Person } from "../../../services/api/person.service";
 import { maskPhone, formatPhone } from "../../../utils/phone";
@@ -33,6 +37,9 @@ export const PeoplePage = () => {
   const [people, setPeople] = useState<Person[]>([]);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -42,6 +49,45 @@ export const PeoplePage = () => {
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingPerson, setDeletingPerson] = useState<Person | null>(null);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setPage(0);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setPage(0);
+  };
+
+  const handleChangePage = (_: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    setRowsPerPage(parseInt(e.target.value, 10));
+    setPage(0);
+  };
+
+  const filteredPeople = people.filter((p) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const nameMatch = p.name?.toLowerCase().includes(query);
+    const emailMatch = p.email?.toLowerCase().includes(query);
+    const altEmailMatch = p.alternative_email?.toLowerCase().includes(query);
+    const phoneFormatted = formatPhone(p.phone).toLowerCase();
+    const phoneRaw = (p.phone || "").toLowerCase();
+    const phoneMatch =
+      phoneFormatted.includes(query) || phoneRaw.includes(query);
+    return nameMatch || emailMatch || altEmailMatch || phoneMatch;
+  });
+
+  const paginatedPeople = filteredPeople.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage,
+  );
 
   const load = async () => {
     try {
@@ -137,6 +183,40 @@ export const PeoplePage = () => {
         </Button>
       </Box>
 
+      {/* Barra de Busca Padronizada */}
+      <Box sx={{ mb: 2.5, maxWidth: { xs: "100%", sm: 400 } }}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder={t("people.search")}
+          value={searchQuery}
+          onChange={handleSearchChange}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchRoundedIcon
+                    fontSize="small"
+                    sx={{ color: "text.secondary" }}
+                  />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    onClick={handleClearSearch}
+                    aria-label={t("shared.cancel")}
+                  >
+                    <ClearRoundedIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
+            },
+          }}
+        />
+      </Box>
+
       <TableContainer
         component={Paper}
         elevation={0}
@@ -148,7 +228,7 @@ export const PeoplePage = () => {
         }}
       >
         <Table sx={{ minWidth: 650 }}>
-          <TableHead>
+          <TableHead sx={{ bgcolor: "grey.50" }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>
                 {t("people.fields.name")}
@@ -168,17 +248,29 @@ export const PeoplePage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {people.length === 0 ? (
+            {filteredPeople.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  {t("people.noData")}
+                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {people.length === 0
+                      ? t("people.noData")
+                      : t("tables.noResults")}
+                  </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              people.map((p) => (
-                <TableRow key={p.id} hover>
-                  <TableCell>{p.name}</TableCell>
-                  <TableCell>{p.email}</TableCell>
+              paginatedPeople.map((p) => (
+                <TableRow
+                  key={p.id}
+                  hover
+                  sx={{
+                    cursor: "pointer",
+                    transition: "background-color 0.15s ease",
+                  }}
+                  onClick={() => navigate(`/people/${p.id}`)}
+                >
+                  <TableCell sx={{ fontWeight: 600 }}>{p.name}</TableCell>
+                  <TableCell>{p.email || "-"}</TableCell>
                   <TableCell>{p.alternative_email || "-"}</TableCell>
                   <TableCell>{formatPhone(p.phone) || "-"}</TableCell>
                   <TableCell align="right">
@@ -186,7 +278,10 @@ export const PeoplePage = () => {
                       <IconButton
                         color="secondary"
                         size="small"
-                        onClick={() => navigate(`/people/${p.id}`)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/people/${p.id}`);
+                        }}
                         sx={{ mr: 1 }}
                       >
                         <PetsIcon fontSize="small" />
@@ -196,7 +291,10 @@ export const PeoplePage = () => {
                       <IconButton
                         color="primary"
                         size="small"
-                        onClick={() => handleOpenEdit(p)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenEdit(p);
+                        }}
                         sx={{ mr: 1 }}
                       >
                         <EditIcon fontSize="small" />
@@ -206,7 +304,10 @@ export const PeoplePage = () => {
                       <IconButton
                         color="error"
                         size="small"
-                        onClick={() => handleOpenDelete(p)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenDelete(p);
+                        }}
                       >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
@@ -217,6 +318,38 @@ export const PeoplePage = () => {
             )}
           </TableBody>
         </Table>
+
+        <TablePagination
+          component="div"
+          count={filteredPeople.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50]}
+          labelRowsPerPage={t("tables.rowsPerPage")}
+          labelDisplayedRows={({ from, to, count }) =>
+            t("tables.displayedRows", {
+              from,
+              to,
+              count: count !== -1 ? count : `>${to}`,
+            })
+          }
+          sx={{
+            borderTop: "1px solid",
+            borderColor: "divider",
+            "& .MuiTablePagination-toolbar": {
+              flexWrap: "wrap",
+              justifyContent: { xs: "center", sm: "space-between" },
+              gap: 1,
+              py: 1,
+              px: { xs: 1, sm: 2 },
+            },
+            "& .MuiTablePagination-actions": {
+              ml: { xs: 0, sm: 2 },
+            },
+          }}
+        />
       </TableContainer>
 
       {/* Modal Criar / Editar */}

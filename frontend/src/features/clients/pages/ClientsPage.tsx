@@ -30,6 +30,8 @@ import {
   Alert,
   CircularProgress,
   Autocomplete,
+  InputAdornment,
+  TablePagination,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -38,6 +40,8 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
 import { useTranslation } from "react-i18next";
 import {
   clientService,
@@ -74,6 +78,9 @@ export const ClientsPage = () => {
   const [open, setOpen] = useState(false);
   const [personId, setPersonId] = useState("");
   const [dogs, setDogs] = useState<Omit<Dog, "id">[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const {
     anchorEl: reportMenuAnchor,
@@ -232,6 +239,46 @@ export const ClientsPage = () => {
     const p = people.find((item) => item.id === pId);
     return p ? p.name : t("clients.unknownPerson");
   };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setPage(0);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setPage(0);
+  };
+
+  const handleChangePage = (_: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    setRowsPerPage(parseInt(e.target.value, 10));
+    setPage(0);
+  };
+
+  const filteredClients = clients.filter((c) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const personName = getPersonName(c.person_id).toLowerCase();
+    const dogMatch = (c.dogs || []).some(
+      (d) =>
+        d.breed?.toLowerCase().includes(query) ||
+        (d.photos || []).some((p) =>
+          p.file_number?.toLowerCase().includes(query),
+        ),
+    );
+    return personName.includes(query) || dogMatch;
+  });
+
+  const paginatedClients = filteredClients.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage,
+  );
 
   const handleExportPdfReport = async () => {
     if (!activeSeason) return;
@@ -438,6 +485,40 @@ export const ClientsPage = () => {
         </Box>
       </Box>
 
+      {/* Barra de Busca Padronizada */}
+      <Box sx={{ mb: 2.5, maxWidth: { xs: "100%", sm: 400 } }}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder={t("clients.search")}
+          value={searchQuery}
+          onChange={handleSearchChange}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchRoundedIcon
+                    fontSize="small"
+                    sx={{ color: "text.secondary" }}
+                  />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    onClick={handleClearSearch}
+                    aria-label={t("shared.cancel")}
+                  >
+                    <ClearRoundedIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
+            },
+          }}
+        />
+      </Box>
+
       <TableContainer
         component={Paper}
         elevation={0}
@@ -469,27 +550,44 @@ export const ClientsPage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {clients.length === 0 ? (
+            {filteredClients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} align="center">
-                  {t("clients.noData")}
+                <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {clients.length === 0
+                      ? t("clients.noData")
+                      : t("tables.noResults")}
+                  </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              clients.map((c) => {
+              paginatedClients.map((c) => {
                 const totalPhotos = (c.dogs || []).reduce(
                   (acc, d) => acc + (d.photos?.length || 0),
                   0,
                 );
                 return (
-                  <TableRow key={c.id} hover>
-                    <TableCell>{getPersonName(c.person_id)}</TableCell>
+                  <TableRow
+                    key={c.id}
+                    hover
+                    sx={{
+                      cursor: "pointer",
+                      transition: "background-color 0.15s ease",
+                    }}
+                    onClick={() => navigate(`/clients/${c.id}`)}
+                  >
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      {getPersonName(c.person_id)}
+                    </TableCell>
                     <TableCell>{c.dogs?.length || 0}</TableCell>
                     <TableCell>{totalPhotos}</TableCell>
                     <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
                       <Button
                         size="small"
-                        onClick={() => navigate(`/clients/${c.id}`)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/clients/${c.id}`);
+                        }}
                         sx={{ whiteSpace: "nowrap" }}
                       >
                         {t("clients.actions.details")}
@@ -501,6 +599,38 @@ export const ClientsPage = () => {
             )}
           </TableBody>
         </Table>
+
+        <TablePagination
+          component="div"
+          count={filteredClients.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50]}
+          labelRowsPerPage={t("tables.rowsPerPage")}
+          labelDisplayedRows={({ from, to, count }) =>
+            t("tables.displayedRows", {
+              from,
+              to,
+              count: count !== -1 ? count : `>${to}`,
+            })
+          }
+          sx={{
+            borderTop: "1px solid",
+            borderColor: "divider",
+            "& .MuiTablePagination-toolbar": {
+              flexWrap: "wrap",
+              justifyContent: { xs: "center", sm: "space-between" },
+              gap: 1,
+              py: 1,
+              px: { xs: 1, sm: 2 },
+            },
+            "& .MuiTablePagination-actions": {
+              ml: { xs: 0, sm: 2 },
+            },
+          }}
+        />
       </TableContainer>
 
       {/* Dialog Criar Cliente */}

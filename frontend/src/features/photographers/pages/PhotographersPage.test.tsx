@@ -146,4 +146,65 @@ describe("PhotographersPage", () => {
       expect(photographerService.delete).toHaveBeenCalledWith("photog-uuid-1");
     });
   });
+
+  it("filters photographers by name using search input", async () => {
+    render(
+      <BrowserRouter>
+        <PhotographersPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Carlos Fotografia")).toBeInTheDocument();
+      expect(screen.getByText("Mariana Lentes")).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText(
+      /Buscar fotógrafo por nome/i,
+    );
+    fireEvent.change(searchInput, { target: { value: "Mariana" } });
+
+    expect(screen.queryByText("Carlos Fotografia")).not.toBeInTheDocument();
+    expect(screen.getByText("Mariana Lentes")).toBeInTheDocument();
+
+    const clearButton = screen.getByLabelText(/Cancelar/i);
+    fireEvent.click(clearButton);
+
+    expect(screen.getByText("Carlos Fotografia")).toBeInTheDocument();
+    expect(screen.getByText("Mariana Lentes")).toBeInTheDocument();
+  });
+
+  it("paginates photographers when list exceeds rowsPerPage", async () => {
+    const manyPhotographers = Array.from({ length: 12 }, (_, i) => ({
+      id: `photog-id-${i + 1}`,
+      name: `Fotógrafo ${i + 1}`,
+      created_at: "2026-06-01T10:00:00Z",
+    }));
+
+    vi.spyOn(photographerService, "list").mockResolvedValueOnce(
+      manyPhotographers,
+    );
+
+    render(
+      <BrowserRouter>
+        <PhotographersPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Fotógrafo 1")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Fotógrafo 10")).toBeInTheDocument();
+    expect(screen.queryByText("Fotógrafo 11")).not.toBeInTheDocument();
+
+    const nextPageBtn = screen.getByRole("button", {
+      name: /next page|próxima página/i,
+    });
+    fireEvent.click(nextPageBtn);
+
+    expect(screen.queryByText("Fotógrafo 1")).not.toBeInTheDocument();
+    expect(screen.getByText("Fotógrafo 11")).toBeInTheDocument();
+    expect(screen.getByText("Fotógrafo 12")).toBeInTheDocument();
+  });
 });

@@ -24,6 +24,8 @@ import {
   IconButton,
   Tooltip,
   Avatar,
+  InputAdornment,
+  TablePagination,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -32,6 +34,8 @@ import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
 import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
 import { useTranslation } from "react-i18next";
 import { seasonService, Season } from "../../../services/api/season.service";
 import {
@@ -48,6 +52,9 @@ export const SeasonsPage = () => {
 
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -82,6 +89,45 @@ export const SeasonsPage = () => {
     }
     return "";
   };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setPage(0);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setPage(0);
+  };
+
+  const handleChangePage = (_: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    setRowsPerPage(parseInt(e.target.value, 10));
+    setPage(0);
+  };
+
+  const filteredSeasons = seasons.filter((s) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const nameMatch = s.name?.toLowerCase().includes(query);
+    const dateMatch = s.created_at
+      ? new Date(s.created_at)
+          .toLocaleDateString()
+          .toLowerCase()
+          .includes(query)
+      : false;
+    return nameMatch || dateMatch;
+  });
+
+  const paginatedSeasons = filteredSeasons.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage,
+  );
 
   const load = async () => {
     try {
@@ -217,6 +263,40 @@ export const SeasonsPage = () => {
         </Tooltip>
       </Box>
 
+      {/* Barra de Busca Padronizada */}
+      <Box sx={{ mb: 2.5, maxWidth: { xs: "100%", sm: 400 } }}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder={t("seasons.search")}
+          value={searchQuery}
+          onChange={handleSearchChange}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchRoundedIcon
+                    fontSize="small"
+                    sx={{ color: "text.secondary" }}
+                  />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    onClick={handleClearSearch}
+                    aria-label={t("shared.cancel")}
+                  >
+                    <ClearRoundedIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
+            },
+          }}
+        />
+      </Box>
+
       <TableContainer
         component={Paper}
         elevation={0}
@@ -251,14 +331,18 @@ export const SeasonsPage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {seasons.length === 0 ? (
+            {filteredSeasons.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                  {t("seasons.noData")}
+                  <Typography variant="body2" color="text.secondary">
+                    {seasons.length === 0
+                      ? t("seasons.noData")
+                      : t("tables.noResults")}
+                  </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              seasons.map((s) => {
+              paginatedSeasons.map((s) => {
                 const isActive = activeSeason?.id === s.id;
                 const associatedPhotogs = s.photographer_ids?.length || 0;
                 const associatedJudges = s.judges?.length || 0;
@@ -268,7 +352,10 @@ export const SeasonsPage = () => {
                     hover
                     sx={{
                       bgcolor: isActive ? "rgba(2, 132, 199, 0.04)" : "inherit",
+                      cursor: "pointer",
+                      transition: "background-color 0.15s ease",
                     }}
+                    onClick={() => handleOpenEdit(s)}
                   >
                     <TableCell>
                       <Box
@@ -310,7 +397,10 @@ export const SeasonsPage = () => {
                           size="small"
                           variant="outlined"
                           color="inherit"
-                          onClick={() => setActiveSeason(s)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveSeason(s);
+                          }}
                           sx={{
                             textTransform: "none",
                             fontSize: "0.75rem",
@@ -419,7 +509,10 @@ export const SeasonsPage = () => {
                             aria-label={t("seasons.edit")}
                             color="primary"
                             size="small"
-                            onClick={() => handleOpenEdit(s)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEdit(s);
+                            }}
                             disabled={isWriteBlocked}
                             sx={{ mr: 1 }}
                           >
@@ -439,7 +532,10 @@ export const SeasonsPage = () => {
                             aria-label={t("seasons.delete")}
                             color="error"
                             size="small"
-                            onClick={() => handleOpenDelete(s)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenDelete(s);
+                            }}
                             disabled={isWriteBlocked}
                           >
                             <DeleteIcon fontSize="small" />
@@ -453,6 +549,38 @@ export const SeasonsPage = () => {
             )}
           </TableBody>
         </Table>
+
+        <TablePagination
+          component="div"
+          count={filteredSeasons.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50]}
+          labelRowsPerPage={t("tables.rowsPerPage")}
+          labelDisplayedRows={({ from, to, count }) =>
+            t("tables.displayedRows", {
+              from,
+              to,
+              count: count !== -1 ? count : `>${to}`,
+            })
+          }
+          sx={{
+            borderTop: "1px solid",
+            borderColor: "divider",
+            "& .MuiTablePagination-toolbar": {
+              flexWrap: "wrap",
+              justifyContent: { xs: "center", sm: "space-between" },
+              gap: 1,
+              py: 1,
+              px: { xs: 1, sm: 2 },
+            },
+            "& .MuiTablePagination-actions": {
+              ml: { xs: 0, sm: 2 },
+            },
+          }}
+        />
       </TableContainer>
 
       {/* Modal Criar / Editar Evento */}
