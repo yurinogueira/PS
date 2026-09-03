@@ -1645,7 +1645,7 @@ export const DashboardPage = () => {
                 onPageChange={handlePageChange}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleRowsPerPageChange}
-                rowsPerPageOptions={[5, 10, 25, 50]}
+                rowsPerPageOptions={[10, 25, 50]}
                 labelRowsPerPage={t("dashboard.rowsPerPage")}
                 labelDisplayedRows={({ from, to, count }) =>
                   t("dashboard.displayedRows", {

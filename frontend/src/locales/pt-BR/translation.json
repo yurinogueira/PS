@@ -186,6 +186,7 @@
   },
   "seasons": {
     "title": "Eventos",
+    "search": "Buscar por nome ou ano...",
     "add": "Novo Evento",
     "edit": "Editar Evento",
     "delete": "Excluir",
@@ -232,6 +233,7 @@
   },
   "photographers": {
     "title": "Fotógrafos",
+    "search": "Buscar fotógrafo por nome...",
     "add": "Novo Fotógrafo",
     "edit": "Editar Fotógrafo",
     "delete": "Excluir Fotógrafo",
@@ -748,5 +750,11 @@
       "trialActive_one": "Período de teste gratuito ativo: <strong>resta 1 dia</strong> de teste.",
       "trialActive_other": "Período de teste gratuito ativo: <strong>restam {{count}} dias</strong> de teste."
     }
+  },
+  "tables": {
+    "rowsPerPage": "Itens por página:",
+    "displayedRows": "{{from}}–{{to}} de {{count}}",
+    "searchPlaceholder": "Buscar...",
+    "noResults": "Nenhum resultado encontrado."
   }
 }

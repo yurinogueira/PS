@@ -145,4 +145,62 @@ describe("SeasonsPage", () => {
 
     expect(useSeasonStore.getState().activeSeason?.id).toBe("season-1");
   });
+
+  it("filters seasons using search input and clears filter", async () => {
+    render(
+      <BrowserRouter>
+        <SeasonsPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Dog Show 2026")).toBeInTheDocument();
+      expect(screen.getByText("Agility Cup 2026")).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText(/Buscar por nome ou ano/i);
+    fireEvent.change(searchInput, { target: { value: "Agility" } });
+
+    expect(screen.queryByText("Dog Show 2026")).not.toBeInTheDocument();
+    expect(screen.getByText("Agility Cup 2026")).toBeInTheDocument();
+
+    const clearButton = screen.getByLabelText(/Cancelar/i);
+    fireEvent.click(clearButton);
+
+    expect(screen.getByText("Dog Show 2026")).toBeInTheDocument();
+    expect(screen.getByText("Agility Cup 2026")).toBeInTheDocument();
+  });
+
+  it("paginates seasons when count exceeds rowsPerPage", async () => {
+    const manySeasons = Array.from({ length: 12 }, (_, i) => ({
+      id: `season-id-${i + 1}`,
+      name: `Evento ${i + 1}`,
+      photographer_ids: [],
+      judges: [],
+    }));
+
+    vi.spyOn(seasonService, "list").mockResolvedValueOnce(manySeasons);
+
+    render(
+      <BrowserRouter>
+        <SeasonsPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Evento 1")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Evento 10")).toBeInTheDocument();
+    expect(screen.queryByText("Evento 11")).not.toBeInTheDocument();
+
+    const nextPageBtn = screen.getByRole("button", {
+      name: /next page|próxima página/i,
+    });
+    fireEvent.click(nextPageBtn);
+
+    expect(screen.queryByText("Evento 1")).not.toBeInTheDocument();
+    expect(screen.getByText("Evento 11")).toBeInTheDocument();
+    expect(screen.getByText("Evento 12")).toBeInTheDocument();
+  });
 });

@@ -19,12 +19,16 @@ import {
   Tooltip,
   Avatar,
   Chip,
+  InputAdornment,
+  TablePagination,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
 import { useTranslation } from "react-i18next";
 import {
   photographerService,
@@ -39,10 +43,52 @@ export const PhotographersPage = () => {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingPhotographer, setDeletingPhotographer] =
     useState<Photographer | null>(null);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setPage(0);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setPage(0);
+  };
+
+  const handleChangePage = (_: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    setRowsPerPage(parseInt(e.target.value, 10));
+    setPage(0);
+  };
+
+  const filteredPhotographers = photographers.filter((p) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const nameMatch = p.name?.toLowerCase().includes(query);
+    const linkedSeasons = seasons.filter((s) =>
+      s.photographer_ids?.includes(p.id),
+    );
+    const seasonMatch = linkedSeasons.some((s) =>
+      s.name?.toLowerCase().includes(query),
+    );
+    return nameMatch || seasonMatch;
+  });
+
+  const paginatedPhotographers = filteredPhotographers.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage,
+  );
 
   const load = async () => {
     try {
@@ -137,6 +183,40 @@ export const PhotographersPage = () => {
         </Button>
       </Box>
 
+      {/* Barra de Busca Padronizada */}
+      <Box sx={{ mb: 2.5, maxWidth: { xs: "100%", sm: 400 } }}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder={t("photographers.search")}
+          value={searchQuery}
+          onChange={handleSearchChange}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchRoundedIcon
+                    fontSize="small"
+                    sx={{ color: "text.secondary" }}
+                  />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    onClick={handleClearSearch}
+                    aria-label={t("shared.cancel")}
+                  >
+                    <ClearRoundedIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
+            },
+          }}
+        />
+      </Box>
+
       <TableContainer
         component={Paper}
         elevation={0}
@@ -165,19 +245,31 @@ export const PhotographersPage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {photographers.length === 0 ? (
+            {filteredPhotographers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
-                  {t("photographers.noData")}
+                  <Typography variant="body2" color="text.secondary">
+                    {photographers.length === 0
+                      ? t("photographers.noData")
+                      : t("tables.noResults")}
+                  </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              photographers.map((p) => {
+              paginatedPhotographers.map((p) => {
                 const linkedSeasons = seasons.filter((s) =>
                   s.photographer_ids?.includes(p.id),
                 );
                 return (
-                  <TableRow key={p.id} hover>
+                  <TableRow
+                    key={p.id}
+                    hover
+                    sx={{
+                      cursor: "pointer",
+                      transition: "background-color 0.15s ease",
+                    }}
+                    onClick={() => handleOpenEdit(p)}
+                  >
                     <TableCell>
                       <Box
                         sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
@@ -254,7 +346,10 @@ export const PhotographersPage = () => {
                           aria-label={t("photographers.edit")}
                           color="primary"
                           size="small"
-                          onClick={() => handleOpenEdit(p)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenEdit(p);
+                          }}
                           sx={{ mr: 1 }}
                         >
                           <EditIcon fontSize="small" />
@@ -265,7 +360,10 @@ export const PhotographersPage = () => {
                           aria-label={t("photographers.delete")}
                           color="error"
                           size="small"
-                          onClick={() => handleOpenDelete(p)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDelete(p);
+                          }}
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
@@ -277,6 +375,38 @@ export const PhotographersPage = () => {
             )}
           </TableBody>
         </Table>
+
+        <TablePagination
+          component="div"
+          count={filteredPhotographers.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50]}
+          labelRowsPerPage={t("tables.rowsPerPage")}
+          labelDisplayedRows={({ from, to, count }) =>
+            t("tables.displayedRows", {
+              from,
+              to,
+              count: count !== -1 ? count : `>${to}`,
+            })
+          }
+          sx={{
+            borderTop: "1px solid",
+            borderColor: "divider",
+            "& .MuiTablePagination-toolbar": {
+              flexWrap: "wrap",
+              justifyContent: { xs: "center", sm: "space-between" },
+              gap: 1,
+              py: 1,
+              px: { xs: 1, sm: 2 },
+            },
+            "& .MuiTablePagination-actions": {
+              ml: { xs: 0, sm: 2 },
+            },
+          }}
+        />
       </TableContainer>
 
       {/* Modal Criar / Editar */}

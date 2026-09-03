@@ -186,6 +186,7 @@
   },
   "seasons": {
     "title": "Events",
+    "search": "Search by name or year...",
     "add": "New Event",
     "edit": "Edit Event",
     "delete": "Delete",
@@ -232,6 +233,7 @@
   },
   "photographers": {
     "title": "Photographers",
+    "search": "Search photographer by name...",
     "add": "New Photographer",
     "edit": "Edit Photographer",
     "delete": "Delete Photographer",
@@ -748,5 +750,11 @@
       "trialActive_one": "Free trial active: <strong>1 day remaining</strong>.",
       "trialActive_other": "Free trial active: <strong>{{count}} days remaining</strong>."
     }
+  },
+  "tables": {
+    "rowsPerPage": "Rows per page:",
+    "displayedRows": "{{from}}–{{to}} of {{count}}",
+    "searchPlaceholder": "Search...",
+    "noResults": "No results found."
   }
 }
