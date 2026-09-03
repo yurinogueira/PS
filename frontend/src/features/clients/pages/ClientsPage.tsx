@@ -449,18 +449,21 @@ export const ClientsPage = () => {
         }}
       >
         <Table sx={{ minWidth: 550 }}>
-          <TableHead>
+          <TableHead sx={{ bgcolor: "grey.50" }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>
+              <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                 {t("clients.columns.name")}
               </TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>
+              <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                 {t("clientDetails.dogs")}
               </TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>
+              <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                 {t("clients.columns.photos")}
               </TableCell>
-              <TableCell align="right" sx={{ fontWeight: 600 }}>
+              <TableCell
+                align="right"
+                sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+              >
                 {t("clients.columns.actions")}
               </TableCell>
             </TableRow>
@@ -483,10 +486,11 @@ export const ClientsPage = () => {
                     <TableCell>{getPersonName(c.person_id)}</TableCell>
                     <TableCell>{c.dogs?.length || 0}</TableCell>
                     <TableCell>{totalPhotos}</TableCell>
-                    <TableCell align="right">
+                    <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
                       <Button
                         size="small"
                         onClick={() => navigate(`/clients/${c.id}`)}
+                        sx={{ whiteSpace: "nowrap" }}
                       >
                         {t("clients.actions.details")}
                       </Button>
