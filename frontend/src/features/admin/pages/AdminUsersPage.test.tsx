@@ -9,6 +9,7 @@ vi.mock("../services/admin.service", () => ({
     getUsers: vi.fn(),
     getTenants: vi.fn(),
     assignTenant: vi.fn(),
+    updateUserRole: vi.fn(),
   },
 }));
 
@@ -88,6 +89,46 @@ describe("AdminUsersPage", () => {
         overflow: "hidden",
         textOverflow: "ellipsis",
       });
+    });
+  });
+
+  it("opens edit role modal and updates user role", async () => {
+    vi.mocked(adminService.getUsers).mockResolvedValue([
+      {
+        id: "u1",
+        name: "Alice Test",
+        email: "alice@test.com",
+        role: "user",
+        superAdmin: false,
+        tenantId: "tenant-1",
+      },
+    ]);
+    vi.mocked(adminService.getTenants).mockResolvedValue([]);
+    vi.mocked(adminService.updateUserRole).mockResolvedValueOnce({
+      id: "u1",
+      name: "Alice Test",
+      email: "alice@test.com",
+      role: "manager",
+      superAdmin: false,
+      tenantId: "tenant-1",
+    });
+
+    render(
+      <BrowserRouter>
+        <AdminUsersPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Alice Test")).toBeInTheDocument();
+    });
+
+    const editRoleBtn = screen.getByRole("button", { name: /Alterar Função/i });
+    expect(editRoleBtn).toBeInTheDocument();
+    editRoleBtn.click();
+
+    await waitFor(() => {
+      expect(screen.getByText("Alterar Função do Usuário")).toBeInTheDocument();
     });
   });
 });

@@ -46,6 +46,10 @@ type AssignTenantRequest struct {
 	TenantID string `json:"tenantId" example:"acme-corp"`
 }
 
+type UpdateUserRoleRequest struct {
+	Role string `json:"role" example:"manager"`
+}
+
 // ListTenants godoc
 // @Summary      Listar todos os tenants
 // @Description  Retorna a lista de todas as organizações (tenants) cadastradas no sistema
@@ -315,6 +319,56 @@ func (h *AdminHandler) AssignTenant(w http.ResponseWriter, r *http.Request) {
 			httpx.Error(w, http.StatusBadRequest, "Invalid input", nil)
 		default:
 			httpx.Error(w, http.StatusInternalServerError, "Failed to assign tenant", nil)
+		}
+		return
+	}
+
+	httpx.Success(w, map[string]any{
+		"user": updated,
+	})
+}
+
+// UpdateUserRole godoc
+// @Summary      Atualizar função de um usuário
+// @Description  Altera a função/papel de um usuário no sistema (admin, manager, user). Requer perfil Administrador e impede o lockout do último administrador ativo.
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        id path string true "ID do Usuário"
+// @Param        payload body UpdateUserRoleRequest true "Dados da nova função"
+// @Security     BearerAuth
+// @Success      200 {object} httpx.SuccessEnvelope
+// @Failure      400 {object} httpx.ErrorEnvelope
+// @Failure      401 {object} httpx.ErrorEnvelope
+// @Failure      403 {object} httpx.ErrorEnvelope
+// @Failure      404 {object} httpx.ErrorEnvelope
+// @Router       /api/v1/admin/users/{id}/role [put]
+func (h *AdminHandler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		httpx.Error(w, http.StatusBadRequest, "User ID is required", nil)
+		return
+	}
+
+	var input UpdateUserRoleRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		httpx.Error(w, http.StatusBadRequest, "Invalid request payload", nil)
+		return
+	}
+
+	updated, err := h.adminService.UpdateUserRole(r.Context(), id, input.Role)
+	if err != nil {
+		switch {
+		case errors.Is(err, adminusecase.ErrUserNotFound):
+			httpx.Error(w, http.StatusNotFound, "User not found", nil)
+		case errors.Is(err, adminusecase.ErrInvalidInput):
+			httpx.Error(w, http.StatusBadRequest, "Invalid input", nil)
+		case errors.Is(err, adminusecase.ErrInvalidRole):
+			httpx.Error(w, http.StatusBadRequest, "Invalid role. Must be 'admin', 'manager', or 'user'", nil)
+		case errors.Is(err, adminusecase.ErrLastAdminLockout):
+			httpx.Error(w, http.StatusBadRequest, "Cannot demote the last active administrator", nil)
+		default:
+			httpx.Error(w, http.StatusInternalServerError, "Failed to update user role", nil)
 		}
 		return
 	}

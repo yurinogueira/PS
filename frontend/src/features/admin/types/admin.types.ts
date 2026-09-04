@@ -1,4 +1,4 @@
-import { User } from "../../auth/types/auth.types";
+import { User, UserRole } from "../../auth/types/auth.types";
 
 export interface TenantSettings {
   hideOverviewByDefault?: boolean;
@@ -39,3 +39,49 @@ export interface AssignTenantPayload {
 }
 
 export type AdminUser = User;
+
+export interface UpdateUserRolePayload {
+  role: UserRole;
+}
+
+export type AuditLogAction =
+  "CREATE" | "UPDATE" | "DELETE" | "ROLE_CHANGE" | "ASSIGN_TENANT";
+
+export type AuditLogEntityType =
+  "user" | "tenant" | "season" | "photographer" | "person" | "client";
+
+export interface AuditLogChange {
+  fieldChanged: string;
+  oldValue: unknown;
+  newValue: unknown;
+}
+
+export interface AuditLog {
+  id: string;
+  tenantId?: string;
+  entityType: AuditLogEntityType;
+  entityId: string;
+  userId: string;
+  userEmail: string;
+  action: AuditLogAction;
+  changes: AuditLogChange[];
+  createdAt: string;
+}
+
+export interface AuditLogsFilter {
+  page?: number;
+  limit?: number;
+  entityType?: AuditLogEntityType | "";
+  action?: AuditLogAction | "";
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface PaginatedAuditLogs {
+  items: AuditLog[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}

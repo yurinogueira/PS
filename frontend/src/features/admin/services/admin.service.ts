@@ -3,11 +3,14 @@ import { ApiEnvelope } from "../../auth/types/auth.types";
 import {
   AdminUser,
   AssignTenantPayload,
+  AuditLogsFilter,
   CreateTenantPayload,
+  PaginatedAuditLogs,
   Tenant,
   UpdateTenantPaymentStatusPayload,
   UpdateTenantPlanPayload,
   UpdateTenantSettingsPayload,
+  UpdateUserRolePayload,
 } from "../types/admin.types";
 
 export const adminService = {
@@ -73,5 +76,24 @@ export const adminService = {
       payload,
     );
     return response.data.data.user;
+  },
+
+  async updateUserRole(
+    userId: string,
+    payload: UpdateUserRolePayload,
+  ): Promise<AdminUser> {
+    const response = await apiClient.put<ApiEnvelope<{ user: AdminUser }>>(
+      `/admin/users/${userId}/role`,
+      payload,
+    );
+    return response.data.data.user;
+  },
+
+  async getAuditLogs(params?: AuditLogsFilter): Promise<PaginatedAuditLogs> {
+    const response = await apiClient.get<ApiEnvelope<PaginatedAuditLogs>>(
+      "/admin/logs",
+      { params },
+    );
+    return response.data.data;
   },
 };

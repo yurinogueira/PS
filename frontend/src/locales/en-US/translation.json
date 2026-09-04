@@ -19,7 +19,8 @@
       "clientsPhotos": "Clients & Photos",
       "exports": "Exports",
       "organizations": "Organizations",
-      "usersAccess": "User Management"
+      "usersAccess": "User Management",
+      "logs": "Audit Logs"
     }
   },
   "language": {
@@ -775,6 +776,7 @@
       "emailVerified": "Email verified",
       "pendingVerification": "Pending verification",
       "superAdminBadge": "SuperAdmin",
+      "managerBadge": "Manager",
       "userBadge": "User",
       "tenantUnlinked": "No Tenant (Access Blocked)",
       "loading": "Loading users...",
@@ -791,6 +793,7 @@
       "no": "No",
       "assignTenant": "Assign Tenant",
       "changeTenant": "Change Tenant",
+      "editRole": "Change Role",
       "assignModal": {
         "title": "Assign Organization (Tenant)",
         "organization": "Organization",
@@ -800,9 +803,85 @@
         "saving": "Saving...",
         "cancel": "Cancel"
       },
+      "roles": {
+        "admin": "Administrator",
+        "adminDesc": "Unrestricted access to Organizations, Users, and Audit Logs.",
+        "manager": "Manager",
+        "managerDesc": "Access to tenant data and Audit Logs inspection.",
+        "user": "User",
+        "userDesc": "Standard access to linked tenant operations."
+      },
+      "roleModal": {
+        "title": "Change User Role",
+        "role": "System Role",
+        "save": "Save Role",
+        "saving": "Saving...",
+        "successRole": "User role updated successfully.",
+        "errorRole": "Error updating user role."
+      },
       "errorLoad": "Unable to load users and tenants data.",
       "successAssign": "Organization assigned successfully.",
       "errorAssign": "Error assigning organization to user."
+    },
+    "logs": {
+      "title": "Audit Logs",
+      "docTitle": "Audit Logs - Admin",
+      "subtitle": "Detailed audit trail of operations, data mutations, and permission changes across the system.",
+      "totalRecords": "Total Records",
+      "currentPage": "Current Page",
+      "pageSize": "Items per Page",
+      "refresh": "Refresh",
+      "entityFilter": "Entity",
+      "allEntities": "All Entities",
+      "actionFilter": "Action",
+      "allActions": "All Actions",
+      "searchUser": "Search actor (ID)...",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "clearFilters": "Clear",
+      "loading": "Loading audit logs...",
+      "noLogsFound": "No audit logs found",
+      "noLogsHint": "Try adjusting or clearing search filters.",
+      "system": "System",
+      "globalScope": "Global",
+      "viewChanges": "View Changes",
+      "rowsPerPage": "Rows per page:",
+      "errorLoad": "Unable to load audit logs.",
+      "columns": {
+        "date": "Date / Time",
+        "user": "Acting User",
+        "action": "Action",
+        "entity": "Affected Entity",
+        "tenant": "Organization",
+        "details": "Details"
+      },
+      "entities": {
+        "user": "User",
+        "tenant": "Organization",
+        "season": "Season",
+        "photographer": "Photographer",
+        "person": "Person",
+        "client": "Client"
+      },
+      "actions": {
+        "CREATE": "CREATE (Creation)",
+        "UPDATE": "UPDATE (Edition)",
+        "DELETE": "DELETE (Deletion)",
+        "ROLE_CHANGE": "ROLE_CHANGE (Role)",
+        "ASSIGN_TENANT": "ASSIGN_TENANT (Tenant)"
+      },
+      "modal": {
+        "title": "Change Details",
+        "action": "Action",
+        "entity": "Entity",
+        "user": "Actor",
+        "date": "Date / Time",
+        "diffTitle": "Changed Fields (Diff):",
+        "noChangesRecorded": "No detailed field modifications recorded.",
+        "field": "Field",
+        "oldValue": "Old Value",
+        "newValue": "New Value"
+      }
     }
   },
   "shared": {

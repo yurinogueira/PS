@@ -27,6 +27,7 @@ type jwtClaims struct {
 	Email      string `json:"email,omitempty"`
 	TenantID   string `json:"tenantId,omitempty"`
 	SuperAdmin bool   `json:"superAdmin,omitempty"`
+	Role       string `json:"role,omitempty"`
 	Type       string `json:"type"`
 	IssuedAt   int64  `json:"iat"`
 	ExpiresAt  int64  `json:"exp"`
@@ -59,11 +60,13 @@ func (p *Provider) GeneratePair(user domainuser.User) (portauth.TokenPair, error
 }
 
 func (p *Provider) GenerateAccessToken(user domainuser.User) (string, error) {
+	role := user.GetRole()
 	return p.signJWT(p.accessSecret, jwtClaims{
 		Subject:    user.ID,
 		Email:      user.Email,
 		TenantID:   user.TenantID,
-		SuperAdmin: user.SuperAdmin,
+		SuperAdmin: role == domainuser.RoleAdmin,
+		Role:       string(role),
 		Type:       "access",
 		IssuedAt:   time.Now().UTC().Unix(),
 		ExpiresAt:  time.Now().UTC().Add(p.accessTTL).Unix(),
@@ -86,7 +89,22 @@ func (p *Provider) ParseAccessToken(token string) (portauth.TokenClaims, error) 
 	if err != nil {
 		return portauth.TokenClaims{}, err
 	}
-	return portauth.TokenClaims{UserID: claims.Subject, Email: claims.Email, TenantID: claims.TenantID, SuperAdmin: claims.SuperAdmin}, nil
+	role := claims.Role
+	if role == "" {
+		if claims.SuperAdmin {
+			role = "admin"
+		} else {
+			role = "user"
+		}
+	}
+	isAdmin := role == "admin" || claims.SuperAdmin
+	return portauth.TokenClaims{
+		UserID:     claims.Subject,
+		Email:      claims.Email,
+		TenantID:   claims.TenantID,
+		SuperAdmin: isAdmin,
+		Role:       role,
+	}, nil
 }
 
 func (p *Provider) ParseRefreshToken(token string) (portauth.TokenClaims, error) {

@@ -13,6 +13,7 @@ import (
 	"ps/internal/shared/httpx"
 	"ps/internal/shared/middleware"
 
+	auditport "ps/internal/application/ports/auditlog"
 	clientport "ps/internal/application/ports/client"
 	personport "ps/internal/application/ports/person"
 	photographerport "ps/internal/application/ports/photographer"
@@ -20,6 +21,7 @@ import (
 	seasonport "ps/internal/application/ports/season"
 	storageport "ps/internal/application/ports/storage"
 	adminusecase "ps/internal/application/usecase/admin"
+	auditusecase "ps/internal/application/usecase/auditlog"
 	clientusecase "ps/internal/application/usecase/client"
 	personusecase "ps/internal/application/usecase/person"
 	photographerusecase "ps/internal/application/usecase/photographer"
@@ -47,21 +49,25 @@ func NewRouter(
 	clients clientport.Repository,
 	storageProvider storageport.Provider,
 	reportRepo reportport.Repository,
+	auditRepo auditport.Repository,
 ) *Router {
 	mux := http.NewServeMux()
 	healthHandler := handlers.NewHealthHandler()
 	authHandler := handlers.NewAuthHandler(users, hasher, tokens, emailSender, cfg.CookieDomain, cfg.CookieSecure)
-	userHandler := handlers.NewUserHandler(users, nil, hasher, tokens)
+	auditSvc := auditusecase.NewService(auditRepo)
+	auditLogHandler := handlers.NewAuditLogHandler(auditSvc)
 
-	tenantSvc := tenantusecase.NewService(tenants, clients)
-	adminSvc := adminusecase.NewService(users, tenants)
+	userHandler := handlers.NewUserHandler(users, nil, hasher, tokens).WithAuditor(auditSvc)
+
+	tenantSvc := tenantusecase.NewService(tenants, clients).WithAuditor(auditSvc)
+	adminSvc := adminusecase.NewService(users, tenants, auditSvc)
 	adminHandler := handlers.NewAdminHandler(tenantSvc, adminSvc)
 	tenantHandler := handlers.NewTenantHandler(tenantSvc)
 
-	seasonSvc := seasonusecase.NewService(seasons, clients, tenantSvc)
-	photographerSvc := photographerusecase.NewService(photographers, tenantSvc)
-	personSvc := personusecase.NewService(persons, tenantSvc)
-	clientSvc := clientusecase.NewService(clients, persons, seasons, photographers, tenantSvc)
+	seasonSvc := seasonusecase.NewService(seasons, clients, tenantSvc).WithAuditor(auditSvc)
+	photographerSvc := photographerusecase.NewService(photographers, tenantSvc).WithAuditor(auditSvc)
+	personSvc := personusecase.NewService(persons, tenantSvc).WithAuditor(auditSvc)
+	clientSvc := clientusecase.NewService(clients, persons, seasons, photographers, tenantSvc).WithAuditor(auditSvc)
 	reportSvc := reportusecase.NewService(clients, persons, photographers, storageProvider, emailSender, cfg.AppBaseURL, tenantSvc).
 		WithReportRepo(reportRepo).
 		WithSeasonRepo(seasons)
@@ -107,9 +113,14 @@ func NewRouter(
 		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
 	}
 
-	// SuperAdmin routes wrapper (requires authentication + superAdmin)
+	// Admin routes wrapper (requires authentication + admin)
 	adminChain := func(h http.HandlerFunc) http.Handler {
-		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequireSuperAdmin(), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
+		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequireAdmin(), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
+	}
+
+	// Admin or Manager routes wrapper (requires authentication + admin or manager)
+	adminOrManagerChain := func(h http.HandlerFunc) http.Handler {
+		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequireAdminOrManager(), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
 	}
 
 	// Business routes wrapper (requires authentication + tenant)
@@ -125,6 +136,8 @@ func NewRouter(
 	mux.Handle("PUT /api/v1/admin/tenants/{name}/settings", adminChain(adminHandler.UpdateTenantSettings))
 	mux.Handle("GET /api/v1/admin/users", adminChain(adminHandler.ListUsers))
 	mux.Handle("PUT /api/v1/admin/users/{id}/tenant", adminChain(adminHandler.AssignTenant))
+	mux.Handle("PUT /api/v1/admin/users/{id}/role", adminChain(adminHandler.UpdateUserRole))
+	mux.Handle("GET /api/v1/admin/logs", adminOrManagerChain(auditLogHandler.List))
 
 	// Tenant info route (current authenticated organization)
 	mux.Handle("GET /api/v1/tenant", businessChain(tenantHandler.GetCurrentTenant))

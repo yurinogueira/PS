@@ -9,6 +9,8 @@ import (
 
 	portauth "ps/internal/application/ports/auth"
 	userport "ps/internal/application/ports/user"
+	auditusecase "ps/internal/application/usecase/auditlog"
+	domainaudit "ps/internal/domain/auditlog"
 	domainuser "ps/internal/domain/user"
 )
 
@@ -27,21 +29,32 @@ var (
 )
 
 type Service struct {
-	users  userport.Repository
-	hasher portauth.PasswordHasher
-	now    func() time.Time
+	users   userport.Repository
+	hasher  portauth.PasswordHasher
+	auditor *auditusecase.Service
+	now     func() time.Time
 }
 
 type ProfileOutput struct {
 	User domainuser.User `json:"user"`
 }
 
-func NewService(users userport.Repository, cars interface{}, hasher portauth.PasswordHasher) *Service {
-	return &Service{
-		users:  users,
-		hasher: hasher,
-		now:    time.Now,
+func NewService(users userport.Repository, cars interface{}, hasher portauth.PasswordHasher, auditor ...*auditusecase.Service) *Service {
+	var a *auditusecase.Service
+	if len(auditor) > 0 {
+		a = auditor[0]
 	}
+	return &Service{
+		users:   users,
+		hasher:  hasher,
+		auditor: a,
+		now:     time.Now,
+	}
+}
+
+func (s *Service) WithAuditor(auditor *auditusecase.Service) *Service {
+	s.auditor = auditor
+	return s
 }
 
 func isValidName(name string) bool {
@@ -78,10 +91,20 @@ func (s *Service) UpdateProfile(ctx context.Context, userID, name string) (domai
 		return domainuser.User{}, ErrUserNotFound
 	}
 
+	oldUser := user
 	user.Name = name
 	user.UpdatedAt = s.now().UTC()
 
-	return s.users.Update(ctx, user)
+	updated, err := s.users.Update(ctx, user)
+	if err != nil {
+		return domainuser.User{}, err
+	}
+
+	if s.auditor != nil {
+		s.auditor.RecordMutation(ctx, updated.TenantID, domainaudit.EntityUser, updated.ID, domainaudit.ActionUpdate, oldUser, updated)
+	}
+
+	return updated, nil
 }
 
 func (s *Service) UpdatePassword(ctx context.Context, userID, currentPassword, newPassword string) error {
@@ -106,6 +129,26 @@ func (s *Service) UpdatePassword(ctx context.Context, userID, currentPassword, n
 	user.PasswordHash = newHash
 	user.UpdatedAt = s.now().UTC()
 
-	_, err = s.users.Update(ctx, user)
-	return err
+	updated, err := s.users.Update(ctx, user)
+	if err != nil {
+		return err
+	}
+
+	if s.auditor != nil {
+		s.auditor.Record(ctx, auditusecase.Entry{
+			TenantID:   updated.TenantID,
+			EntityType: domainaudit.EntityUser,
+			EntityID:   updated.ID,
+			Action:     domainaudit.ActionUpdate,
+			Changes: []domainaudit.Change{
+				{
+					FieldChanged: "password",
+					OldValue:     nil,
+					NewValue:     "[PROTECTED]",
+				},
+			},
+		})
+	}
+
+	return nil
 }

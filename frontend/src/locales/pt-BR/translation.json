@@ -19,7 +19,8 @@
       "clientsPhotos": "Clientes e Fotos",
       "exports": "Exportações",
       "organizations": "Organizações",
-      "usersAccess": "Gestão de Usuários"
+      "usersAccess": "Gestão de Usuários",
+      "logs": "Logs de Auditoria"
     }
   },
   "language": {
@@ -775,6 +776,7 @@
       "emailVerified": "E-mail verificado",
       "pendingVerification": "Pendente de verificação",
       "superAdminBadge": "SuperAdmin",
+      "managerBadge": "Gestor",
       "userBadge": "Usuário",
       "tenantUnlinked": "Sem Tenant (Acesso Bloqueado)",
       "loading": "Carregando usuários...",
@@ -791,6 +793,7 @@
       "no": "Não",
       "assignTenant": "Atribuir Tenant",
       "changeTenant": "Alterar Tenant",
+      "editRole": "Alterar Função",
       "assignModal": {
         "title": "Atribuir Organização (Tenant)",
         "organization": "Organização",
@@ -800,9 +803,85 @@
         "saving": "Salvando...",
         "cancel": "Cancelar"
       },
+      "roles": {
+        "admin": "Administrador",
+        "adminDesc": "Acesso irrestrito a Organizações, Usuários e Logs de Auditoria.",
+        "manager": "Gestor",
+        "managerDesc": "Acesso aos dados do tenant e consulta aos Logs de Auditoria.",
+        "user": "Usuário",
+        "userDesc": "Acesso padrão às operações do tenant vinculado."
+      },
+      "roleModal": {
+        "title": "Alterar Função do Usuário",
+        "role": "Função no Sistema",
+        "save": "Salvar Função",
+        "saving": "Salvando...",
+        "successRole": "Função do usuário alterada com sucesso.",
+        "errorRole": "Erro ao alterar função do usuário."
+      },
       "errorLoad": "Não foi possível carregar os dados de usuários e tenants.",
       "successAssign": "Organização atribuída com sucesso.",
       "errorAssign": "Erro ao atribuir organização ao usuário."
+    },
+    "logs": {
+      "title": "Logs de Auditoria",
+      "docTitle": "Logs de Auditoria - Admin",
+      "subtitle": "Histórico detalhado de auditoria de operações, mutações de dados e alterações de permissões do sistema.",
+      "totalRecords": "Total de Registros",
+      "currentPage": "Página Atual",
+      "pageSize": "Itens por Página",
+      "refresh": "Atualizar",
+      "entityFilter": "Entidade",
+      "allEntities": "Todas as Entidades",
+      "actionFilter": "Ação",
+      "allActions": "Todas as Ações",
+      "searchUser": "Buscar executor (ID)...",
+      "startDate": "Data Inicial",
+      "endDate": "Data Final",
+      "clearFilters": "Limpar",
+      "loading": "Carregando logs de auditoria...",
+      "noLogsFound": "Nenhum log de auditoria encontrado",
+      "noLogsHint": "Tente ajustar ou limpar os filtros de busca.",
+      "system": "Sistema",
+      "globalScope": "Global",
+      "viewChanges": "Ver Alterações",
+      "rowsPerPage": "Linhas por página:",
+      "errorLoad": "Não foi possível carregar os logs de auditoria.",
+      "columns": {
+        "date": "Data / Hora",
+        "user": "Usuário Executor",
+        "action": "Ação",
+        "entity": "Entidade Afetada",
+        "tenant": "Organização",
+        "details": "Detalhes"
+      },
+      "entities": {
+        "user": "Usuário",
+        "tenant": "Organização",
+        "season": "Temporada",
+        "photographer": "Fotógrafo",
+        "person": "Pessoa",
+        "client": "Cliente"
+      },
+      "actions": {
+        "CREATE": "CREATE (Criação)",
+        "UPDATE": "UPDATE (Edição)",
+        "DELETE": "DELETE (Exclusão)",
+        "ROLE_CHANGE": "ROLE_CHANGE (Função)",
+        "ASSIGN_TENANT": "ASSIGN_TENANT (Tenant)"
+      },
+      "modal": {
+        "title": "Detalhes da Alteração",
+        "action": "Ação",
+        "entity": "Entidade",
+        "user": "Executor",
+        "date": "Data / Hora",
+        "diffTitle": "Campos Alterados (Diff):",
+        "noChangesRecorded": "Nenhuma modificação detalhada de campo registrada.",
+        "field": "Campo",
+        "oldValue": "Valor Anterior",
+        "newValue": "Novo Valor"
+      }
     }
   },
   "shared": {

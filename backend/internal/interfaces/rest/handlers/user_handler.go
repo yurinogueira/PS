@@ -8,6 +8,7 @@ import (
 
 	portauth "ps/internal/application/ports/auth"
 	userport "ps/internal/application/ports/user"
+	auditusecase "ps/internal/application/usecase/auditlog"
 	userusecase "ps/internal/application/usecase/user"
 	"ps/internal/shared/httpx"
 )
@@ -22,6 +23,13 @@ func NewUserHandler(users userport.Repository, dummy interface{}, hasher portaut
 		service: userusecase.NewService(users, nil, hasher),
 		tokens:  tokens,
 	}
+}
+
+func (h *UserHandler) WithAuditor(auditor *auditusecase.Service) *UserHandler {
+	if h.service != nil {
+		h.service.WithAuditor(auditor)
+	}
+	return h
 }
 
 type UpdateProfileRequest struct {

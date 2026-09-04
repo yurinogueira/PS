@@ -8,6 +8,8 @@ import (
 	clientport "ps/internal/application/ports/client"
 	"ps/internal/application/ports/season"
 	tenantport "ps/internal/application/ports/tenant"
+	auditusecase "ps/internal/application/usecase/auditlog"
+	domainaudit "ps/internal/domain/auditlog"
 	domain "ps/internal/domain/season"
 )
 
@@ -15,6 +17,7 @@ type Service struct {
 	repo            season.Repository
 	clientRepo      clientport.Repository
 	tenantValidator tenantport.Validator
+	auditor         *auditusecase.Service
 }
 
 func NewService(repo season.Repository, clientRepo clientport.Repository, validator ...tenantport.Validator) *Service {
@@ -29,6 +32,11 @@ func NewService(repo season.Repository, clientRepo clientport.Repository, valida
 	}
 }
 
+func (s *Service) WithAuditor(auditor *auditusecase.Service) *Service {
+	s.auditor = auditor
+	return s
+}
+
 func (s *Service) Create(ctx context.Context, season *domain.Season, tenantID string) error {
 	if s.tenantValidator != nil {
 		if err := s.tenantValidator.ValidateCanCreateSeason(ctx, tenantID); err != nil {
@@ -36,7 +44,13 @@ func (s *Service) Create(ctx context.Context, season *domain.Season, tenantID st
 		}
 	}
 	season.TenantID = tenantID
-	return s.repo.Create(ctx, season)
+	if err := s.repo.Create(ctx, season); err != nil {
+		return err
+	}
+	if s.auditor != nil {
+		s.auditor.RecordMutation(ctx, tenantID, domainaudit.EntitySeason, season.ID, domainaudit.ActionCreate, nil, season)
+	}
+	return nil
 }
 
 func (s *Service) GetByID(ctx context.Context, id, tenantID string) (*domain.Season, error) {
@@ -53,8 +67,18 @@ func (s *Service) Update(ctx context.Context, season *domain.Season, tenantID st
 			return err
 		}
 	}
+	var oldSeason *domain.Season
+	if s.auditor != nil {
+		oldSeason, _ = s.repo.GetByID(ctx, season.ID, tenantID)
+	}
 	season.TenantID = tenantID
-	return s.repo.Update(ctx, season)
+	if err := s.repo.Update(ctx, season); err != nil {
+		return err
+	}
+	if s.auditor != nil {
+		s.auditor.RecordMutation(ctx, tenantID, domainaudit.EntitySeason, season.ID, domainaudit.ActionUpdate, oldSeason, season)
+	}
+	return nil
 }
 
 func (s *Service) Delete(ctx context.Context, id, tenantID string) error {
@@ -63,8 +87,15 @@ func (s *Service) Delete(ctx context.Context, id, tenantID string) error {
 			return err
 		}
 	}
+	var oldSeason *domain.Season
+	if s.auditor != nil {
+		oldSeason, _ = s.repo.GetByID(ctx, id, tenantID)
+	}
 	if err := s.repo.Delete(ctx, id, tenantID); err != nil {
 		return err
+	}
+	if s.auditor != nil {
+		s.auditor.RecordMutation(ctx, tenantID, domainaudit.EntitySeason, id, domainaudit.ActionDelete, oldSeason, nil)
 	}
 
 	if s.clientRepo != nil {

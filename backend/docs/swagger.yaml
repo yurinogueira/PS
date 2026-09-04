@@ -164,6 +164,12 @@ definitions:
         example: true
         type: boolean
     type: object
+  handlers.UpdateUserRoleRequest:
+    properties:
+      role:
+        example: manager
+        type: string
+    type: object
   handlers.VerifyEmailRequest:
     properties:
       token:
@@ -251,6 +257,64 @@ info:
   title: PS API
   version: "1.0"
 paths:
+  /api/v1/admin/logs:
+    get:
+      description: Retorna o histórico paginado de logs de auditoria de mutações no
+        sistema (disponível para Administrador e Gestor)
+      parameters:
+      - description: 'Número da página (padrão: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Itens por página (padrão: 20, máx: 100)'
+        in: query
+        name: limit
+        type: integer
+      - description: Filtrar por tipo de entidade (user, tenant, season, photographer,
+          person, client)
+        in: query
+        name: entity_type
+        type: string
+      - description: Filtrar por ação (CREATE, UPDATE, DELETE, ROLE_CHANGE, ASSIGN_TENANT)
+        in: query
+        name: action
+        type: string
+      - description: Filtrar por ID do usuário executor
+        in: query
+        name: user_id
+        type: string
+      - description: Data inicial em formato RFC3339
+        in: query
+        name: start_date
+        type: string
+      - description: Data final em formato RFC3339
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.SuccessEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Listar logs de auditoria
+      tags:
+      - Admin
   /api/v1/admin/tenants:
     get:
       description: Retorna a lista de todas as organizações (tenants) cadastradas
@@ -473,6 +537,53 @@ paths:
       security:
       - BearerAuth: []
       summary: Listar usuários para administração
+      tags:
+      - Admin
+  /api/v1/admin/users/{id}/role:
+    put:
+      consumes:
+      - application/json
+      description: Altera a função/papel de um usuário no sistema (admin, manager,
+        user). Requer perfil Administrador e impede o lockout do último administrador
+        ativo.
+      parameters:
+      - description: ID do Usuário
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados da nova função
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateUserRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.SuccessEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Atualizar função de um usuário
       tags:
       - Admin
   /api/v1/admin/users/{id}/tenant:

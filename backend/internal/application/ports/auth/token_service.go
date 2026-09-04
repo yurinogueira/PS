@@ -12,6 +12,7 @@ type TokenClaims struct {
 	Email      string
 	TenantID   string
 	SuperAdmin bool
+	Role       string
 }
 
 type TokenService interface {
