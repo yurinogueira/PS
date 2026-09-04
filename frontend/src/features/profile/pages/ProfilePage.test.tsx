@@ -75,4 +75,32 @@ describe("ProfilePage", () => {
       }),
     ).toBeInTheDocument();
   });
+
+  it("renders with full-width container matching layout guidelines", async () => {
+    vi.mocked(profileService.getProfile).mockResolvedValueOnce({
+      user: {
+        id: "user-1",
+        name: "Yuri Nogueira",
+        email: "yuri@ps.com",
+        emailVerified: true,
+        createdAt: "2026-08-25T00:00:00Z",
+      },
+    });
+
+    const { container } = render(
+      <BrowserRouter>
+        <ProfilePage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Meu Perfil & Configurações"),
+      ).toBeInTheDocument();
+    });
+
+    const rootBox = container.firstChild as HTMLElement;
+    expect(rootBox).toHaveStyle({ width: "100%" });
+    expect(rootBox.style.maxWidth).toBeFalsy();
+  });
 });
