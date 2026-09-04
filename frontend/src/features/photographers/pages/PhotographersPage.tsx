@@ -153,7 +153,7 @@ export const PhotographersPage = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
+    <Box sx={{ width: "100%" }}>
       <Box
         sx={{
           display: "flex",

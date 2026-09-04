@@ -586,7 +586,7 @@ export const PersonDetailsPage = () => {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1600, margin: "0 auto" }}>
+    <Box sx={{ width: "100%" }}>
       {/* Top Navigation & Person Header */}
       <Paper
         elevation={0}
