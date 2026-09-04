@@ -547,6 +547,8 @@
     "subtitle": "Generate custom reports, launch filtered dynamic exports, and track the execution history.",
     "selectEvent": "Filter by Event",
     "allEvents": "All Events",
+    "activeEvent": "Active Event",
+    "noActiveEvent": "No active event selected",
     "blockedAlert": "Exports are currently disabled due to overdue payments or your plan limits.",
     "availableReports": "Available Exports",
     "history": "Export History",
