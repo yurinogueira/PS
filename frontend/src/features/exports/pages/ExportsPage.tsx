@@ -81,36 +81,6 @@ export const ExportsPage: React.FC = () => {
     }
   };
 
-  const handleDownloadClientsPdfDirect = async () => {
-    setLoadingAction("pdf_direct");
-    try {
-      const blob = await reportService.downloadClientsPdfDirect(
-        selectedSeasonId || undefined,
-      );
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `relatorio_consolidado_${Date.now()}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      setSnackbar({
-        open: true,
-        message: t("exports.messages.pdfDownloaded"),
-        severity: "success",
-      });
-      setRefreshTrigger((prev) => prev + 1);
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || t("exports.messages.downloadFailed");
-      setSnackbar({ open: true, message: msg, severity: "error" });
-    } finally {
-      setLoadingAction(null);
-    }
-  };
-
   const handleExportClientsCsv = async () => {
     setLoadingAction("clients_csv");
     try {
@@ -273,26 +243,10 @@ export const ExportsPage: React.FC = () => {
                   {t("exports.cards.clientsPdf.description")}
                 </Typography>
               </CardContent>
-              <CardActions sx={{ p: 2, pt: 0, gap: 1 }}>
+              <CardActions sx={{ p: 2, pt: 0 }}>
                 <Button
                   size="small"
                   variant="outlined"
-                  color="primary"
-                  startIcon={
-                    loadingAction === "pdf_direct" ? (
-                      <CircularProgress size={16} />
-                    ) : (
-                      <DownloadRoundedIcon />
-                    )
-                  }
-                  onClick={handleDownloadClientsPdfDirect}
-                  disabled={Boolean(loadingAction) || isReportsBlocked}
-                >
-                  {t("exports.cards.clientsPdf.actionDirect")}
-                </Button>
-                <Button
-                  size="small"
-                  variant="text"
                   color="primary"
                   startIcon={
                     loadingAction === "pdf_async" ? (

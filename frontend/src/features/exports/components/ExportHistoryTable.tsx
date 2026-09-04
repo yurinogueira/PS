@@ -135,7 +135,13 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const filename = job.file_path.split("/").pop() || `export_${job.id}.csv`;
+      const isPdf =
+        job.type === "clients_pdf" ||
+        job.type === "dynamic_payment" ||
+        job.file_path.endsWith(".pdf");
+      const fallbackExt = isPdf ? "pdf" : "csv";
+      const filename =
+        job.file_path.split("/").pop() || `export_${job.id}.${fallbackExt}`;
       a.download = filename;
       document.body.appendChild(a);
       a.click();

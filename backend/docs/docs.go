@@ -1768,7 +1768,7 @@ const docTemplate = `{
         },
         "/api/v1/reports/dynamic-payment": {
             "post": {
-                "description": "Inicia a extração assíncrona do relatório customizado por status de pagamento e métodos múltiplos para o tenant autenticado",
+                "description": "Inicia a extração assíncrona do relatório consolidado em PDF customizado por status de pagamento e métodos múltiplos para o tenant autenticado",
                 "consumes": [
                     "application/json"
                 ],
@@ -1778,7 +1778,7 @@ const docTemplate = `{
                 "tags": [
                     "Reports"
                 ],
-                "summary": "Exportar relatório dinâmico filtrado por status e métodos de pagamento",
+                "summary": "Exportar relatório dinâmico em PDF filtrado por status e métodos de pagamento",
                 "parameters": [
                     {
                         "description": "Parâmetros da exportação dinâmica",

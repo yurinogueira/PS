@@ -576,7 +576,7 @@
         "paid_clients_csv": "Paid Clients (CSV)",
         "unpaid_clients_csv": "Unpaid Clients (CSV)",
         "clients_pdf": "Consolidated Clients (PDF)",
-        "dynamic_payment": "Dynamic by Payment (CSV)"
+        "dynamic_payment": "Dynamic by Payment (PDF)"
       }
     },
     "cards": {
@@ -603,13 +603,13 @@
       },
       "dynamicPayment": {
         "title": "Dynamic Payment Export",
-        "description": "Configure custom filters by payment status and choose multiple specific payment methods.",
+        "description": "Configure custom filters by payment status and choose multiple specific payment methods to generate a customized PDF report.",
         "action": "Configure & Export"
       }
     },
     "dynamicDialog": {
       "title": "Dynamic Export by Payment",
-      "description": "Choose specific criteria to generate a customized CSV spreadsheet.",
+      "description": "Choose specific criteria to generate a customized PDF report.",
       "paidStatusLabel": "Payment Status",
       "paidStatusAll": "All records",
       "paidStatusPaid": "Paid only (confirmed)",
