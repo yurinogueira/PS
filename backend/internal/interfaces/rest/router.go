@@ -13,10 +13,11 @@ import (
 	"ps/internal/shared/httpx"
 	"ps/internal/shared/middleware"
 
-	"ps/internal/application/ports/client"
-	"ps/internal/application/ports/person"
-	"ps/internal/application/ports/photographer"
-	"ps/internal/application/ports/season"
+	clientport "ps/internal/application/ports/client"
+	personport "ps/internal/application/ports/person"
+	photographerport "ps/internal/application/ports/photographer"
+	reportport "ps/internal/application/ports/report"
+	seasonport "ps/internal/application/ports/season"
 	storageport "ps/internal/application/ports/storage"
 	adminusecase "ps/internal/application/usecase/admin"
 	clientusecase "ps/internal/application/usecase/client"
@@ -40,11 +41,12 @@ func NewRouter(
 	hasher portauth.PasswordHasher,
 	tokens portauth.TokenService,
 	emailSender emailport.Sender,
-	seasons season.Repository,
-	photographers photographer.Repository,
-	persons person.Repository,
-	clients client.Repository,
+	seasons seasonport.Repository,
+	photographers photographerport.Repository,
+	persons personport.Repository,
+	clients clientport.Repository,
 	storageProvider storageport.Provider,
+	reportRepo reportport.Repository,
 ) *Router {
 	mux := http.NewServeMux()
 	healthHandler := handlers.NewHealthHandler()
@@ -60,7 +62,9 @@ func NewRouter(
 	photographerSvc := photographerusecase.NewService(photographers, tenantSvc)
 	personSvc := personusecase.NewService(persons, tenantSvc)
 	clientSvc := clientusecase.NewService(clients, persons, seasons, photographers, tenantSvc)
-	reportSvc := reportusecase.NewService(clients, persons, photographers, storageProvider, emailSender, cfg.AppBaseURL, tenantSvc)
+	reportSvc := reportusecase.NewService(clients, persons, photographers, storageProvider, emailSender, cfg.AppBaseURL, tenantSvc).
+		WithReportRepo(reportRepo).
+		WithSeasonRepo(seasons)
 
 	seasonHandler := handlers.NewSeasonHandler(seasonSvc)
 	photographerHandler := handlers.NewPhotographerHandler(photographerSvc)
@@ -159,6 +163,9 @@ func NewRouter(
 	mux.Handle("POST /api/v1/reports/unpaid-clients-csv", businessChain(reportHandler.ExportUnpaidClientsCSV))
 	mux.Handle("POST /api/v1/reports/paid-clients-csv", businessChain(reportHandler.ExportPaidClientsCSV))
 	mux.Handle("POST /api/v1/reports/clients-pdf", businessChain(reportHandler.ExportClientsPDF))
+	mux.Handle("POST /api/v1/reports/dynamic-payment", businessChain(reportHandler.ExportDynamicPayment))
+	mux.Handle("GET /api/v1/reports/history", businessChain(reportHandler.ListHistory))
+	mux.Handle("GET /api/v1/reports/jobs/{id}", businessChain(reportHandler.GetJob))
 	mux.Handle("GET /api/v1/reports/clients-pdf", businessChain(reportHandler.DownloadDirectClientsPDF))
 	mux.Handle("GET /api/v1/reports/download", businessChain(reportHandler.DownloadReport))
 

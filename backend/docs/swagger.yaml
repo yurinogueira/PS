@@ -96,6 +96,20 @@ definitions:
         example: free
         type: string
     type: object
+  handlers.ExportDynamicPaymentRequest:
+    properties:
+      is_paid:
+        type: boolean
+      paid_status:
+        description: '"all", "paid", "unpaid"'
+        type: string
+      payment_methods:
+        items:
+          type: string
+        type: array
+      season_id:
+        type: string
+    type: object
   handlers.ForgotPasswordRequest:
     properties:
       email:
@@ -1388,6 +1402,120 @@ paths:
           schema:
             $ref: '#/definitions/httpx.ErrorEnvelope'
       summary: Baixar arquivo de relatório gerado
+      tags:
+      - Reports
+  /api/v1/reports/dynamic-payment:
+    post:
+      consumes:
+      - application/json
+      description: Inicia a extração assíncrona do relatório customizado por status
+        de pagamento e métodos múltiplos para o tenant autenticado
+      parameters:
+      - description: Parâmetros da exportação dinâmica
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ExportDynamicPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/httpx.SuccessEnvelope'
+        "400":
+          description: Requisição inválida
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "401":
+          description: Não autenticado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Tenant não associado ou bloqueado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      summary: Exportar relatório dinâmico filtrado por status e métodos de pagamento
+      tags:
+      - Reports
+  /api/v1/reports/history:
+    get:
+      description: Retorna o histórico paginado de jobs de relatórios/exportações
+        do tenant autenticado
+      parameters:
+      - description: ID do evento para filtrar o histórico
+        in: query
+        name: season_id
+        type: string
+      - description: 'Número da página (padrão: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Quantidade por página (padrão: 10, máximo: 100)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.SuccessEnvelope'
+        "401":
+          description: Não autenticado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Tenant não associado ou bloqueado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      summary: Listar histórico de exportações
+      tags:
+      - Reports
+  /api/v1/reports/jobs/{id}:
+    get:
+      description: Retorna os detalhes e status de um job de exportação do tenant
+        autenticado
+      parameters:
+      - description: ID do job
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.SuccessEnvelope'
+        "401":
+          description: Não autenticado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "403":
+          description: Tenant não associado ou bloqueado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "404":
+          description: Job não encontrado
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/httpx.ErrorEnvelope'
+      summary: Obter detalhes de um job de exportação
       tags:
       - Reports
   /api/v1/reports/paid-clients-csv:

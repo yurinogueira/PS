@@ -8,10 +8,12 @@ import (
 	"strings"
 	"testing"
 
+	reportport "ps/internal/application/ports/report"
 	storageport "ps/internal/application/ports/storage"
 	clientdomain "ps/internal/domain/client"
 	persondomain "ps/internal/domain/person"
 	photographerdomain "ps/internal/domain/photographer"
+	reportdomain "ps/internal/domain/report"
 )
 
 // Mock implementations
@@ -1042,5 +1044,190 @@ func TestGeneratePaidClientsCSV(t *testing.T) {
 	}
 	if emailSender.sentReports[0].ReportName != "Relatório de Clientes Pagos" {
 		t.Fatalf("expected report name 'Relatório de Clientes Pagos', got %q", emailSender.sentReports[0].ReportName)
+	}
+}
+
+type mockTestJobRepo struct {
+	jobs []*reportdomain.ReportJob
+}
+
+func (m *mockTestJobRepo) Create(ctx context.Context, job *reportdomain.ReportJob) error {
+	m.jobs = append(m.jobs, job)
+	return nil
+}
+func (m *mockTestJobRepo) Update(ctx context.Context, job *reportdomain.ReportJob) error {
+	for i, j := range m.jobs {
+		if j.ID == job.ID {
+			m.jobs[i] = job
+			return nil
+		}
+	}
+	m.jobs = append(m.jobs, job)
+	return nil
+}
+func (m *mockTestJobRepo) GetByID(ctx context.Context, id, tenantID string) (*reportdomain.ReportJob, error) {
+	for _, j := range m.jobs {
+		if j.ID == id && j.TenantID == tenantID {
+			return j, nil
+		}
+	}
+	return nil, errors.New("not found")
+}
+func (m *mockTestJobRepo) List(ctx context.Context, filter reportport.ListFilter) (*reportport.ListResult, error) {
+	var matched []*reportdomain.ReportJob
+	for _, j := range m.jobs {
+		if j.TenantID == filter.TenantID {
+			if filter.SeasonID == "" || j.SeasonID == filter.SeasonID {
+				matched = append(matched, j)
+			}
+		}
+	}
+	return &reportport.ListResult{
+		Jobs:  matched,
+		Total: int64(len(matched)),
+		Page:  filter.Page,
+		Limit: filter.Limit,
+	}, nil
+}
+
+func TestGenerateDynamicPaymentCSV(t *testing.T) {
+	val100 := 100.0
+	val200 := 200.0
+	clientRepo := &mockClientRepo{
+		clients: []*clientdomain.SeasonClient{
+			{
+				ID:       "client-1",
+				TenantID: "tenant-1",
+				PersonID: "person-1",
+				SeasonID: "season-1",
+				Dogs: []clientdomain.Dog{
+					{
+						Breed: "Poodle",
+						Photos: []clientdomain.Photo{
+							{
+								FileNumber:    "IMG_001",
+								PaymentMethod: "Pix",
+								AmountPaid:    &val100,
+							},
+							{
+								FileNumber:    "IMG_002",
+								PaymentMethod: "Não pago",
+							},
+							{
+								FileNumber:    "IMG_003",
+								PaymentMethod: "Dinheiro",
+								AmountPaid:    &val200,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	personRepo := &mockPersonRepo{
+		people: map[string]*persondomain.Person{
+			"person-1": {
+				ID:    "person-1",
+				Name:  "Maria Silva",
+				Email: "maria@example.com",
+				Phone: "11999998888",
+			},
+		},
+	}
+	photogRepo := &mockPhotographerRepo{}
+	storage := &mockStorageProvider{files: make(map[string][]byte)}
+	emailSender := &mockEmailSender{}
+
+	svc := NewService(clientRepo, personRepo, photogRepo, storage, emailSender, "http://localhost:8080")
+
+	// 1. Filter: Paid only, specifically "Pix"
+	isPaidTrue := true
+	pathPix, err := svc.GenerateDynamicPaymentCSV(context.Background(), "tenant-1", "season-1", &reportdomain.ReportFilters{
+		IsPaid:         &isPaidTrue,
+		PaymentMethods: []string{"Pix"},
+	}, "user@test.com", "User")
+	if err != nil {
+		t.Fatalf("unexpected error generating dynamic CSV: %v", err)
+	}
+	csvData := storage.files[pathPix]
+	r := csv.NewReader(bytes.NewReader(bytes.TrimPrefix(csvData, []byte("\xEF\xBB\xBF"))))
+	records, _ := r.ReadAll()
+	// Header + 1 photo (IMG_001) = 2
+	if len(records) != 2 {
+		t.Fatalf("expected 2 records for Pix filter, got %d", len(records))
+	}
+	if records[1][8] != "IMG_001" || records[1][10] != "Pix" {
+		t.Fatalf("unexpected record: %v", records[1])
+	}
+
+	// 2. Filter: Unpaid only
+	isPaidFalse := false
+	pathUnpaid, err := svc.GenerateDynamicPaymentCSV(context.Background(), "tenant-1", "season-1", &reportdomain.ReportFilters{
+		IsPaid: &isPaidFalse,
+	}, "", "")
+	if err != nil {
+		t.Fatalf("unexpected error generating unpaid dynamic CSV: %v", err)
+	}
+	csvDataUnpaid := storage.files[pathUnpaid]
+	rUnpaid := csv.NewReader(bytes.NewReader(bytes.TrimPrefix(csvDataUnpaid, []byte("\xEF\xBB\xBF"))))
+	recordsUnpaid, _ := rUnpaid.ReadAll()
+	// Header + 1 photo (IMG_002) = 2
+	if len(recordsUnpaid) != 2 {
+		t.Fatalf("expected 2 records for Unpaid filter, got %d", len(recordsUnpaid))
+	}
+	if recordsUnpaid[1][8] != "IMG_002" || recordsUnpaid[1][10] != "Não pago" {
+		t.Fatalf("unexpected record: %v", recordsUnpaid[1])
+	}
+}
+
+func TestStartJobLifecycle(t *testing.T) {
+	clientRepo := &mockClientRepo{}
+	personRepo := &mockPersonRepo{people: make(map[string]*persondomain.Person)}
+	photogRepo := &mockPhotographerRepo{}
+	storage := &mockStorageProvider{files: make(map[string][]byte)}
+	emailSender := &mockEmailSender{}
+	jobRepo := &mockTestJobRepo{}
+
+	svc := NewService(clientRepo, personRepo, photogRepo, storage, emailSender, "http://localhost:8080").
+		WithReportRepo(jobRepo)
+
+	job := &reportdomain.ReportJob{
+		TenantID: "tenant-1",
+		SeasonID: "season-1",
+		Type:     reportdomain.TypeClientsCSV,
+		RequestedBy: reportdomain.UserSummary{
+			UserName:  "Test",
+			UserEmail: "test@example.com",
+		},
+	}
+
+	started, err := svc.StartJob(context.Background(), job)
+	if err != nil {
+		t.Fatalf("failed to start job: %v", err)
+	}
+	if started.ID == "" {
+		t.Fatalf("expected job ID to be set")
+	}
+
+	// Test ListJobs
+	listRes, err := svc.ListJobs(context.Background(), reportport.ListFilter{
+		TenantID: "tenant-1",
+		Page:     1,
+		Limit:    10,
+	})
+	if err != nil {
+		t.Fatalf("failed to list jobs: %v", err)
+	}
+	if len(listRes.Jobs) != 1 {
+		t.Fatalf("expected 1 job in list, got %d", len(listRes.Jobs))
+	}
+
+	// Test GetJob
+	found, err := svc.GetJob(context.Background(), started.ID, "tenant-1")
+	if err != nil {
+		t.Fatalf("failed to get job: %v", err)
+	}
+	if found.ID != started.ID {
+		t.Fatalf("expected job ID %q, got %q", started.ID, found.ID)
 	}
 }

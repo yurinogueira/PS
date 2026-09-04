@@ -2,15 +2,19 @@ package handlers_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
+	reportport "ps/internal/application/ports/report"
 	storageport "ps/internal/application/ports/storage"
 	reportusecase "ps/internal/application/usecase/report"
 	clientdomain "ps/internal/domain/client"
 	persondomain "ps/internal/domain/person"
 	photographerdomain "ps/internal/domain/photographer"
+	reportdomain "ps/internal/domain/report"
 	domainuser "ps/internal/domain/user"
 	usermemory "ps/internal/infrastructure/user/memory"
 	"ps/internal/interfaces/rest/handlers"
@@ -152,21 +156,66 @@ func (m *mockReportEmailSender) SendReportReadyEmail(ctx context.Context, toEmai
 	return nil
 }
 
-func setupReportHandler() (*handlers.ReportHandler, *mockReportStorageProvider, *usermemory.Repository) {
+type mockReportJobRepo struct {
+	jobs []*reportdomain.ReportJob
+}
+
+func (m *mockReportJobRepo) Create(ctx context.Context, job *reportdomain.ReportJob) error {
+	m.jobs = append(m.jobs, job)
+	return nil
+}
+func (m *mockReportJobRepo) Update(ctx context.Context, job *reportdomain.ReportJob) error {
+	for i, j := range m.jobs {
+		if j.ID == job.ID {
+			m.jobs[i] = job
+			return nil
+		}
+	}
+	m.jobs = append(m.jobs, job)
+	return nil
+}
+func (m *mockReportJobRepo) GetByID(ctx context.Context, id, tenantID string) (*reportdomain.ReportJob, error) {
+	for _, j := range m.jobs {
+		if j.ID == id && j.TenantID == tenantID {
+			return j, nil
+		}
+	}
+	return nil, errors.New("job not found")
+}
+func (m *mockReportJobRepo) List(ctx context.Context, filter reportport.ListFilter) (*reportport.ListResult, error) {
+	var matched []*reportdomain.ReportJob
+	for _, j := range m.jobs {
+		if j.TenantID == filter.TenantID {
+			if filter.SeasonID == "" || j.SeasonID == filter.SeasonID {
+				matched = append(matched, j)
+			}
+		}
+	}
+	return &reportport.ListResult{
+		Jobs:  matched,
+		Total: int64(len(matched)),
+		Page:  filter.Page,
+		Limit: filter.Limit,
+	}, nil
+}
+
+func setupReportHandler() (*handlers.ReportHandler, *mockReportStorageProvider, *usermemory.Repository, *mockReportJobRepo) {
 	clientRepo := &mockReportClientRepo{}
 	personRepo := &mockReportPersonRepo{people: make(map[string]*persondomain.Person)}
 	photogRepo := &mockReportPhotographerRepo{}
 	storage := &mockReportStorageProvider{files: make(map[string][]byte)}
 	emailSender := &mockReportEmailSender{}
 	userRepo := usermemory.NewRepository()
+	jobRepo := &mockReportJobRepo{}
 
-	svc := reportusecase.NewService(clientRepo, personRepo, photogRepo, storage, emailSender, "http://localhost:8080")
+	svc := reportusecase.NewService(clientRepo, personRepo, photogRepo, storage, emailSender, "http://localhost:8080").
+		WithReportRepo(jobRepo)
 	handler := handlers.NewReportHandler(svc, userRepo)
-	return handler, storage, userRepo
+	return handler, storage, userRepo, jobRepo
 }
 
 func TestReportHandler_ExportEndpoints(t *testing.T) {
-	handler, _, userRepo := setupReportHandler()
+	handler, _, userRepo, jobRepo := setupReportHandler()
 
 	u, _ := userRepo.Create(context.Background(), domainuser.User{
 		Name:     "Test User",
@@ -239,6 +288,71 @@ func TestReportHandler_ExportEndpoints(t *testing.T) {
 		}
 	})
 
+	t.Run("ExportDynamicPayment success", func(t *testing.T) {
+		body := `{"season_id":"season-1","paid_status":"paid","payment_methods":["Pix","Dinheiro"]}`
+		req := httptest.NewRequest("POST", "/api/v1/reports/dynamic-payment", strings.NewReader(body))
+		ctx := context.WithValue(req.Context(), middleware.TenantIDKey, "tenant-1")
+		ctx = context.WithValue(ctx, middleware.UserIDKey, u.ID)
+		req = req.WithContext(ctx)
+
+		rec := httptest.NewRecorder()
+		handler.ExportDynamicPayment(rec, req)
+
+		if rec.Code != http.StatusAccepted {
+			t.Fatalf("expected 202 Accepted, got %d: %s", rec.Code, rec.Body.String())
+		}
+	})
+
+	t.Run("ListHistory success", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/v1/reports/history?page=1&limit=10", nil)
+		ctx := context.WithValue(req.Context(), middleware.TenantIDKey, "tenant-1")
+		req = req.WithContext(ctx)
+
+		rec := httptest.NewRecorder()
+		handler.ListHistory(rec, req)
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected 200 OK, got %d: %s", rec.Code, rec.Body.String())
+		}
+	})
+
+	t.Run("GetJob success and not found", func(t *testing.T) {
+		// Create dummy job
+		testJob := &reportdomain.ReportJob{
+			ID:       "job-123",
+			TenantID: "tenant-1",
+			Type:     reportdomain.TypeClientsCSV,
+			Status:   reportdomain.StatusCompleted,
+		}
+		_ = jobRepo.Create(context.Background(), testJob)
+
+		// Found
+		req := httptest.NewRequest("GET", "/api/v1/reports/jobs/job-123", nil)
+		req.SetPathValue("id", "job-123")
+		ctx := context.WithValue(req.Context(), middleware.TenantIDKey, "tenant-1")
+		req = req.WithContext(ctx)
+
+		rec := httptest.NewRecorder()
+		handler.GetJob(rec, req)
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected 200 OK, got %d: %s", rec.Code, rec.Body.String())
+		}
+
+		// Not found
+		reqNotFound := httptest.NewRequest("GET", "/api/v1/reports/jobs/unknown-job", nil)
+		reqNotFound.SetPathValue("id", "unknown-job")
+		ctx = context.WithValue(reqNotFound.Context(), middleware.TenantIDKey, "tenant-1")
+		reqNotFound = reqNotFound.WithContext(ctx)
+
+		recNotFound := httptest.NewRecorder()
+		handler.GetJob(recNotFound, reqNotFound)
+
+		if recNotFound.Code != http.StatusNotFound {
+			t.Fatalf("expected 404 Not Found, got %d", recNotFound.Code)
+		}
+	})
+
 	t.Run("DownloadDirectClientsPDF success", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/api/v1/reports/clients-pdf", nil)
 		ctx := context.WithValue(req.Context(), middleware.TenantIDKey, "tenant-1")
@@ -257,7 +371,7 @@ func TestReportHandler_ExportEndpoints(t *testing.T) {
 }
 
 func TestReportHandler_DownloadReport(t *testing.T) {
-	handler, storage, _ := setupReportHandler()
+	handler, storage, _, _ := setupReportHandler()
 
 	// Store dummy file
 	validPath := "reports/tenant_tenant-1/clientes_123.csv"

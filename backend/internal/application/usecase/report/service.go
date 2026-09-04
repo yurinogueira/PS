@@ -14,15 +14,19 @@ import (
 	"unicode"
 
 	"github.com/go-pdf/fpdf"
+	"go.mongodb.org/mongo-driver/v2/bson"
 
 	clientport "ps/internal/application/ports/client"
 	emailport "ps/internal/application/ports/email"
 	personport "ps/internal/application/ports/person"
 	photographerport "ps/internal/application/ports/photographer"
+	reportport "ps/internal/application/ports/report"
+	seasonport "ps/internal/application/ports/season"
 	storageport "ps/internal/application/ports/storage"
 	tenantport "ps/internal/application/ports/tenant"
 	clientdomain "ps/internal/domain/client"
 	persondomain "ps/internal/domain/person"
+	reportdomain "ps/internal/domain/report"
 )
 
 var (
@@ -37,6 +41,8 @@ type Service struct {
 	storageProvider  storageport.Provider
 	emailSender      emailport.Sender
 	tenantValidator  tenantport.Validator
+	reportRepo       reportport.Repository
+	seasonRepo       seasonport.Repository
 	appBaseURL       string
 }
 
@@ -65,6 +71,16 @@ func NewService(
 		tenantValidator:  tv,
 		appBaseURL:       strings.TrimRight(appBaseURL, "/"),
 	}
+}
+
+func (s *Service) WithReportRepo(repo reportport.Repository) *Service {
+	s.reportRepo = repo
+	return s
+}
+
+func (s *Service) WithSeasonRepo(repo seasonport.Repository) *Service {
+	s.seasonRepo = repo
+	return s
 }
 
 // FormatPhone standardizes Brazilian phone numbers into (XX) XXXXX-XXXX or (XX) XXXX-XXXX
@@ -1031,4 +1047,290 @@ func (s *Service) GetReportFile(ctx context.Context, tenantID, relativePath stri
 	}
 
 	return s.storageProvider.Get(ctx, cleanPath)
+}
+
+func (s *Service) GenerateDynamicPaymentCSV(ctx context.Context, tenantID, seasonID string, filters *reportdomain.ReportFilters, userEmail, userName string) (string, error) {
+	if tenantID == "" {
+		return "", errors.New("tenant ID cannot be empty")
+	}
+
+	if s.tenantValidator != nil {
+		if err := s.tenantValidator.ValidateCanExportReport(ctx, tenantID, seasonID); err != nil {
+			return "", err
+		}
+	}
+
+	// 1. Fetch photographers to map IDs to names
+	photographersList, err := s.photographerRepo.List(ctx, tenantID)
+	if err != nil {
+		log.Printf("[REPORT] Failed to list photographers for tenant %s: %v", tenantID, err)
+		photographersList = nil
+	}
+	photogMap := make(map[string]string)
+	for _, p := range photographersList {
+		photogMap[p.ID] = p.Name
+	}
+
+	// 2. Cache persons dynamically during stream to avoid repeated identical queries
+	personCache := make(map[string]*persondomain.Person)
+
+	// Build map of allowed normalized payment methods if specified
+	allowedMethodsMap := make(map[string]bool)
+	if filters != nil && len(filters.PaymentMethods) > 0 {
+		for _, m := range filters.PaymentMethods {
+			norm := strings.ToLower(NormalizePaymentMethod(m))
+			allowedMethodsMap[norm] = true
+		}
+	}
+
+	// 3. Prepare CSV buffer with UTF-8 BOM for Excel compatibility and headers
+	var buf bytes.Buffer
+	buf.WriteString("\xEF\xBB\xBF")
+	writer := csv.NewWriter(&buf)
+
+	headers := []string{
+		"Nome",
+		"E-mail",
+		"E-mail alternativo",
+		"Telefone",
+		"Dono do Cachorro",
+		"Raça",
+		"Juiz",
+		"Competição Ganha",
+		"Número do Arquivo da Foto",
+		"Fotografo",
+		"Forma de Pagamento",
+		"Valor Pago",
+		"Data da Foto",
+	}
+	if err := writer.Write(sanitizeRow(headers)); err != nil {
+		return "", fmt.Errorf("failed to write csv headers: %w", err)
+	}
+
+	// 4. Stream clients from MongoDB and apply dynamic filters
+	streamErr := s.clientRepo.StreamByTenant(ctx, tenantID, seasonID, func(c *clientdomain.SeasonClient) error {
+		var personObj *persondomain.Person
+		var ok bool
+
+		for _, dog := range c.Dogs {
+			isOwnerStr := formatIsOwner(dog.IsOwner)
+			var wonCompStr string
+			if len(dog.WonCompetitions) > 0 {
+				wonCompStr = strings.Join(dog.WonCompetitions, ", ")
+			} else if dog.CompetitionsWon > 0 {
+				wonCompStr = "Sim"
+			}
+
+			for _, photo := range dog.Photos {
+				normPay := NormalizePaymentMethod(photo.PaymentMethod)
+				isPaid := normPay != "Não pago" && normPay != ""
+
+				// Filter by payment status
+				if filters != nil && filters.IsPaid != nil {
+					if *filters.IsPaid && !isPaid {
+						continue
+					}
+					if !*filters.IsPaid && isPaid {
+						continue
+					}
+				}
+
+				// Filter by payment methods if specified
+				if len(allowedMethodsMap) > 0 {
+					if !allowedMethodsMap[strings.ToLower(normPay)] {
+						continue
+					}
+				}
+
+				if personObj == nil {
+					personObj, ok = personCache[c.PersonID]
+					if !ok {
+						p, err := s.personRepo.GetByID(ctx, c.PersonID, tenantID)
+						if err != nil || p == nil {
+							p = &persondomain.Person{
+								Name: "Desconhecido",
+							}
+						}
+						personCache[c.PersonID] = p
+						personObj = p
+					}
+				}
+
+				var photographerName string
+				if name, exists := photogMap[photo.PhotographerID]; exists && name != "" {
+					photographerName = name
+				} else {
+					photographerName = photo.PhotographerID
+				}
+
+				amountPaid := FormatPaidAmount(photo.AmountPaid, photo.Currency)
+				photoDate := formatPhotoDate(&photo, c.CreatedAt)
+				judgeStr := formatJudges(&photo)
+
+				row := []string{
+					personObj.Name,
+					personObj.Email,
+					personObj.AlternativeEmail,
+					FormatPhone(personObj.Phone),
+					isOwnerStr,
+					dog.Breed,
+					judgeStr,
+					wonCompStr,
+					photo.FileNumber,
+					photographerName,
+					normPay,
+					amountPaid,
+					photoDate,
+				}
+				if err := writer.Write(sanitizeRow(row)); err != nil {
+					return err
+				}
+			}
+		}
+
+		writer.Flush()
+		return writer.Error()
+	})
+
+	if streamErr != nil {
+		return "", fmt.Errorf("error during client streaming: %w", streamErr)
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return "", fmt.Errorf("error finishing csv writer: %w", err)
+	}
+
+	// 5. Store generated CSV in Storage Provider with isolated tenant path
+	timestamp := time.Now().UTC().Unix()
+	fileName := fmt.Sprintf("clientes_dinamico_%d.csv", timestamp)
+	relativePath := fmt.Sprintf("reports/tenant_%s/%s", tenantID, fileName)
+
+	_, err = s.storageProvider.Save(ctx, relativePath, storageport.File{
+		Name:        fileName,
+		Data:        buf.Bytes(),
+		ContentType: "text/csv; charset=utf-8",
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to save report to storage: %w", err)
+	}
+
+	// 6. Send notification email with download link if userEmail is provided
+	if userEmail != "" {
+		downloadURL := fmt.Sprintf("%s/reports/download?file=%s", s.appBaseURL, url.QueryEscape(relativePath))
+		if err := s.emailSender.SendReportReadyEmail(ctx, userEmail, userName, "Relatório Dinâmico de Clientes", downloadURL); err != nil {
+			log.Printf("[REPORT-EMAIL-ERROR] Failed to send report ready email to %s: %v", userEmail, err)
+		}
+	}
+
+	return relativePath, nil
+}
+
+func (s *Service) StartJob(ctx context.Context, job *reportdomain.ReportJob) (*reportdomain.ReportJob, error) {
+	if job.TenantID == "" {
+		return nil, errors.New("tenant ID cannot be empty")
+	}
+
+	if s.tenantValidator != nil {
+		if err := s.tenantValidator.ValidateCanExportReport(ctx, job.TenantID, job.SeasonID); err != nil {
+			return nil, err
+		}
+	}
+
+	if job.ID == "" {
+		job.ID = bson.NewObjectID().Hex()
+	}
+	if job.CreatedAt.IsZero() {
+		job.CreatedAt = time.Now().UTC()
+	}
+	if job.Status == "" {
+		job.Status = reportdomain.StatusPending
+	}
+
+	if job.SeasonID != "" && job.SeasonName == "" && s.seasonRepo != nil {
+		if season, err := s.seasonRepo.GetByID(ctx, job.SeasonID, job.TenantID); err == nil && season != nil {
+			job.SeasonName = season.Name
+		}
+	}
+	if job.SeasonID == "" && job.SeasonName == "" {
+		job.SeasonName = "Todos os Eventos"
+	}
+
+	if s.reportRepo != nil {
+		if err := s.reportRepo.Create(ctx, job); err != nil {
+			return nil, fmt.Errorf("failed to create report job: %w", err)
+		}
+	}
+
+	// Launch async extraction job in background goroutine with detached context
+	go func(j *reportdomain.ReportJob) {
+		jobCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
+
+		start := time.Now()
+		j.Status = reportdomain.StatusProcessing
+		if s.reportRepo != nil {
+			_ = s.reportRepo.Update(jobCtx, j)
+		}
+
+		var filePath string
+		var genErr error
+
+		userEmail := j.RequestedBy.UserEmail
+		if userEmail == "" {
+			userEmail = j.UserEmail
+		}
+		userName := j.RequestedBy.UserName
+		if userName == "" {
+			userName = j.UserName
+		}
+
+		switch j.Type {
+		case reportdomain.TypeClientsCSV:
+			filePath, genErr = s.GenerateClientsCSV(jobCtx, j.TenantID, j.SeasonID, userEmail, userName)
+		case reportdomain.TypeUnpaidClientsCSV:
+			filePath, genErr = s.GenerateUnpaidClientsCSV(jobCtx, j.TenantID, j.SeasonID, userEmail, userName)
+		case reportdomain.TypePaidClientsCSV:
+			filePath, genErr = s.GeneratePaidClientsCSV(jobCtx, j.TenantID, j.SeasonID, userEmail, userName)
+		case reportdomain.TypeClientsPDF:
+			filePath, genErr = s.GenerateClientsPDF(jobCtx, j.TenantID, j.SeasonID, userEmail, userName)
+		case reportdomain.TypeDynamicPayment:
+			filePath, genErr = s.GenerateDynamicPaymentCSV(jobCtx, j.TenantID, j.SeasonID, j.Filters, userEmail, userName)
+		default:
+			genErr = fmt.Errorf("unsupported report type: %s", j.Type)
+		}
+
+		completed := time.Now().UTC()
+		j.CompletedAt = &completed
+		j.DurationMS = time.Since(start).Milliseconds()
+
+		if genErr != nil {
+			j.Status = reportdomain.StatusFailed
+			j.Error = genErr.Error()
+			log.Printf("[REPORT-JOB-ERROR] Job %s failed: %v", j.ID, genErr)
+		} else {
+			j.Status = reportdomain.StatusCompleted
+			j.FilePath = filePath
+		}
+
+		if s.reportRepo != nil {
+			_ = s.reportRepo.Update(jobCtx, j)
+		}
+	}(job)
+
+	return job, nil
+}
+
+func (s *Service) ListJobs(ctx context.Context, filter reportport.ListFilter) (*reportport.ListResult, error) {
+	if s.reportRepo == nil {
+		return &reportport.ListResult{Jobs: make([]*reportdomain.ReportJob, 0)}, nil
+	}
+	return s.reportRepo.List(ctx, filter)
+}
+
+func (s *Service) GetJob(ctx context.Context, id, tenantID string) (*reportdomain.ReportJob, error) {
+	if s.reportRepo == nil {
+		return nil, errors.New("report repository not configured")
+	}
+	return s.reportRepo.GetByID(ctx, id, tenantID)
 }
