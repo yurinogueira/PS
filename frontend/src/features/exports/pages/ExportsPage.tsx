@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -6,16 +6,14 @@ import {
   CardContent,
   CardActions,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   CircularProgress,
   Snackbar,
   Alert,
   Grid,
+  Chip,
 } from "@mui/material";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
+import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
@@ -24,26 +22,23 @@ import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import { useTranslation } from "react-i18next";
-import { useSeasonStore, Season } from "../../../store/seasonStore";
+import { useSeasonStore } from "../../../store/seasonStore";
 import { useTenantStore } from "../../../store/tenantStore";
-import { seasonService } from "../../../services/api/season.service";
 import {
   reportService,
   DynamicPaymentParams,
 } from "../../../services/api/report.service";
-import { TenantStatusBanner } from "../../shared/components/TenantStatusBanner";
 import { DynamicExportDialog } from "../components/DynamicExportDialog";
 import { ExportHistoryTable } from "../components/ExportHistoryTable";
 
 export const ExportsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { activeSeason, setActiveSeason } = useSeasonStore();
+  const { activeSeason } = useSeasonStore();
   const { tenantStatus } = useTenantStore();
 
-  const [seasons, setSeasons] = useState<Season[]>([]);
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string>(
-    activeSeason?.id || "",
-  );
+  const selectedSeasonId = activeSeason?.id || "";
+  const currentSeason = activeSeason;
+
   const [dynamicDialogOpen, setDynamicDialogOpen] = useState(false);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -63,34 +58,6 @@ export const ExportsPage: React.FC = () => {
     tenantStatus?.isTrialExpired ||
     tenantStatus?.clientLimitExceeded,
   );
-
-  useEffect(() => {
-    const loadSeasons = async () => {
-      try {
-        const data = await seasonService.list();
-        setSeasons(data || []);
-      } catch (err) {
-        console.error("Erro ao carregar lista de temporadas:", err);
-      }
-    };
-    loadSeasons();
-  }, []);
-
-  useEffect(() => {
-    if (activeSeason?.id) {
-      setSelectedSeasonId(activeSeason.id);
-    }
-  }, [activeSeason]);
-
-  const handleSeasonChange = (id: string) => {
-    setSelectedSeasonId(id);
-    const season = seasons.find((s) => s.id === id);
-    if (season) {
-      setActiveSeason(season);
-    }
-  };
-
-  const currentSeason = seasons.find((s) => s.id === selectedSeasonId);
 
   const handleExportClientsPdfAsync = async () => {
     setLoadingAction("pdf_async");
@@ -222,8 +189,6 @@ export const ExportsPage: React.FC = () => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto" }}>
-      <TenantStatusBanner />
-
       {/* Page Header */}
       <Box
         sx={{
@@ -249,28 +214,23 @@ export const ExportsPage: React.FC = () => {
           </Typography>
         </Box>
 
-        {/* Season Selector */}
-        <Box sx={{ minWidth: 240, width: { xs: "100%", sm: "auto" } }}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="season-select-label">
-              {t("exports.selectEvent")}
-            </InputLabel>
-            <Select
-              labelId="season-select-label"
-              value={selectedSeasonId}
-              label={t("exports.selectEvent")}
-              onChange={(e) => handleSeasonChange(e.target.value)}
-            >
-              <MenuItem value="">
-                <em>{t("exports.allEvents")}</em>
-              </MenuItem>
-              {seasons.map((s) => (
-                <MenuItem key={s.id} value={s.id}>
-                  {s.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+        {/* Active Event Indicator (Controlled globally by top bar) */}
+        <Box>
+          {activeSeason ? (
+            <Chip
+              icon={<EventNoteRoundedIcon />}
+              label={`${t("exports.activeEvent")}: ${activeSeason.name}`}
+              color="primary"
+              variant="outlined"
+              sx={{ fontWeight: 600, py: 2.2, px: 1, borderRadius: 2 }}
+            />
+          ) : (
+            <Chip
+              label={t("exports.allEvents")}
+              variant="outlined"
+              sx={{ fontWeight: 500, py: 2.2, px: 1, borderRadius: 2 }}
+            />
+          )}
         </Box>
       </Box>
 

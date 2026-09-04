@@ -547,6 +547,8 @@
     "subtitle": "Gere relatórios customizados, dispare exportações com filtros avançados e acompanhe o histórico completo de execuções.",
     "selectEvent": "Filtrar por Evento",
     "allEvents": "Todos os Eventos",
+    "activeEvent": "Evento Ativo",
+    "noActiveEvent": "Nenhum evento ativo selecionado",
     "blockedAlert": "As exportações estão desabilitadas no momento devido a pendências financeiras ou limites do seu plano.",
     "availableReports": "Exportações Disponíveis",
     "history": "Histórico de Exportações",

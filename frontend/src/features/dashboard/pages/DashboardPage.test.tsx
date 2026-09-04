@@ -25,6 +25,19 @@ describe("DashboardPage", () => {
       limit: 10,
     });
     vi.spyOn(photographerService, "list").mockResolvedValue([]);
+    vi.spyOn(clientService, "getById").mockResolvedValue({
+      id: "client-1",
+      person_id: "person-1",
+      season_id: "season-1",
+      dogs: [],
+    });
+    vi.spyOn(personService, "getById").mockResolvedValue({
+      id: "person-1",
+      name: "Carlos Ferreira",
+      email: "carlos@example.com",
+      alternative_email: "",
+      phone: "1199999999",
+    });
   });
 
   it("renders alert when no active season is selected", () => {

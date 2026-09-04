@@ -159,4 +159,36 @@ describe("ExportsPage", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("uses activeSeason from useSeasonStore and does not render event select dropdown", async () => {
+    useSeasonStore.setState({
+      activeSeason: mockSeasons[0],
+    });
+
+    render(
+      <BrowserRouter>
+        <ExportsPage />
+      </BrowserRouter>,
+    );
+
+    // Verify active season badge is displayed
+    expect(
+      screen.getByText(`Evento Ativo: ${mockSeasons[0].name}`),
+    ).toBeInTheDocument();
+
+    // Verify no select dropdown exists for choosing another season
+    expect(
+      screen.queryByLabelText(/Filtrar por Evento/i),
+    ).not.toBeInTheDocument();
+
+    // Trigger CSV export and verify it uses active season ID
+    const exportCsvBtn = screen.getByRole("button", { name: /exportar csv/i });
+    fireEvent.click(exportCsvBtn);
+
+    await waitFor(() => {
+      expect(reportService.exportClientsCsv).toHaveBeenCalledWith(
+        mockSeasons[0].id,
+      );
+    });
+  });
 });

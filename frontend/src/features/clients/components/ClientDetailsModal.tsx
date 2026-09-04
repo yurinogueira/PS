@@ -244,13 +244,16 @@ export const ClientDetailsModal = ({
     <>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
         <DialogTitle
+          component="div"
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
           }}
         >
-          <Typography variant="h6">{t("clientDetails.title")}</Typography>
+          <Typography variant="h6" component="span">
+            {t("clientDetails.title")}
+          </Typography>
           <Button
             color="error"
             size="small"

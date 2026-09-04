@@ -23,7 +23,11 @@ import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import HourglassEmptyRoundedIcon from "@mui/icons-material/HourglassEmptyRounded";
 import { useTranslation } from "react-i18next";
-import { ReportJob, reportService } from "../../../services/api/report.service";
+import {
+  ReportJob,
+  ReportHistoryResponse,
+  reportService,
+} from "../../../services/api/report.service";
 
 interface ExportHistoryTableProps {
   seasonId?: string;
@@ -83,8 +87,10 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
           limit,
           season_id: seasonId || undefined,
         });
-        setJobs(res.jobs || []);
-        setTotal(res.total || 0);
+        const payload =
+          (res as unknown as { data?: ReportHistoryResponse })?.data || res;
+        setJobs(payload?.jobs || []);
+        setTotal(payload?.total ?? 0);
       } catch (err) {
         console.error("Erro ao carregar histórico de exportações:", err);
       } finally {
