@@ -18,8 +18,10 @@ import CollectionsIcon from "@mui/icons-material/Collections";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import SupervisorAccountRoundedIcon from "@mui/icons-material/SupervisorAccountRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../features/auth/state/auth.store";
+import { getUserRole } from "../features/auth/types/auth.types";
 
 interface SidebarProps {
   mobileOpen: boolean;
@@ -70,18 +72,31 @@ export function Sidebar({
     },
   ];
 
+  const userRole = getUserRole(user);
+  const isAdmin = userRole === "admin";
+  const isManager = userRole === "manager";
+  const canAccessAdminSection = isAdmin || isManager;
+
   const adminMenuItems = [
     {
       text: t("layout.nav.organizations"),
       icon: <BusinessRoundedIcon />,
       path: "/admin/tenants",
+      show: isAdmin,
     },
     {
       text: t("layout.nav.usersAccess"),
       icon: <SupervisorAccountRoundedIcon />,
       path: "/admin/users",
+      show: isAdmin,
     },
-  ];
+    {
+      text: t("layout.nav.logs"),
+      icon: <HistoryRoundedIcon />,
+      path: "/admin/logs",
+      show: isAdmin || isManager,
+    },
+  ].filter((item) => item.show);
 
   const handleNavigation = (path: string) => {
     if (mobileOpen) {
@@ -164,7 +179,7 @@ export function Sidebar({
           );
         })}
 
-        {user?.superAdmin && (
+        {canAccessAdminSection && (
           <>
             <Divider sx={{ my: 2 }} />
             <Typography

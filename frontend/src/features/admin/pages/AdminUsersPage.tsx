@@ -36,9 +36,11 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import SupervisorAccountRoundedIcon from "@mui/icons-material/SupervisorAccountRounded";
+import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
 import { useTranslation } from "react-i18next";
 import { adminService } from "../services/admin.service";
 import { AdminUser, Tenant } from "../types/admin.types";
+import { getUserRole, UserRole } from "../../auth/types/auth.types";
 import { useDocumentTitle } from "../../shared/hooks/useDocumentTitle";
 
 export const AdminUsersPage = () => {
@@ -118,6 +120,60 @@ export const AdminUsersPage = () => {
       );
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Role Dialog State
+  const [openRole, setOpenRole] = useState(false);
+  const [selectedRoleUser, setSelectedRoleUser] = useState<AdminUser | null>(
+    null,
+  );
+  const [selectedRole, setSelectedRole] = useState<UserRole>("user");
+  const [roleSubmitting, setRoleSubmitting] = useState(false);
+  const [roleErrorMessage, setRoleErrorMessage] = useState<string | null>(null);
+
+  const handleOpenRole = (user: AdminUser) => {
+    setSelectedRoleUser(user);
+    setSelectedRole(getUserRole(user));
+    setRoleErrorMessage(null);
+    setOpenRole(true);
+  };
+
+  const handleSaveRole = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedRoleUser) return;
+
+    setRoleSubmitting(true);
+    setRoleErrorMessage(null);
+
+    try {
+      await adminService.updateUserRole(selectedRoleUser.id, {
+        role: selectedRole,
+      });
+
+      setSuccessMessage(
+        t(
+          "admin.users.roleModal.successRole",
+          "Função do usuário alterada com sucesso.",
+        ),
+      );
+      setOpenRole(false);
+      setSelectedRoleUser(null);
+      await loadData();
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      setRoleErrorMessage(
+        error.response?.data?.message ||
+          t(
+            "admin.users.roleModal.errorRole",
+            "Erro ao alterar função do usuário.",
+          ),
+      );
+    } finally {
+      setRoleSubmitting(false);
     }
   };
 
@@ -375,18 +431,28 @@ export const AdminUsersPage = () => {
                     >
                       <Box
                         sx={{
-                          bgcolor: u.superAdmin ? "secondary.50" : "grey.100",
-                          color: u.superAdmin
-                            ? "secondary.main"
-                            : "text.secondary",
+                          bgcolor:
+                            getUserRole(u) === "admin"
+                              ? "secondary.50"
+                              : getUserRole(u) === "manager"
+                                ? "info.50"
+                                : "grey.100",
+                          color:
+                            getUserRole(u) === "admin"
+                              ? "secondary.main"
+                              : getUserRole(u) === "manager"
+                                ? "info.main"
+                                : "text.secondary",
                           p: 0.8,
                           borderRadius: "50%",
                           display: "inline-flex",
                           flexShrink: 0,
                         }}
                       >
-                        {u.superAdmin ? (
+                        {getUserRole(u) === "admin" ? (
                           <SupervisorAccountRoundedIcon fontSize="small" />
+                        ) : getUserRole(u) === "manager" ? (
+                          <ManageAccountsRoundedIcon fontSize="small" />
                         ) : (
                           <PersonRoundedIcon fontSize="small" />
                         )}
@@ -512,17 +578,28 @@ export const AdminUsersPage = () => {
                     )}
                   </TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
-                    {u.superAdmin ? (
+                    {getUserRole(u) === "admin" ? (
                       <Chip
-                        label={t("admin.users.superAdminBadge")}
+                        label={t(
+                          "admin.users.superAdminBadge",
+                          "Administrador",
+                        )}
                         size="small"
                         color="secondary"
                         variant="filled"
                         sx={{ fontWeight: 600 }}
                       />
+                    ) : getUserRole(u) === "manager" ? (
+                      <Chip
+                        label={t("admin.users.managerBadge", "Gestor")}
+                        size="small"
+                        color="info"
+                        variant="filled"
+                        sx={{ fontWeight: 600 }}
+                      />
                     ) : (
                       <Chip
-                        label={t("admin.users.userBadge")}
+                        label={t("admin.users.userBadge", "Usuário")}
                         size="small"
                         variant="outlined"
                       />
@@ -568,17 +645,35 @@ export const AdminUsersPage = () => {
                     )}
                   </TableCell>
                   <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<EditRoundedIcon />}
-                      onClick={() => handleOpenAssign(u)}
-                      sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                        justifyContent: "flex-end",
+                      }}
                     >
-                      {u.tenantId
-                        ? t("admin.users.changeTenant")
-                        : t("admin.users.assignTenant")}
-                    </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<EditRoundedIcon />}
+                        onClick={() => handleOpenAssign(u)}
+                        sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+                      >
+                        {u.tenantId
+                          ? t("admin.users.changeTenant")
+                          : t("admin.users.assignTenant")}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        color="secondary"
+                        startIcon={<ManageAccountsRoundedIcon />}
+                        onClick={() => handleOpenRole(u)}
+                        sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+                      >
+                        {t("admin.users.editRole", "Alterar Função")}
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))
@@ -665,6 +760,126 @@ export const AdminUsersPage = () => {
               {submitting
                 ? t("admin.users.assignModal.saving")
                 : t("admin.users.assignModal.save")}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Dialog Alterar Função */}
+      <Dialog
+        open={openRole}
+        onClose={() => !roleSubmitting && setOpenRole(false)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{ paper: { sx: { borderRadius: 3 } } }}
+      >
+        <form onSubmit={handleSaveRole}>
+          <DialogTitle
+            sx={{
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <ManageAccountsRoundedIcon color="secondary" />
+            {t("admin.users.roleModal.title", "Alterar Função do Usuário")}
+          </DialogTitle>
+          <DialogContent
+            sx={{ display: "flex", flexDirection: "column", gap: 2.5, pt: 2 }}
+          >
+            <Box
+              sx={{
+                bgcolor: "grey.50",
+                p: 2,
+                borderRadius: 2,
+                border: "1px solid #E2E8F0",
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                {selectedRoleUser?.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {selectedRoleUser?.email}
+              </Typography>
+            </Box>
+
+            {roleErrorMessage && (
+              <Alert severity="error">{roleErrorMessage}</Alert>
+            )}
+
+            <FormControl fullWidth size="medium">
+              <InputLabel id="role-select-label">
+                {t("admin.users.roleModal.role", "Função no Sistema")}
+              </InputLabel>
+              <Select
+                labelId="role-select-label"
+                value={selectedRole}
+                label={t("admin.users.roleModal.role", "Função no Sistema")}
+                disabled={roleSubmitting}
+                onChange={(e) => setSelectedRole(e.target.value as UserRole)}
+              >
+                <MenuItem value="admin">
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {t("admin.users.roles.admin", "Administrador")}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {t(
+                        "admin.users.roles.adminDesc",
+                        "Acesso irrestrito a Organizações, Usuários e Logs de Auditoria.",
+                      )}
+                    </Typography>
+                  </Box>
+                </MenuItem>
+                <MenuItem value="manager">
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {t("admin.users.roles.manager", "Gestor")}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {t(
+                        "admin.users.roles.managerDesc",
+                        "Acesso aos dados do tenant e consulta aos Logs de Auditoria.",
+                      )}
+                    </Typography>
+                  </Box>
+                </MenuItem>
+                <MenuItem value="user">
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {t("admin.users.roles.user", "Usuário")}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {t(
+                        "admin.users.roles.userDesc",
+                        "Acesso padrão às operações do tenant vinculado.",
+                      )}
+                    </Typography>
+                  </Box>
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions sx={{ p: 2.5 }}>
+            <Button
+              onClick={() => setOpenRole(false)}
+              disabled={roleSubmitting}
+              color="inherit"
+            >
+              {t("shared.cancel", "Cancelar")}
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              color="secondary"
+              disabled={roleSubmitting}
+              startIcon={roleSubmitting && <CircularProgress size={16} />}
+              sx={{ fontWeight: 600 }}
+            >
+              {roleSubmitting
+                ? t("admin.users.roleModal.saving", "Salvando...")
+                : t("admin.users.roleModal.save", "Salvar Função")}
             </Button>
           </DialogActions>
         </form>

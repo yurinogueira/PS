@@ -9,6 +9,8 @@ import (
 
 	clientport "ps/internal/application/ports/client"
 	tenantport "ps/internal/application/ports/tenant"
+	auditusecase "ps/internal/application/usecase/auditlog"
+	domainaudit "ps/internal/domain/auditlog"
 	domaintenant "ps/internal/domain/tenant"
 )
 
@@ -51,6 +53,7 @@ type TenantStatusDTO struct {
 type Service struct {
 	repo       tenantport.Repository
 	clientRepo clientport.Repository
+	auditor    *auditusecase.Service
 }
 
 func NewService(repo tenantport.Repository, clientRepo ...clientport.Repository) *Service {
@@ -62,6 +65,11 @@ func NewService(repo tenantport.Repository, clientRepo ...clientport.Repository)
 		repo:       repo,
 		clientRepo: cr,
 	}
+}
+
+func (s *Service) WithAuditor(auditor *auditusecase.Service) *Service {
+	s.auditor = auditor
+	return s
 }
 
 func (s *Service) Create(ctx context.Context, input CreateTenantInput) (domaintenant.Tenant, error) {
@@ -112,7 +120,16 @@ func (s *Service) Create(ctx context.Context, input CreateTenantInput) (domainte
 		UpdatedAt:     now,
 	}
 
-	return s.repo.Create(ctx, t)
+	created, err := s.repo.Create(ctx, t)
+	if err != nil {
+		return domaintenant.Tenant{}, err
+	}
+
+	if s.auditor != nil {
+		s.auditor.RecordMutation(ctx, created.Name, domainaudit.EntityTenant, created.Name, domainaudit.ActionCreate, nil, created)
+	}
+
+	return created, nil
 }
 
 func (s *Service) UpdatePlan(ctx context.Context, name string, plan string) (domaintenant.Tenant, error) {
@@ -131,6 +148,7 @@ func (s *Service) UpdatePlan(ctx context.Context, name string, plan string) (dom
 		return domaintenant.Tenant{}, err
 	}
 
+	oldTenant := t
 	now := time.Now().UTC()
 	t.Plan = cleanPlan
 	t.UpdatedAt = now
@@ -144,7 +162,16 @@ func (s *Service) UpdatePlan(ctx context.Context, name string, plan string) (dom
 		t.PlanExpiresAt = nil
 	}
 
-	return s.repo.Update(ctx, t)
+	updated, err := s.repo.Update(ctx, t)
+	if err != nil {
+		return domaintenant.Tenant{}, err
+	}
+
+	if s.auditor != nil {
+		s.auditor.RecordMutation(ctx, updated.Name, domainaudit.EntityTenant, updated.Name, domainaudit.ActionUpdate, oldTenant, updated)
+	}
+
+	return updated, nil
 }
 
 func (s *Service) UpdatePaymentStatus(ctx context.Context, name string, status string) (domaintenant.Tenant, error) {
@@ -163,11 +190,21 @@ func (s *Service) UpdatePaymentStatus(ctx context.Context, name string, status s
 		return domaintenant.Tenant{}, err
 	}
 
+	oldTenant := t
 	now := time.Now().UTC()
 	t.PaymentStatus = cleanStatus
 	t.UpdatedAt = now
 
-	return s.repo.Update(ctx, t)
+	updated, err := s.repo.Update(ctx, t)
+	if err != nil {
+		return domaintenant.Tenant{}, err
+	}
+
+	if s.auditor != nil {
+		s.auditor.RecordMutation(ctx, updated.Name, domainaudit.EntityTenant, updated.Name, domainaudit.ActionUpdate, oldTenant, updated)
+	}
+
+	return updated, nil
 }
 
 func (s *Service) UpdateSettings(ctx context.Context, name string, settings domaintenant.TenantSettings) (domaintenant.Tenant, error) {
@@ -181,11 +218,21 @@ func (s *Service) UpdateSettings(ctx context.Context, name string, settings doma
 		return domaintenant.Tenant{}, err
 	}
 
+	oldTenant := t
 	now := time.Now().UTC()
 	t.Settings = settings
 	t.UpdatedAt = now
 
-	return s.repo.Update(ctx, t)
+	updated, err := s.repo.Update(ctx, t)
+	if err != nil {
+		return domaintenant.Tenant{}, err
+	}
+
+	if s.auditor != nil {
+		s.auditor.RecordMutation(ctx, updated.Name, domainaudit.EntityTenant, updated.Name, domainaudit.ActionUpdate, oldTenant, updated)
+	}
+
+	return updated, nil
 }
 
 func (s *Service) List(ctx context.Context) ([]domaintenant.Tenant, error) {

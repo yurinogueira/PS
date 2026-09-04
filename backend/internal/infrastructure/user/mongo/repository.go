@@ -27,11 +27,20 @@ type userDoc struct {
 	PasswordResetExpiresAt     *time.Time `bson:"passwordResetExpiresAt,omitempty"`
 	TenantID                   string     `bson:"tenantId"`
 	SuperAdmin                 bool       `bson:"superAdmin,omitempty"`
+	Role                       string     `bson:"role,omitempty"`
 	CreatedAt                  time.Time  `bson:"createdAt"`
 	UpdatedAt                  time.Time  `bson:"updatedAt,omitempty"`
 }
 
 func (d userDoc) toDomain() domainuser.User {
+	role := domainuser.Role(d.Role)
+	if role == "" {
+		if d.SuperAdmin {
+			role = domainuser.RoleAdmin
+		} else {
+			role = domainuser.RoleUser
+		}
+	}
 	return domainuser.User{
 		ID:                         d.ID,
 		Name:                       d.Name,
@@ -44,7 +53,8 @@ func (d userDoc) toDomain() domainuser.User {
 		PasswordResetTokenHash:     d.PasswordResetTokenHash,
 		PasswordResetExpiresAt:     d.PasswordResetExpiresAt,
 		TenantID:                   d.TenantID,
-		SuperAdmin:                 d.SuperAdmin,
+		SuperAdmin:                 role == domainuser.RoleAdmin,
+		Role:                       role,
 		CreatedAt:                  d.CreatedAt,
 		UpdatedAt:                  d.UpdatedAt,
 	}
@@ -111,7 +121,8 @@ func (r *Repository) Create(ctx context.Context, user domainuser.User) (domainus
 		PasswordResetTokenHash:     user.PasswordResetTokenHash,
 		PasswordResetExpiresAt:     user.PasswordResetExpiresAt,
 		TenantID:                   user.TenantID,
-		SuperAdmin:                 user.SuperAdmin,
+		SuperAdmin:                 user.GetRole() == domainuser.RoleAdmin,
+		Role:                       string(user.GetRole()),
 		CreatedAt:                  user.CreatedAt,
 		UpdatedAt:                  user.UpdatedAt,
 	}
@@ -133,6 +144,7 @@ func (r *Repository) Update(ctx context.Context, user domainuser.User) (domainus
 		user.UpdatedAt = time.Now().UTC()
 	}
 
+	role := user.GetRole()
 	doc := bson.M{
 		"$set": bson.M{
 			"name":                       strings.TrimSpace(user.Name),
@@ -145,7 +157,8 @@ func (r *Repository) Update(ctx context.Context, user domainuser.User) (domainus
 			"passwordResetTokenHash":     user.PasswordResetTokenHash,
 			"passwordResetExpiresAt":     user.PasswordResetExpiresAt,
 			"tenantId":                   user.TenantID,
-			"superAdmin":                 user.SuperAdmin,
+			"superAdmin":                 role == domainuser.RoleAdmin,
+			"role":                       string(role),
 			"updatedAt":                  user.UpdatedAt,
 		},
 	}

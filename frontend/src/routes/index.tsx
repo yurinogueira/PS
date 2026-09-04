@@ -4,6 +4,17 @@ import { AppLayout } from "../layouts/AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { AdminRoute } from "./AdminRoute";
 import { PageLoadingFallback } from "../features/shared";
+import { useAuthStore } from "../features/auth/state/auth.store";
+import { getUserRole } from "../features/auth/types/auth.types";
+
+function AdminRedirect() {
+  const user = useAuthStore((state) => state.user);
+  const role = getUserRole(user);
+  if (role === "manager") {
+    return <Navigate to="/admin/logs" replace />;
+  }
+  return <Navigate to="/admin/tenants" replace />;
+}
 
 // Lazy-loaded route components for optimal bundle splitting and initial load performance
 const LoginPage = lazy(() =>
@@ -95,6 +106,11 @@ const AdminUsersPage = lazy(() =>
     default: m.AdminUsersPage,
   })),
 );
+const AdminLogsPage = lazy(() =>
+  import("../features/admin/pages/AdminLogsPage").then((m) => ({
+    default: m.AdminLogsPage,
+  })),
+);
 
 export function AppRoutes() {
   return (
@@ -120,12 +136,14 @@ export function AppRoutes() {
             <Route path="/exports" element={<ExportsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
 
-            {/* SuperAdmin routes */}
-            <Route element={<AdminRoute />}>
-              <Route
-                path="/admin"
-                element={<Navigate to="/admin/tenants" replace />}
-              />
+            {/* Shared Admin & Manager routes */}
+            <Route element={<AdminRoute allowedRoles={["admin", "manager"]} />}>
+              <Route path="/admin" element={<AdminRedirect />} />
+              <Route path="/admin/logs" element={<AdminLogsPage />} />
+            </Route>
+
+            {/* SuperAdmin only routes */}
+            <Route element={<AdminRoute allowedRoles={["admin"]} />}>
               <Route path="/admin/tenants" element={<AdminTenantsPage />} />
               <Route path="/admin/users" element={<AdminUsersPage />} />
             </Route>

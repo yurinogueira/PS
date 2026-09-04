@@ -122,5 +122,36 @@ func TestAdminService(t *testing.T) {
 	if updated.TenantID != "" {
 		t.Fatalf("expected empty tenantID, got %s", updated.TenantID)
 	}
-	_ = u2
+
+	// 8. UpdateUserRole tests
+	// u2 is currently SuperAdmin (admin)
+	// Try demoting u2 when u2 is the only admin -> ErrLastAdminLockout
+	_, err = svc.UpdateUserRole(ctx, u2.ID, "user")
+	if err != adminusecase.ErrLastAdminLockout {
+		t.Fatalf("expected ErrLastAdminLockout, got %v", err)
+	}
+
+	// Promote u1 to admin
+	u1Admin, err := svc.UpdateUserRole(ctx, u1.ID, "admin")
+	if err != nil {
+		t.Fatalf("unexpected error promoting u1 to admin: %v", err)
+	}
+	if u1Admin.Role != domainuser.RoleAdmin || !u1Admin.SuperAdmin {
+		t.Fatalf("expected u1 to be admin, got role=%s superAdmin=%v", u1Admin.Role, u1Admin.SuperAdmin)
+	}
+
+	// Now that u1 is admin, u2 can be demoted to manager
+	u2Manager, err := svc.UpdateUserRole(ctx, u2.ID, "manager")
+	if err != nil {
+		t.Fatalf("unexpected error demoting u2 to manager: %v", err)
+	}
+	if u2Manager.Role != domainuser.RoleManager || u2Manager.SuperAdmin {
+		t.Fatalf("expected u2 to be manager, got role=%s superAdmin=%v", u2Manager.Role, u2Manager.SuperAdmin)
+	}
+
+	// Invalid role check
+	_, err = svc.UpdateUserRole(ctx, u1.ID, "super_hero")
+	if err != adminusecase.ErrInvalidRole {
+		t.Fatalf("expected ErrInvalidRole, got %v", err)
+	}
 }

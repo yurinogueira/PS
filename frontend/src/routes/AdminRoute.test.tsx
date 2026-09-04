@@ -70,4 +70,52 @@ describe("AdminRoute", () => {
 
     expect(screen.getByText("Admin Content")).toBeInTheDocument();
   });
+
+  it("renders content for manager when manager role is allowed", () => {
+    useAuthStore.getState().setUser({
+      id: "u2",
+      name: "Manager User",
+      email: "manager@test.com",
+      role: "manager",
+      superAdmin: false,
+      tenantId: "org-1",
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/logs"]}>
+        <Routes>
+          <Route element={<AdminRoute allowedRoles={["admin", "manager"]} />}>
+            <Route path="/admin/logs" element={<div>Logs Content</div>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Logs Content")).toBeInTheDocument();
+  });
+
+  it("blocks manager from routes that require admin role", () => {
+    useAuthStore.getState().setUser({
+      id: "u2",
+      name: "Manager User",
+      email: "manager@test.com",
+      role: "manager",
+      superAdmin: false,
+      tenantId: "org-1",
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/users"]}>
+        <Routes>
+          <Route path="/dashboard" element={<div>Dashboard Page</div>} />
+          <Route element={<AdminRoute allowedRoles={["admin"]} />}>
+            <Route path="/admin/users" element={<div>Users Content</div>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Dashboard Page")).toBeInTheDocument();
+    expect(screen.queryByText("Users Content")).not.toBeInTheDocument();
+  });
 });

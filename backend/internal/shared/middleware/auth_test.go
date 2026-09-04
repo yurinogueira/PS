@@ -67,3 +67,49 @@ func TestRequireSuperAdmin(t *testing.T) {
 		t.Fatalf("expected 403 Forbidden for non-superadmin, got %d", rec2.Code)
 	}
 }
+
+func TestRequireAdminOrManager(t *testing.T) {
+	dummyHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
+
+	// 1. Admin allowed
+	tokenAdmin := &mockTokenService{
+		claims: portauth.TokenClaims{UserID: "u1", Role: "admin"},
+	}
+	chain := middleware.Auth(tokenAdmin)(middleware.RequireAdminOrManager()(dummyHandler))
+	req := httptest.NewRequest("GET", "/admin/logs", nil)
+	req.AddCookie(&http.Cookie{Name: "ps_access_token", Value: "valid"})
+	rec := httptest.NewRecorder()
+	chain.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for admin, got %d", rec.Code)
+	}
+
+	// 2. Manager allowed
+	tokenManager := &mockTokenService{
+		claims: portauth.TokenClaims{UserID: "u2", Role: "manager"},
+	}
+	chain = middleware.Auth(tokenManager)(middleware.RequireAdminOrManager()(dummyHandler))
+	req = httptest.NewRequest("GET", "/admin/logs", nil)
+	req.AddCookie(&http.Cookie{Name: "ps_access_token", Value: "valid"})
+	rec = httptest.NewRecorder()
+	chain.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for manager, got %d", rec.Code)
+	}
+
+	// 3. Regular user forbidden
+	tokenUser := &mockTokenService{
+		claims: portauth.TokenClaims{UserID: "u3", Role: "user"},
+	}
+	chain = middleware.Auth(tokenUser)(middleware.RequireAdminOrManager()(dummyHandler))
+	req = httptest.NewRequest("GET", "/admin/logs", nil)
+	req.AddCookie(&http.Cookie{Name: "ps_access_token", Value: "valid"})
+	rec = httptest.NewRecorder()
+	chain.ServeHTTP(rec, req)
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for regular user, got %d", rec.Code)
+	}
+}

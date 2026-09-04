@@ -9,6 +9,8 @@ import (
 	photographerport "ps/internal/application/ports/photographer"
 	seasonport "ps/internal/application/ports/season"
 	tenantport "ps/internal/application/ports/tenant"
+	auditusecase "ps/internal/application/usecase/auditlog"
+	domainaudit "ps/internal/domain/auditlog"
 	domain "ps/internal/domain/client"
 )
 
@@ -26,6 +28,7 @@ type Service struct {
 	seasonRepo       seasonport.Repository
 	photographerRepo photographerport.Repository
 	tenantValidator  tenantport.Validator
+	auditor          *auditusecase.Service
 }
 
 func NewService(
@@ -46,6 +49,11 @@ func NewService(
 		photographerRepo: photographerRepo,
 		tenantValidator:  tv,
 	}
+}
+
+func (s *Service) WithAuditor(auditor *auditusecase.Service) *Service {
+	s.auditor = auditor
+	return s
 }
 
 func (s *Service) validateReferences(ctx context.Context, c *domain.SeasonClient, tenantID string) error {
@@ -122,7 +130,13 @@ func (s *Service) Create(ctx context.Context, client *domain.SeasonClient, tenan
 	if err := s.validateReferences(ctx, client, tenantID); err != nil {
 		return err
 	}
-	return s.repo.Create(ctx, client)
+	if err := s.repo.Create(ctx, client); err != nil {
+		return err
+	}
+	if s.auditor != nil {
+		s.auditor.RecordMutation(ctx, tenantID, domainaudit.EntityClient, client.ID, domainaudit.ActionCreate, nil, client)
+	}
+	return nil
 }
 
 func (s *Service) GetByID(ctx context.Context, id, tenantID string) (*domain.SeasonClient, error) {
@@ -149,7 +163,8 @@ func (s *Service) Update(ctx context.Context, client *domain.SeasonClient, tenan
 		}
 	}
 	client.TenantID = tenantID
-	if _, err := s.repo.GetByID(ctx, client.ID, tenantID); err != nil {
+	oldClient, err := s.repo.GetByID(ctx, client.ID, tenantID)
+	if err != nil {
 		return ErrClientNotFound
 	}
 	if err := s.validateAndNormalizePhotos(client); err != nil {
@@ -158,7 +173,13 @@ func (s *Service) Update(ctx context.Context, client *domain.SeasonClient, tenan
 	if err := s.validateReferences(ctx, client, tenantID); err != nil {
 		return err
 	}
-	return s.repo.Update(ctx, client)
+	if err := s.repo.Update(ctx, client); err != nil {
+		return err
+	}
+	if s.auditor != nil {
+		s.auditor.RecordMutation(ctx, tenantID, domainaudit.EntityClient, client.ID, domainaudit.ActionUpdate, oldClient, client)
+	}
+	return nil
 }
 
 func (s *Service) Delete(ctx context.Context, id, tenantID string) error {
@@ -167,5 +188,15 @@ func (s *Service) Delete(ctx context.Context, id, tenantID string) error {
 			return err
 		}
 	}
-	return s.repo.Delete(ctx, id, tenantID)
+	var oldClient *domain.SeasonClient
+	if s.auditor != nil {
+		oldClient, _ = s.repo.GetByID(ctx, id, tenantID)
+	}
+	if err := s.repo.Delete(ctx, id, tenantID); err != nil {
+		return err
+	}
+	if s.auditor != nil {
+		s.auditor.RecordMutation(ctx, tenantID, domainaudit.EntityClient, id, domainaudit.ActionDelete, oldClient, nil)
+	}
+	return nil
 }

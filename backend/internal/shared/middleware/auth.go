@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	portauth "ps/internal/application/ports/auth"
+	"ps/internal/shared/authctx"
 	"ps/internal/shared/httpx"
 )
 
@@ -15,20 +16,43 @@ const (
 	UserIDKey     contextKey = "user_id"
 	TenantIDKey   contextKey = "tenant_id"
 	SuperAdminKey contextKey = "super_admin"
+	UserEmailKey  contextKey = "user_email"
+	UserRoleKey   contextKey = "user_role"
 )
 
 func GetTenantID(ctx context.Context) string {
-	if val, ok := ctx.Value(TenantIDKey).(string); ok {
+	if val, ok := ctx.Value(TenantIDKey).(string); ok && val != "" {
 		return val
 	}
-	return ""
+	return authctx.GetTenantID(ctx)
 }
 
 func GetUserID(ctx context.Context) string {
-	if val, ok := ctx.Value(UserIDKey).(string); ok {
+	if val, ok := ctx.Value(UserIDKey).(string); ok && val != "" {
 		return val
 	}
-	return ""
+	return authctx.GetUserID(ctx)
+}
+
+func GetUserEmail(ctx context.Context) string {
+	if val, ok := ctx.Value(UserEmailKey).(string); ok && val != "" {
+		return val
+	}
+	return authctx.GetUserEmail(ctx)
+}
+
+func GetUserRole(ctx context.Context) string {
+	if val, ok := ctx.Value(UserRoleKey).(string); ok && val != "" {
+		return val
+	}
+	role := authctx.GetUserRole(ctx)
+	if role != "" {
+		return role
+	}
+	if IsSuperAdmin(ctx) {
+		return "admin"
+	}
+	return "user"
 }
 
 func IsSuperAdmin(ctx context.Context) bool {
@@ -36,6 +60,14 @@ func IsSuperAdmin(ctx context.Context) bool {
 		return val
 	}
 	return false
+}
+
+func IsAdmin(ctx context.Context) bool {
+	return IsSuperAdmin(ctx) || GetUserRole(ctx) == "admin"
+}
+
+func IsManager(ctx context.Context) bool {
+	return GetUserRole(ctx) == "manager"
 }
 
 func Auth(tokenService portauth.TokenService) func(http.Handler) http.Handler {
@@ -59,9 +91,25 @@ func Auth(tokenService portauth.TokenService) func(http.Handler) http.Handler {
 				return
 			}
 
+			role := claims.Role
+			if role == "" {
+				if claims.SuperAdmin {
+					role = "admin"
+				} else {
+					role = "user"
+				}
+			}
+			isAdmin := claims.SuperAdmin || role == "admin"
+
 			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
 			ctx = context.WithValue(ctx, TenantIDKey, claims.TenantID)
-			ctx = context.WithValue(ctx, SuperAdminKey, claims.SuperAdmin)
+			ctx = context.WithValue(ctx, SuperAdminKey, isAdmin)
+			ctx = context.WithValue(ctx, UserEmailKey, claims.Email)
+			ctx = context.WithValue(ctx, UserRoleKey, role)
+
+			// Also populate shared authctx
+			ctx = authctx.WithUser(ctx, claims.UserID, claims.Email, claims.TenantID, role)
+
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -70,8 +118,8 @@ func Auth(tokenService portauth.TokenService) func(http.Handler) http.Handler {
 func RequireTenant() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			tenantID, ok := r.Context().Value(TenantIDKey).(string)
-			if !ok || strings.TrimSpace(tenantID) == "" {
+			tenantID := GetTenantID(r.Context())
+			if strings.TrimSpace(tenantID) == "" {
 				httpx.Error(w, http.StatusForbidden, "Tenant is required. Pending administrator approval.", nil)
 				return
 			}
@@ -81,10 +129,26 @@ func RequireTenant() func(http.Handler) http.Handler {
 }
 
 func RequireSuperAdmin() func(http.Handler) http.Handler {
+	return RequireAdmin()
+}
+
+func RequireAdmin() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if !IsSuperAdmin(r.Context()) {
-				httpx.Error(w, http.StatusForbidden, "Forbidden: superadmin access required", nil)
+			if !IsAdmin(r.Context()) {
+				httpx.Error(w, http.StatusForbidden, "Forbidden: administrator access required", nil)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func RequireAdminOrManager() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !IsAdmin(r.Context()) && !IsManager(r.Context()) {
+				httpx.Error(w, http.StatusForbidden, "Forbidden: administrator or manager access required", nil)
 				return
 			}
 			next.ServeHTTP(w, r)

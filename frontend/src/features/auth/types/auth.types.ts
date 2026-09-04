@@ -1,13 +1,23 @@
+export type UserRole = "admin" | "manager" | "user";
+
 export interface User {
   id: string;
   name: string;
   email: string;
   tenantId?: string;
   superAdmin?: boolean;
+  role?: UserRole;
   emailVerified?: boolean;
   emailVerifiedAt?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export function getUserRole(user: User | null | undefined): UserRole {
+  if (!user) return "user";
+  if (user.role) return user.role;
+  if (user.superAdmin) return "admin";
+  return "user";
 }
 
 export interface AuthTokens {

@@ -14,6 +14,7 @@ import (
 	tenantport "ps/internal/application/ports/tenant"
 	userport "ps/internal/application/ports/user"
 	"ps/internal/config"
+	auditMongo "ps/internal/infrastructure/auditlog/mongo"
 	bcryptinfra "ps/internal/infrastructure/auth/bcrypt"
 	jwtauth "ps/internal/infrastructure/auth/jwt"
 	clientMongo "ps/internal/infrastructure/client/mongo"
@@ -87,10 +88,16 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	peMongo := personMongo.NewRepository(db)
 	cMongo := clientMongo.NewRepository(db)
 	rMongo := reportMongo.NewRepository(db)
+	alMongo := auditMongo.NewRepository(db)
 
 	if idx, ok := rMongo.(mongoinfra.Indexable); ok {
 		if idxErr := idx.EnsureIndexes(ctx); idxErr != nil {
 			log.Printf("[WARNING] Could not ensure report indexes: %v", idxErr)
+		}
+	}
+	if idx, ok := alMongo.(mongoinfra.Indexable); ok {
+		if idxErr := idx.EnsureIndexes(ctx); idxErr != nil {
+			log.Printf("[WARNING] Could not ensure auditlog indexes: %v", idxErr)
 		}
 	}
 
@@ -101,7 +108,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	persons = peMongo
 	clients = cMongo
 
-	handler := rest.NewRouter(cfg, users, tenants, hasher, tokens, emailSender, seasons, photographers, persons, clients, storageProvider, rMongo)
+	handler := rest.NewRouter(cfg, users, tenants, hasher, tokens, emailSender, seasons, photographers, persons, clients, storageProvider, rMongo, alMongo)
 	return &App{
 		handler:     handler,
 		mongoClient: mongoClient,
