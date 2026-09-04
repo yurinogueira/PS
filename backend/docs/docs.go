@@ -1766,6 +1766,175 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/reports/dynamic-payment": {
+            "post": {
+                "description": "Inicia a extração assíncrona do relatório customizado por status de pagamento e métodos múltiplos para o tenant autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Exportar relatório dinâmico filtrado por status e métodos de pagamento",
+                "parameters": [
+                    {
+                        "description": "Parâmetros da exportação dinâmica",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ExportDynamicPaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.SuccessEnvelope"
+                        }
+                    },
+                    "400": {
+                        "description": "Requisição inválida",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant não associado ou bloqueado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reports/history": {
+            "get": {
+                "description": "Retorna o histórico paginado de jobs de relatórios/exportações do tenant autenticado",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Listar histórico de exportações",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID do evento para filtrar o histórico",
+                        "name": "season_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Número da página (padrão: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Quantidade por página (padrão: 10, máximo: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.SuccessEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant não associado ou bloqueado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reports/jobs/{id}": {
+            "get": {
+                "description": "Retorna os detalhes e status de um job de exportação do tenant autenticado",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Obter detalhes de um job de exportação",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID do job",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.SuccessEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Tenant não associado ou bloqueado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Job não encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/reports/paid-clients-csv": {
             "post": {
                 "description": "Inicia a extração assíncrona do relatório de clientes e fotos com pagamentos confirmados (pagos) do tenant autenticado e envia o link para o e-mail cadastrado",
@@ -2359,6 +2528,27 @@ const docTemplate = `{
                 "plan": {
                     "type": "string",
                     "example": "free"
+                }
+            }
+        },
+        "handlers.ExportDynamicPaymentRequest": {
+            "type": "object",
+            "properties": {
+                "is_paid": {
+                    "type": "boolean"
+                },
+                "paid_status": {
+                    "description": "\"all\", \"paid\", \"unpaid\"",
+                    "type": "string"
+                },
+                "payment_methods": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "season_id": {
+                    "type": "string"
                 }
             }
         },

@@ -17,6 +17,7 @@
       "photographers": "Fotógrafos",
       "people": "Pessoas",
       "clientsPhotos": "Clientes e Fotos",
+      "exports": "Exportações",
       "organizations": "Organizações",
       "usersAccess": "Gestão de Usuários"
     }
@@ -539,6 +540,89 @@
       "forbidden": "Acesso negado: este relatório pertence a outro tenant.",
       "notFound": "Relatório não encontrado ou link expirado.",
       "default": "Não foi possível baixar o relatório. Verifique se o arquivo ainda existe e se você tem permissão de acesso."
+    }
+  },
+  "exports": {
+    "title": "Central de Exportações",
+    "subtitle": "Gere relatórios customizados, dispare exportações com filtros avançados e acompanhe o histórico completo de execuções.",
+    "selectEvent": "Filtrar por Evento",
+    "allEvents": "Todos os Eventos",
+    "blockedAlert": "As exportações estão desabilitadas no momento devido a pendências financeiras ou limites do seu plano.",
+    "availableReports": "Exportações Disponíveis",
+    "history": "Histórico de Exportações",
+    "refreshHistory": "Atualizar Histórico",
+    "table": {
+      "type": "Tipo de Relatório",
+      "season": "Evento / Temporada",
+      "requestedBy": "Solicitado Por",
+      "requestedAt": "Data da Solicitação",
+      "completedAt": "Conclusão",
+      "duration": "Duração",
+      "status": "Status",
+      "actions": "Ações",
+      "empty": "Nenhuma exportação encontrada para os filtros selecionados.",
+      "downloadTooltip": "Baixar arquivo gerado",
+      "errorTooltip": "Erro: {{error}}",
+      "statusLabels": {
+        "pending": "Pendente",
+        "processing": "Processando",
+        "completed": "Concluído",
+        "failed": "Falha"
+      },
+      "types": {
+        "clients_csv": "Clientes Geral (CSV)",
+        "paid_clients_csv": "Clientes Pagos (CSV)",
+        "unpaid_clients_csv": "Clientes Não Pagos (CSV)",
+        "clients_pdf": "Consolidado Geral (PDF)",
+        "dynamic_payment": "Dinâmico por Pagamento (CSV)"
+      }
+    },
+    "cards": {
+      "clientsPdf": {
+        "title": "Relatório Consolidado (PDF)",
+        "description": "Documento completo formatado em A4 paisagem com tabela de clientes, cães, fotos, juízes e pagamentos.",
+        "actionDirect": "Download Direto",
+        "actionAsync": "Solicitar via E-mail"
+      },
+      "clientsCsv": {
+        "title": "Relatório Geral de Clientes (CSV)",
+        "description": "Planilha consolidada compatível com Excel contendo todos os clientes e fotografias cadastradas.",
+        "action": "Exportar CSV"
+      },
+      "paidClientsCsv": {
+        "title": "Relatório de Clientes Pagos (CSV)",
+        "description": "Planilha filtrada contendo apenas registros de fotos com pagamento confirmado.",
+        "action": "Exportar Pagos"
+      },
+      "unpaidClientsCsv": {
+        "title": "Relatório de Não Pagos (CSV)",
+        "description": "Planilha de clientes e fotos com pagamentos pendentes ou não quitados para cobrança.",
+        "action": "Exportar Não Pagos"
+      },
+      "dynamicPayment": {
+        "title": "Exportação Dinâmica por Pagamento",
+        "description": "Configure filtros customizados por status de quitação e escolha múltiplos métodos de pagamento.",
+        "action": "Configurar e Exportar"
+      }
+    },
+    "dynamicDialog": {
+      "title": "Exportação Dinâmica por Pagamento",
+      "description": "Selecione os critérios desejados para gerar uma planilha CSV sob medida.",
+      "paidStatusLabel": "Status de Pagamento",
+      "paidStatusAll": "Todos os registros",
+      "paidStatusPaid": "Apenas Pagos (confirmados)",
+      "paidStatusUnpaid": "Apenas Não Pagos (pendentes)",
+      "paymentMethodsLabel": "Formas de Pagamento Específicas",
+      "allMethods": "Considerar todas as formas de pagamento",
+      "methodsHint": "Selecione um ou mais métodos de pagamento para filtrar:",
+      "cancel": "Cancelar",
+      "startExport": "Iniciar Exportação",
+      "exporting": "Iniciando..."
+    },
+    "messages": {
+      "successStarted": "Exportação iniciada com sucesso! O processamento está em andamento.",
+      "pdfDownloaded": "Relatório PDF gerado com sucesso!",
+      "downloadFailed": "Não foi possível realizar o download do relatório."
     }
   },
   "profile": {

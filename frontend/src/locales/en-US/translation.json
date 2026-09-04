@@ -17,6 +17,7 @@
       "photographers": "Photographers",
       "people": "People",
       "clientsPhotos": "Clients & Photos",
+      "exports": "Exports",
       "organizations": "Organizations",
       "usersAccess": "User Management"
     }
@@ -539,6 +540,89 @@
       "forbidden": "Access denied: this report belongs to another tenant.",
       "notFound": "Report not found or link expired.",
       "default": "Unable to download report. Verify the file exists and you have permission."
+    }
+  },
+  "exports": {
+    "title": "Exports Hub",
+    "subtitle": "Generate custom reports, launch filtered dynamic exports, and track the execution history.",
+    "selectEvent": "Filter by Event",
+    "allEvents": "All Events",
+    "blockedAlert": "Exports are currently disabled due to overdue payments or your plan limits.",
+    "availableReports": "Available Exports",
+    "history": "Export History",
+    "refreshHistory": "Refresh History",
+    "table": {
+      "type": "Report Type",
+      "season": "Event / Season",
+      "requestedBy": "Requested By",
+      "requestedAt": "Requested At",
+      "completedAt": "Completed At",
+      "duration": "Duration",
+      "status": "Status",
+      "actions": "Actions",
+      "empty": "No export jobs found for the selected filters.",
+      "downloadTooltip": "Download generated file",
+      "errorTooltip": "Error: {{error}}",
+      "statusLabels": {
+        "pending": "Pending",
+        "processing": "Processing",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "types": {
+        "clients_csv": "Clients Overview (CSV)",
+        "paid_clients_csv": "Paid Clients (CSV)",
+        "unpaid_clients_csv": "Unpaid Clients (CSV)",
+        "clients_pdf": "Consolidated Clients (PDF)",
+        "dynamic_payment": "Dynamic by Payment (CSV)"
+      }
+    },
+    "cards": {
+      "clientsPdf": {
+        "title": "Consolidated Report (PDF)",
+        "description": "Comprehensive document formatted in landscape A4 with clients, dogs, photos, judges, and payments.",
+        "actionDirect": "Direct Download",
+        "actionAsync": "Request by Email"
+      },
+      "clientsCsv": {
+        "title": "General Clients Report (CSV)",
+        "description": "Consolidated Excel-compatible spreadsheet containing all clients and registered photos.",
+        "action": "Export CSV"
+      },
+      "paidClientsCsv": {
+        "title": "Paid Clients Report (CSV)",
+        "description": "Filtered spreadsheet containing only photo records with confirmed payment.",
+        "action": "Export Paid"
+      },
+      "unpaidClientsCsv": {
+        "title": "Unpaid Clients Report (CSV)",
+        "description": "Spreadsheet of clients and photos with unpaid or pending amounts for collection.",
+        "action": "Export Unpaid"
+      },
+      "dynamicPayment": {
+        "title": "Dynamic Payment Export",
+        "description": "Configure custom filters by payment status and choose multiple specific payment methods.",
+        "action": "Configure & Export"
+      }
+    },
+    "dynamicDialog": {
+      "title": "Dynamic Export by Payment",
+      "description": "Choose specific criteria to generate a customized CSV spreadsheet.",
+      "paidStatusLabel": "Payment Status",
+      "paidStatusAll": "All records",
+      "paidStatusPaid": "Paid only (confirmed)",
+      "paidStatusUnpaid": "Unpaid only (pending)",
+      "paymentMethodsLabel": "Specific Payment Methods",
+      "allMethods": "Consider all payment methods",
+      "methodsHint": "Select one or more payment methods to filter:",
+      "cancel": "Cancel",
+      "startExport": "Start Export",
+      "exporting": "Starting..."
+    },
+    "messages": {
+      "successStarted": "Export started successfully! Background processing is running.",
+      "pdfDownloaded": "PDF report generated successfully!",
+      "downloadFailed": "Failed to download the report."
     }
   },
   "profile": {

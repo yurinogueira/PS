@@ -15,6 +15,7 @@ import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
 import CameraAltRoundedIcon from "@mui/icons-material/CameraAltRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import CollectionsIcon from "@mui/icons-material/Collections";
+import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import SupervisorAccountRoundedIcon from "@mui/icons-material/SupervisorAccountRounded";
 import { useTranslation } from "react-i18next";
@@ -61,6 +62,11 @@ export function Sidebar({
       text: t("layout.nav.clientsPhotos"),
       icon: <CollectionsIcon />,
       path: "/clients",
+    },
+    {
+      text: t("layout.nav.exports"),
+      icon: <AssessmentRoundedIcon />,
+      path: "/exports",
     },
   ];
 

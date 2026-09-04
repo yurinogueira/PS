@@ -78,6 +78,11 @@ const ClientDetailsPage = lazy(() =>
     default: m.ClientDetailsPage,
   })),
 );
+const ExportsPage = lazy(() =>
+  import("../features/exports/pages/ExportsPage").then((m) => ({
+    default: m.ExportsPage,
+  })),
+);
 
 // Admin pages
 const AdminTenantsPage = lazy(() =>
@@ -112,6 +117,7 @@ export function AppRoutes() {
             <Route path="/people/:id" element={<PersonDetailsPage />} />
             <Route path="/clients" element={<ClientsPage />} />
             <Route path="/clients/:id" element={<ClientDetailsPage />} />
+            <Route path="/exports" element={<ExportsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
 
             {/* SuperAdmin routes */}

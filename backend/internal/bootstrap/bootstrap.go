@@ -21,6 +21,7 @@ import (
 	emailinfra "ps/internal/infrastructure/email"
 	personMongo "ps/internal/infrastructure/person/mongo"
 	photographerMongo "ps/internal/infrastructure/photographer/mongo"
+	reportMongo "ps/internal/infrastructure/report/mongo"
 	seasonMongo "ps/internal/infrastructure/season/mongo"
 	localstorage "ps/internal/infrastructure/storage/local"
 	ocistorage "ps/internal/infrastructure/storage/oci"
@@ -85,6 +86,13 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	pMongo := photographerMongo.NewRepository(db)
 	peMongo := personMongo.NewRepository(db)
 	cMongo := clientMongo.NewRepository(db)
+	rMongo := reportMongo.NewRepository(db)
+
+	if idx, ok := rMongo.(mongoinfra.Indexable); ok {
+		if idxErr := idx.EnsureIndexes(ctx); idxErr != nil {
+			log.Printf("[WARNING] Could not ensure report indexes: %v", idxErr)
+		}
+	}
 
 	users = uMongo
 	tenants = tMongo
@@ -93,7 +101,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	persons = peMongo
 	clients = cMongo
 
-	handler := rest.NewRouter(cfg, users, tenants, hasher, tokens, emailSender, seasons, photographers, persons, clients, storageProvider)
+	handler := rest.NewRouter(cfg, users, tenants, hasher, tokens, emailSender, seasons, photographers, persons, clients, storageProvider, rMongo)
 	return &App{
 		handler:     handler,
 		mongoClient: mongoClient,
