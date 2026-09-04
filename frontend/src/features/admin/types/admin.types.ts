@@ -72,10 +72,14 @@ export interface AuditLogsFilter {
   page?: number;
   limit?: number;
   entityType?: AuditLogEntityType | "";
+  entity_type?: AuditLogEntityType | "";
   action?: AuditLogAction | "";
   userId?: string;
+  user_id?: string;
   startDate?: string;
+  start_date?: string;
   endDate?: string;
+  end_date?: string;
 }
 
 export interface PaginatedAuditLogs {

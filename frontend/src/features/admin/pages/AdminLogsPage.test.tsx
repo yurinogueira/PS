@@ -58,7 +58,7 @@ describe("AdminLogsPage", () => {
       items: mockLogs,
       total: 2,
       page: 1,
-      limit: 20,
+      limit: 10,
       totalPages: 1,
     });
 
@@ -71,6 +71,9 @@ describe("AdminLogsPage", () => {
     expect(screen.getByText("Logs de Auditoria")).toBeInTheDocument();
 
     await waitFor(() => {
+      expect(adminService.getAuditLogs).toHaveBeenCalledWith(
+        expect.objectContaining({ limit: 10 }),
+      );
       expect(screen.getAllByText("admin@ps.com").length).toBeGreaterThanOrEqual(
         1,
       );
@@ -86,7 +89,7 @@ describe("AdminLogsPage", () => {
       items: mockLogs,
       total: 2,
       page: 1,
-      limit: 20,
+      limit: 10,
       totalPages: 1,
     });
 
@@ -113,6 +116,45 @@ describe("AdminLogsPage", () => {
       expect(
         screen.queryByText("Detalhes da Alteração"),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  it("filters logs by entity when selected", async () => {
+    vi.mocked(adminService.getAuditLogs).mockResolvedValue({
+      items: mockLogs,
+      total: 2,
+      page: 1,
+      limit: 10,
+      totalPages: 1,
+    });
+
+    render(
+      <BrowserRouter>
+        <AdminLogsPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(adminService.getAuditLogs).toHaveBeenCalledWith(
+        expect.objectContaining({ limit: 10 }),
+      );
+    });
+
+    // Select entity filter
+    const entitySelect = screen.getByLabelText("Entidade");
+    fireEvent.mouseDown(entitySelect);
+
+    const clientOption = await screen.findByRole("option", { name: "Cliente" });
+    fireEvent.click(clientOption);
+
+    await waitFor(() => {
+      expect(adminService.getAuditLogs).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityType: "client",
+          page: 1,
+          limit: 10,
+        }),
+      );
     });
   });
 });

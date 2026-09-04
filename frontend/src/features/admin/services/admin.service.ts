@@ -90,9 +90,37 @@ export const adminService = {
   },
 
   async getAuditLogs(params?: AuditLogsFilter): Promise<PaginatedAuditLogs> {
+    const queryParams: Record<string, unknown> = {};
+    if (params) {
+      if (params.page !== undefined) queryParams.page = params.page;
+      if (params.limit !== undefined) queryParams.limit = params.limit;
+      const entity = params.entity_type || params.entityType;
+      if (entity) {
+        queryParams.entity_type = entity;
+        queryParams.entityType = entity;
+      }
+      if (params.action) {
+        queryParams.action = params.action;
+      }
+      const user = params.user_id || params.userId;
+      if (user) {
+        queryParams.user_id = user;
+        queryParams.userId = user;
+      }
+      const start = params.start_date || params.startDate;
+      if (start) {
+        queryParams.start_date = start;
+        queryParams.startDate = start;
+      }
+      const end = params.end_date || params.endDate;
+      if (end) {
+        queryParams.end_date = end;
+        queryParams.endDate = end;
+      }
+    }
     const response = await apiClient.get<ApiEnvelope<PaginatedAuditLogs>>(
       "/admin/logs",
-      { params },
+      { params: queryParams },
     );
     return response.data.data;
   },
