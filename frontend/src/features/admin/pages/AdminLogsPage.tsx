@@ -52,7 +52,7 @@ export const AdminLogsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Filters
@@ -163,7 +163,7 @@ export const AdminLogsPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
+    <Box sx={{ width: "100%" }}>
       {/* Header */}
       <Box
         sx={{
@@ -180,11 +180,17 @@ export const AdminLogsPage: React.FC = () => {
             sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}
           >
             <HistoryRoundedIcon color="primary" sx={{ fontSize: 32 }} />
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: "1.5rem", sm: "2rem" },
+              }}
+            >
               {t("admin.logs.title", "Logs de Auditoria")}
             </Typography>
           </Box>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             {t(
               "admin.logs.subtitle",
               "Rastreabilidade completa e histórico imutável de todas as mutações do sistema.",
@@ -206,22 +212,15 @@ export const AdminLogsPage: React.FC = () => {
       {/* KPI Cards */}
       <Box
         sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           gap: 2,
           mb: 3,
         }}
       >
-        <Card
-          elevation={0}
-          sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}
-        >
-          <CardContent sx={{ py: 2 }}>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ fontWeight: 600, textTransform: "uppercase" }}
-            >
+        <Card elevation={0} sx={{ flex: 1, border: "1px solid #E2E8F0" }}>
+          <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
+            <Typography variant="body2" color="text.secondary">
               {t("admin.logs.totalRecords", "Total de Registros")}
             </Typography>
             <Typography variant="h5" sx={{ mt: 0.5, fontWeight: 700 }}>
@@ -230,16 +229,9 @@ export const AdminLogsPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card
-          elevation={0}
-          sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}
-        >
-          <CardContent sx={{ py: 2 }}>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ fontWeight: 600, textTransform: "uppercase" }}
-            >
+        <Card elevation={0} sx={{ flex: 1, border: "1px solid #E2E8F0" }}>
+          <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
+            <Typography variant="body2" color="text.secondary">
               {t("admin.logs.currentPage", "Página Atual")}
             </Typography>
             <Typography variant="h5" sx={{ mt: 0.5, fontWeight: 700 }}>
@@ -248,16 +240,9 @@ export const AdminLogsPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card
-          elevation={0}
-          sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}
-        >
-          <CardContent sx={{ py: 2 }}>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ fontWeight: 600, textTransform: "uppercase" }}
-            >
+        <Card elevation={0} sx={{ flex: 1, border: "1px solid #E2E8F0" }}>
+          <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
+            <Typography variant="body2" color="text.secondary">
               {t("admin.logs.pageSize", "Itens por Página")}
             </Typography>
             <Typography variant="h5" sx={{ mt: 0.5, fontWeight: 700 }}>
@@ -273,8 +258,7 @@ export const AdminLogsPage: React.FC = () => {
         sx={{
           p: 2,
           mb: 3,
-          border: "1px solid",
-          borderColor: "divider",
+          border: "1px solid #E2E8F0",
           borderRadius: 2,
           display: "flex",
           flexWrap: "wrap",
@@ -421,168 +405,164 @@ export const AdminLogsPage: React.FC = () => {
       )}
 
       {/* Table */}
-      <Paper
+      <TableContainer
+        component={Paper}
         elevation={0}
         sx={{
-          border: "1px solid",
-          borderColor: "divider",
+          border: "1px solid #E2E8F0",
           borderRadius: 2,
-          overflow: "hidden",
+          width: "100%",
+          overflowX: "auto",
         }}
       >
-        <TableContainer sx={{ maxHeight: 600 }}>
-          <Table stickyHeader>
-            <TableHead>
+        <Table sx={{ minWidth: 680 }}>
+          <TableHead sx={{ bgcolor: "grey.50" }}>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                {t("admin.logs.columns.date", "Data / Hora")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                {t("admin.logs.columns.user", "Usuário Executor")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                {t("admin.logs.columns.action", "Ação")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                {t("admin.logs.columns.entity", "Entidade Afetada")}
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                {t("admin.logs.columns.tenant", "Organização")}
+              </TableCell>
+              <TableCell
+                align="right"
+                sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+              >
+                {t("admin.logs.columns.details", "Detalhes")}
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading ? (
               <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>
-                  {t("admin.logs.columns.date", "Data / Hora")}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
-                  {t("admin.logs.columns.user", "Usuário Executor")}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
-                  {t("admin.logs.columns.action", "Ação")}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
-                  {t("admin.logs.columns.entity", "Entidade Afetada")}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
-                  {t("admin.logs.columns.tenant", "Organização")}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700 }} align="center">
-                  {t("admin.logs.columns.details", "Detalhes")}
+                <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                  <CircularProgress size={36} />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                  >
+                    {t("admin.logs.loading", "Carregando logs de auditoria...")}
+                  </Typography>
                 </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
-                    <CircularProgress size={36} />
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 1 }}
-                    >
-                      {t(
-                        "admin.logs.loading",
-                        "Carregando logs de auditoria...",
-                      )}
+            ) : logs.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    {t(
+                      "admin.logs.noLogsFound",
+                      "Nenhum log de auditoria encontrado",
+                    )}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 0.5 }}
+                  >
+                    {t(
+                      "admin.logs.noLogsHint",
+                      "Tente ajustar ou limpar os filtros de busca.",
+                    )}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              logs.map((log) => (
+                <TableRow key={log.id} hover>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {new Date(log.createdAt).toLocaleDateString()}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {new Date(log.createdAt).toLocaleTimeString()}
                     </Typography>
                   </TableCell>
-                </TableRow>
-              ) : logs.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                      {t(
-                        "admin.logs.noLogsFound",
-                        "Nenhum log de auditoria encontrado",
-                      )}
+
+                  <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {log.userEmail || t("admin.logs.system", "Sistema")}
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 0.5 }}
-                    >
-                      {t(
-                        "admin.logs.noLogsHint",
-                        "Tente ajustar ou limpar os filtros de busca.",
-                      )}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                logs.map((log) => (
-                  <TableRow key={log.id} hover>
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {new Date(log.createdAt).toLocaleDateString()}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(log.createdAt).toLocaleTimeString()}
-                      </Typography>
-                    </TableCell>
-
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {log.userEmail || t("admin.logs.system", "Sistema")}
-                      </Typography>
-                      {log.userId && (
-                        <Tooltip title={log.userId}>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ cursor: "pointer" }}
-                          >
-                            ID: {log.userId.slice(0, 8)}...
-                          </Typography>
-                        </Tooltip>
-                      )}
-                    </TableCell>
-
-                    <TableCell>
-                      <Chip
-                        label={log.action}
-                        size="small"
-                        color={getActionColor(log.action)}
-                        sx={{ fontWeight: 700, fontSize: "0.75rem" }}
-                      />
-                    </TableCell>
-
-                    <TableCell>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Chip
-                          label={log.entityType}
-                          size="small"
-                          variant="outlined"
-                          sx={{ textTransform: "capitalize", fontWeight: 600 }}
-                        />
-                        <Tooltip title={log.entityId}>
-                          <Typography variant="caption" color="text.secondary">
-                            #{log.entityId.slice(0, 10)}
-                          </Typography>
-                        </Tooltip>
-                      </Box>
-                    </TableCell>
-
-                    <TableCell>
-                      {log.tenantId ? (
-                        <Typography variant="body2">{log.tenantId}</Typography>
-                      ) : (
+                    {log.userId && (
+                      <Tooltip title={log.userId}>
                         <Typography
                           variant="caption"
                           color="text.secondary"
-                          sx={{ fontStyle: "italic" }}
+                          sx={{ cursor: "pointer" }}
                         >
-                          {t("admin.logs.globalScope", "Global")}
+                          ID: {log.userId.slice(0, 8)}...
                         </Typography>
-                      )}
-                    </TableCell>
+                      </Tooltip>
+                    )}
+                  </TableCell>
 
-                    <TableCell align="center">
-                      <Button
+                  <TableCell>
+                    <Chip
+                      label={log.action}
+                      size="small"
+                      color={getActionColor(log.action)}
+                      sx={{ fontWeight: 700, fontSize: "0.75rem" }}
+                    />
+                  </TableCell>
+
+                  <TableCell>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Chip
+                        label={log.entityType}
                         size="small"
                         variant="outlined"
-                        startIcon={<VisibilityRoundedIcon />}
-                        onClick={() => handleOpenDetails(log)}
-                        sx={{ borderRadius: 1.5 }}
+                        sx={{ textTransform: "capitalize", fontWeight: 600 }}
+                      />
+                      <Tooltip title={log.entityId}>
+                        <Typography variant="caption" color="text.secondary">
+                          #{log.entityId.slice(0, 10)}
+                        </Typography>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+
+                  <TableCell>
+                    {log.tenantId ? (
+                      <Typography variant="body2">{log.tenantId}</Typography>
+                    ) : (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontStyle: "italic" }}
                       >
-                        {t("admin.logs.viewChanges", "Ver Alterações")} (
-                        {log.changes?.length || 0})
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                        {t("admin.logs.globalScope", "Global")}
+                      </Typography>
+                    )}
+                  </TableCell>
+
+                  <TableCell align="right">
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<VisibilityRoundedIcon />}
+                      onClick={() => handleOpenDetails(log)}
+                      sx={{ borderRadius: 1.5 }}
+                    >
+                      {t("admin.logs.viewChanges", "Ver Alterações")} (
+                      {log.changes?.length || 0})
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
 
         <TablePagination
-          rowsPerPageOptions={[10, 20, 50, 100]}
           component="div"
           count={total}
           rowsPerPage={rowsPerPage}
@@ -592,9 +572,31 @@ export const AdminLogsPage: React.FC = () => {
             setRowsPerPage(parseInt(e.target.value, 10));
             setPage(0);
           }}
-          labelRowsPerPage={t("admin.logs.rowsPerPage", "Linhas por página:")}
+          rowsPerPageOptions={[10, 25, 50]}
+          labelRowsPerPage={t("tables.rowsPerPage")}
+          labelDisplayedRows={({ from, to, count }) =>
+            t("tables.displayedRows", {
+              from,
+              to,
+              count: count !== -1 ? count : `>${to}`,
+            })
+          }
+          sx={{
+            borderTop: "1px solid",
+            borderColor: "divider",
+            "& .MuiTablePagination-toolbar": {
+              flexWrap: "wrap",
+              justifyContent: { xs: "center", sm: "space-between" },
+              gap: 1,
+              py: 1,
+              px: { xs: 1, sm: 2 },
+            },
+            "& .MuiTablePagination-actions": {
+              ml: { xs: 0, sm: 2 },
+            },
+          }}
         />
-      </Paper>
+      </TableContainer>
 
       {/* Changes Details Modal */}
       <Dialog
