@@ -584,12 +584,12 @@
         "title": "Consolidated Report (PDF)",
         "description": "Comprehensive document formatted in landscape A4 with clients, dogs, photos, judges, and payments.",
         "actionDirect": "Direct Download",
-        "actionAsync": "Request by Email"
+        "actionAsync": "Export Consolidated"
       },
       "clientsCsv": {
         "title": "General Clients Report (CSV)",
         "description": "Consolidated Excel-compatible spreadsheet containing all clients and registered photos.",
-        "action": "Export CSV"
+        "action": "Export General Report"
       },
       "paidClientsCsv": {
         "title": "Paid Clients Report (CSV)",

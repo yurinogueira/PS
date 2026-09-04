@@ -93,7 +93,9 @@ describe("ExportsPage", () => {
       ).toBeInTheDocument();
     });
 
-    const exportCsvBtn = screen.getByRole("button", { name: /exportar csv/i });
+    const exportCsvBtn = screen.getByRole("button", {
+      name: /exportar relatório geral/i,
+    });
     fireEvent.click(exportCsvBtn);
 
     await waitFor(() => {
@@ -125,7 +127,7 @@ describe("ExportsPage", () => {
 
     await waitFor(() => {
       const exportCsvBtn = screen.getByRole("button", {
-        name: /exportar csv/i,
+        name: /exportar relatório geral/i,
       });
       expect(exportCsvBtn).toBeDisabled();
     });
@@ -179,7 +181,9 @@ describe("ExportsPage", () => {
     ).not.toBeInTheDocument();
 
     // Trigger CSV export and verify it uses active season ID
-    const exportCsvBtn = screen.getByRole("button", { name: /exportar csv/i });
+    const exportCsvBtn = screen.getByRole("button", {
+      name: /exportar relatório geral/i,
+    });
     fireEvent.click(exportCsvBtn);
 
     await waitFor(() => {
@@ -207,9 +211,9 @@ describe("ExportsPage", () => {
       screen.queryByRole("button", { name: /download direto/i }),
     ).not.toBeInTheDocument();
 
-    // Trigger async PDF export via "Solicitar via E-mail"
+    // Trigger async PDF export via "Exportar Consolidado"
     const asyncPdfBtn = screen.getByRole("button", {
-      name: /solicitar via e-mail/i,
+      name: /exportar consolidado/i,
     });
     fireEvent.click(asyncPdfBtn);
 
