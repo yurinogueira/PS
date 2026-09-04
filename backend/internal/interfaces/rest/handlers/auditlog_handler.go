@@ -51,29 +51,52 @@ func (h *AuditLogHandler) List(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		// Admin can optionally filter by tenant_id
+		// Admin can optionally filter by tenant_id or tenantId
 		tenantID = r.URL.Query().Get("tenant_id")
+		if tenantID == "" {
+			tenantID = r.URL.Query().Get("tenantId")
+		}
 	}
 
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 
+	entityType := r.URL.Query().Get("entity_type")
+	if entityType == "" {
+		entityType = r.URL.Query().Get("entityType")
+	}
+
+	action := r.URL.Query().Get("action")
+
+	userID := r.URL.Query().Get("user_id")
+	if userID == "" {
+		userID = r.URL.Query().Get("userId")
+	}
+
 	filter := auditport.Filter{
 		TenantID:   tenantID,
-		EntityType: domainaudit.EntityType(r.URL.Query().Get("entity_type")),
-		Action:     domainaudit.Action(r.URL.Query().Get("action")),
-		UserID:     r.URL.Query().Get("user_id"),
+		EntityType: domainaudit.EntityType(entityType),
+		Action:     domainaudit.Action(action),
+		UserID:     userID,
 		Page:       page,
 		Limit:      limit,
 	}
 
-	if startStr := r.URL.Query().Get("start_date"); startStr != "" {
+	startStr := r.URL.Query().Get("start_date")
+	if startStr == "" {
+		startStr = r.URL.Query().Get("startDate")
+	}
+	if startStr != "" {
 		if t, err := time.Parse(time.RFC3339, startStr); err == nil {
 			filter.StartDate = &t
 		}
 	}
 
-	if endStr := r.URL.Query().Get("end_date"); endStr != "" {
+	endStr := r.URL.Query().Get("end_date")
+	if endStr == "" {
+		endStr = r.URL.Query().Get("endDate")
+	}
+	if endStr != "" {
 		if t, err := time.Parse(time.RFC3339, endStr); err == nil {
 			filter.EndDate = &t
 		}

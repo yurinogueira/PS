@@ -267,8 +267,12 @@ export const AdminLogsPage: React.FC = () => {
         }}
       >
         <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>{t("admin.logs.entityFilter", "Entidade")}</InputLabel>
+          <InputLabel id="entity-filter-label">
+            {t("admin.logs.entityFilter", "Entidade")}
+          </InputLabel>
           <Select
+            labelId="entity-filter-label"
+            id="entity-filter-select"
             value={selectedEntity}
             label={t("admin.logs.entityFilter", "Entidade")}
             onChange={(e) => {
@@ -301,8 +305,12 @@ export const AdminLogsPage: React.FC = () => {
         </FormControl>
 
         <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>{t("admin.logs.actionFilter", "Ação")}</InputLabel>
+          <InputLabel id="action-filter-label">
+            {t("admin.logs.actionFilter", "Ação")}
+          </InputLabel>
           <Select
+            labelId="action-filter-label"
+            id="action-filter-select"
             value={selectedAction}
             label={t("admin.logs.actionFilter", "Ação")}
             onChange={(e) => {
