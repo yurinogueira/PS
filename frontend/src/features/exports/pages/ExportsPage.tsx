@@ -175,7 +175,13 @@ export const ExportsPage: React.FC = () => {
             sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}
           >
             <AssessmentRoundedIcon color="primary" sx={{ fontSize: 32 }} />
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: "1.5rem", sm: "2rem" },
+              }}
+            >
               {t("exports.title")}
             </Typography>
           </Box>

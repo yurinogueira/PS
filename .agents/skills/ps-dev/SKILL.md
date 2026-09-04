@@ -90,14 +90,19 @@ Esta skill define as diretrizes de arquitetura, fluxos de edição, documentaç�
 
 ### 2. Editando o Frontend
 1. Crie ou modifique componentes/telas em `src/features/<feature>/`.
-2. Utilize ícones semânticos de `@mui/icons-material` e componentes padronizados do Design System.
-3. Para acesso ao armazenamento local, use sempre o utilitário seguro `safeStorage` de `src/services/storage/storage.ts`.
-4. Gerencie estado global via stores Zustand em `src/features/<feature>/state/`.
-5. Valide tipos, lint, formatação e testes unitários com:
+2. **Checklist Obrigatório de Design System (`.agents/rules/design-system.md`)**:
+   - **Container Raiz**: Use `<Box sx={{ width: "100%" }}>` (sem `p: ...`, o padding é centralizado no `AppLayout.tsx`).
+   - **Cabeçalho de Página**: Use sempre `variant="h4"` responsivo com `fontWeight: 700` e `fontSize: { xs: "1.5rem", sm: "2rem" }` (nunca use `variant="h5"` para títulos principais de tela).
+   - **Tabelas de Dados**: Envolva em `TableContainer` com borda `#E2E8F0`, `borderRadius: 2`, cabeçalho `TableHead sx={{ bgcolor: "grey.50" }}` e células `TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}`.
+   - **Paginação**: Sempre utilize `<AppTablePagination />` (`src/components/AppTablePagination`), com padrão de 10 linhas, opções restritas a `[10, 25, 50]` e rótulos internacionalizados (`t("tables.rowsPerPage")` e `t("tables.displayedRows")`).
+3. Utilize ícones semânticos de `@mui/icons-material` e componentes padronizados do Design System.
+4. Para acesso ao armazenamento local, use sempre o utilitário seguro `safeStorage` de `src/services/storage/storage.ts`.
+5. Gerencie estado global via stores Zustand em `src/features/<feature>/state/`.
+6. Valide tipos, lint, formatação e testes unitários com:
    ```bash
    ./scripts/check.sh frontend
    ```
-6. Se houver divergências de formatação ou lint simples:
+7. Se houver divergências de formatação ou lint simples:
    ```bash
    ./scripts/fix.sh
    ```

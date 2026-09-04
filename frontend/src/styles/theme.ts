@@ -116,5 +116,35 @@ export const appTheme = createTheme({
         },
       },
     },
+    MuiTableHead: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#F8FAFC",
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        head: {
+          fontWeight: 600,
+          color: "#0F172A",
+        },
+      },
+    },
+    MuiTablePagination: {
+      defaultProps: {
+        rowsPerPageOptions: [10, 25, 50],
+      },
+      styleOverrides: {
+        root: {
+          borderTop: "1px solid #E2E8F0",
+        },
+        toolbar: {
+          flexWrap: "wrap",
+          paddingTop: 8,
+          paddingBottom: 8,
+        },
+      },
+    },
   },
 });

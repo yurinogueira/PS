@@ -149,13 +149,82 @@ Para evitar margens desiguais entre páginas e garantir alinhamento perfeito de 
 
 ---
 
-## 🚫 8. O que NÃO Fazer
+## 📊 8. Padrão de Cabeçalhos de Página, Tabelas de Dados e Paginação (`AppTablePagination`, i18n)
+
+Para garantir consistência visual e usabilidade idêntica em todas as telas do sistema:
+
+### 1. Cabeçalho de Página Padronizado (`Page Header`)
+- Toda página de funcionalidade deve utilizar o padrão de cabeçalho responsivo:
+  ```tsx
+  <Box
+    sx={{
+      display: "flex",
+      flexDirection: { xs: "column", sm: "row" },
+      justifyContent: "space-between",
+      alignItems: { xs: "flex-start", sm: "center" },
+      gap: 2,
+      mb: 3,
+    }}
+  >
+    <Box>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
+        <IconComponent color="primary" sx={{ fontSize: 32 }} />
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            fontSize: { xs: "1.5rem", sm: "2rem" },
+          }}
+        >
+          {t("feature.title")}
+        </Typography>
+      </Box>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        {t("feature.subtitle")}
+      </Typography>
+    </Box>
+    {/* Ações primárias / Botões */}
+  </Box>
+  ```
+- **Nunca** utilize `variant="h5"` para títulos principais de telas no PS.
+
+### 2. Estrutura e Estilização de Tabelas de Dados
+- Superfície: `<TableContainer component={Paper} elevation={0} sx={{ border: "1px solid #E2E8F0", borderRadius: 2, width: "100%", overflowX: "auto" }}>`.
+- Se a tabela estiver contida em um `<Card>`, o card deve ter `border: "1px solid #E2E8F0"`, `borderRadius: 2`, e qualquer `<CardHeader>` deve possuir `sx={{ borderBottom: "1px solid #E2E8F0", px: 2.5, py: 2 }}`.
+- Cabeçalho de Tabela: `<TableHead sx={{ bgcolor: "grey.50" }}>` com células `<TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>`.
+
+### 3. Paginação Obrigatória (`AppTablePagination`)
+- **Sempre utilize o componente centralizado `<AppTablePagination />`** (`src/components/AppTablePagination.tsx`):
+  ```tsx
+  <AppTablePagination
+    count={total}
+    page={page}
+    rowsPerPage={rowsPerPage}
+    onPageChange={handleChangePage}
+    onRowsPerPageChange={handleChangeRowsPerPage}
+  />
+  ```
+- **Regras Imutáveis de Paginação**:
+  - **Padrão de Linhas Inicial**: Sempre `10` (`rowsPerPage = 10` ou `limit = 10`).
+  - **Opções Permitidas**: Exclusivamente `[10, 25, 50]` (é **proibido** utilizar `5` ou valores arbitrários).
+  - **Internacionalização Obrigatória**: Deve renderizar sempre `t("tables.rowsPerPage")` ("Itens por página:") e `t("tables.displayedRows")` ("1–10 de 50"). Nunca deixe renderizar o fallback em inglês do MUI ("1-10 of 50") nem textos hardcoded ("Linhas por página:").
+  - **Divisor Visual**: Deve possuir linha superior `borderTop: "1px solid #E2E8F0"`.
+
+---
+
+## 🚫 9. O que NÃO Fazer
 
 - ❌ **Não adicionar padding externo (`p: ...`) na raiz de páginas dentro do `<Outlet />`** (o `AppLayout` já gerencia o espaçamento de forma centralizada).
+- ❌ **Não utilizar opções de paginação diferentes de `[10, 25, 50]`** (ex.: nunca incluir `5`).
+- ❌ **Não omitir `labelDisplayedRows` no `TablePagination` nativo** (renderiza "of" em inglês; utilize sempre `<AppTablePagination />`).
+- ❌ **Não utilizar strings hardcoded na paginação** (ex.: `"Linhas por página:"`).
+- ❌ **Não utilizar `variant="h5"` para o título principal de páginas** (usar sempre `variant="h4"` com `fontWeight: 700` e `fontSize: { xs: "1.5rem", sm: "2rem" }`).
 - ❌ **Não aninhar `<Typography variant="h6">` dentro de `<DialogTitle>`** sem configurar `component="div"` ou `component="span"`.
+- ❌ Não usar tabelas com cabeçalho `action.hover` ou sem `grey.50`.
 - ❌ Não usar texto branco sobre cores claras como `#4CFCF7` ou `#A7F3D0` (exigem texto escuro `#064E3B` ou `#0F172A`).
 - ❌ Não usar texto azul claro sobre fundo branco em botões (usar `#0369A1` ou `#0F172A` para manter contraste > 4.5:1).
 - ❌ Não pular níveis de heading (ex.: ir direto de `h1` para `h6` ou `h4` para `h6`).
 - ❌ Não bloquear a renderização inicial com loaders centrados que adiam o LCP.
 - ❌ Não colocar diretivas `Disallow` no `robots.txt` para páginas que precisam ser avaliadas ou indexadas pelo Lighthouse/Googlebot.
 - ❌ Não acessar `localStorage` diretamente sem o utilitário `safeStorage`.
+

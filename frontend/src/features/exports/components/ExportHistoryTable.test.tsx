@@ -89,6 +89,8 @@ describe("ExportHistoryTable", () => {
       expect(screen.getByText("Concluído")).toBeInTheDocument();
       expect(screen.getByText("Processando")).toBeInTheDocument();
       expect(screen.getByText("Falha")).toBeInTheDocument();
+      expect(screen.getByText("Itens por página:")).toBeInTheDocument();
+      expect(screen.getByText("1–3 de 3")).toBeInTheDocument();
     });
   });
 

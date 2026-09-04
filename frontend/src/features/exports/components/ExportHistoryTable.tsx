@@ -10,7 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination,
   Chip,
   IconButton,
   Tooltip,
@@ -28,6 +27,8 @@ import {
   ReportHistoryResponse,
   reportService,
 } from "../../../services/api/report.service";
+
+import { AppTablePagination } from "../../../components/AppTablePagination";
 
 interface ExportHistoryTableProps {
   seasonId?: string;
@@ -224,8 +225,13 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
   };
 
   return (
-    <Card elevation={0} sx={{ border: "1px solid", borderColor: "divider" }}>
+    <Card elevation={0} sx={{ border: "1px solid #E2E8F0", borderRadius: 2 }}>
       <CardHeader
+        sx={{
+          borderBottom: "1px solid #E2E8F0",
+          px: 2.5,
+          py: 2,
+        }}
         title={
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <HistoryRoundedIcon color="primary" />
@@ -236,39 +242,46 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
         }
         action={
           <Tooltip title={t("exports.refreshHistory")}>
-            <IconButton onClick={() => fetchJobs(false)} disabled={loading}>
+            <IconButton
+              onClick={() => fetchJobs(false)}
+              disabled={loading}
+              size="small"
+            >
               <RefreshRoundedIcon />
             </IconButton>
           </Tooltip>
         }
       />
       <CardContent sx={{ p: 0 }}>
-        <TableContainer>
-          <Table size="medium">
-            <TableHead sx={{ bgcolor: "action.hover" }}>
+        <TableContainer sx={{ width: "100%", overflowX: "auto" }}>
+          <Table sx={{ minWidth: 680 }}>
+            <TableHead sx={{ bgcolor: "grey.50" }}>
               <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                   {t("exports.table.type")}
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                   {t("exports.table.season")}
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                   {t("exports.table.requestedBy")}
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                   {t("exports.table.requestedAt")}
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                   {t("exports.table.completedAt")}
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                   {t("exports.table.duration")}
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                   {t("exports.table.status")}
                 </TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700 }}>
+                <TableCell
+                  align="center"
+                  sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+                >
                   {t("exports.table.actions")}
                 </TableCell>
               </TableRow>
@@ -363,9 +376,7 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
           </Table>
         </TableContainer>
 
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25, 50]}
-          component="div"
+        <AppTablePagination
           count={total}
           rowsPerPage={limit}
           page={page}
@@ -374,7 +385,6 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
             setLimit(parseInt(e.target.value, 10));
             setPage(0);
           }}
-          labelRowsPerPage="Linhas por página:"
         />
       </CardContent>
     </Card>
