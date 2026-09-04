@@ -81,7 +81,7 @@ describe("ExportHistoryTable", () => {
     await waitFor(() => {
       expect(screen.getByText("Clientes Geral (CSV)")).toBeInTheDocument();
       expect(
-        screen.getByText("Dinâmico por Pagamento (CSV)"),
+        screen.getByText("Dinâmico por Pagamento (PDF)"),
       ).toBeInTheDocument();
       expect(screen.getByText("Clientes Pagos (CSV)")).toBeInTheDocument();
       expect(screen.getByText("Admin User")).toBeInTheDocument();

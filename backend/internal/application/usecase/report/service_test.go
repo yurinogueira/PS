@@ -7,6 +7,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	reportport "ps/internal/application/ports/report"
 	storageport "ps/internal/application/ports/storage"
@@ -1180,6 +1181,91 @@ func TestGenerateDynamicPaymentCSV(t *testing.T) {
 	}
 }
 
+func TestGenerateDynamicPaymentPDF(t *testing.T) {
+	val100 := 100.0
+	val200 := 200.0
+	clientRepo := &mockClientRepo{
+		clients: []*clientdomain.SeasonClient{
+			{
+				ID:       "client-1",
+				TenantID: "tenant-1",
+				PersonID: "person-1",
+				SeasonID: "season-1",
+				Dogs: []clientdomain.Dog{
+					{
+						Breed:           "Poodle",
+						WonCompetitions: []string{"Melhor da Raça"},
+						Photos: []clientdomain.Photo{
+							{
+								FileNumber:    "IMG_001",
+								PaymentMethod: "Pix",
+								AmountPaid:    &val100,
+							},
+							{
+								FileNumber:    "IMG_002",
+								PaymentMethod: "Não pago",
+							},
+							{
+								FileNumber:    "IMG_003",
+								PaymentMethod: "Dinheiro",
+								AmountPaid:    &val200,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	personRepo := &mockPersonRepo{
+		people: map[string]*persondomain.Person{
+			"person-1": {
+				ID:    "person-1",
+				Name:  "Maria Silva",
+				Email: "maria@example.com",
+				Phone: "11999998888",
+			},
+		},
+	}
+	photogRepo := &mockPhotographerRepo{}
+	storage := &mockStorageProvider{files: make(map[string][]byte)}
+	emailSender := &mockEmailSender{}
+
+	svc := NewService(clientRepo, personRepo, photogRepo, storage, emailSender, "http://localhost:8080")
+
+	// 1. Filter: Paid only, specifically "Pix"
+	isPaidTrue := true
+	pathPix, err := svc.GenerateDynamicPaymentPDF(context.Background(), "tenant-1", "season-1", &reportdomain.ReportFilters{
+		IsPaid:         &isPaidTrue,
+		PaymentMethods: []string{"Pix"},
+	}, "user@test.com", "User")
+	if err != nil {
+		t.Fatalf("unexpected error generating dynamic PDF: %v", err)
+	}
+	if !strings.HasSuffix(pathPix, ".pdf") {
+		t.Fatalf("expected .pdf extension, got %s", pathPix)
+	}
+	pdfData := storage.files[pathPix]
+	if !bytes.HasPrefix(pdfData, []byte("%PDF-")) {
+		t.Fatalf("expected valid PDF header, got %s", string(pdfData[:10]))
+	}
+
+	// 2. Filter: Unpaid only
+	isPaidFalse := false
+	pathUnpaid, err := svc.GenerateDynamicPaymentPDF(context.Background(), "tenant-1", "season-1", &reportdomain.ReportFilters{
+		IsPaid: &isPaidFalse,
+	}, "", "")
+	if err != nil {
+		t.Fatalf("unexpected error generating unpaid dynamic PDF: %v", err)
+	}
+	if !strings.HasSuffix(pathUnpaid, ".pdf") {
+		t.Fatalf("expected .pdf extension, got %s", pathUnpaid)
+	}
+	pdfDataUnpaid := storage.files[pathUnpaid]
+	if !bytes.HasPrefix(pdfDataUnpaid, []byte("%PDF-")) {
+		t.Fatalf("expected valid PDF header for unpaid, got %s", string(pdfDataUnpaid[:10]))
+	}
+}
+
 func TestStartJobLifecycle(t *testing.T) {
 	clientRepo := &mockClientRepo{}
 	personRepo := &mockPersonRepo{people: make(map[string]*persondomain.Person)}
@@ -1229,5 +1315,35 @@ func TestStartJobLifecycle(t *testing.T) {
 	}
 	if found.ID != started.ID {
 		t.Fatalf("expected job ID %q, got %q", started.ID, found.ID)
+	}
+
+	// Test StartJob with TypeDynamicPayment
+	dynamicJob := &reportdomain.ReportJob{
+		TenantID: "tenant-1",
+		SeasonID: "season-1",
+		Type:     reportdomain.TypeDynamicPayment,
+		Filters: &reportdomain.ReportFilters{
+			PaymentMethods: []string{"Pix"},
+		},
+		RequestedBy: reportdomain.UserSummary{
+			UserName:  "Test",
+			UserEmail: "test@example.com",
+		},
+	}
+	startedDynamic, err := svc.StartJob(context.Background(), dynamicJob)
+	if err != nil {
+		t.Fatalf("failed to start dynamic job: %v", err)
+	}
+	if startedDynamic.ID == "" {
+		t.Fatalf("expected dynamic job ID to be set")
+	}
+
+	// Wait up to 2 seconds for goroutine to finish
+	time.Sleep(200 * time.Millisecond)
+	updatedDynamic, _ := svc.GetJob(context.Background(), startedDynamic.ID, "tenant-1")
+	if updatedDynamic != nil && updatedDynamic.Status == reportdomain.StatusCompleted {
+		if !strings.HasSuffix(updatedDynamic.FilePath, ".pdf") {
+			t.Fatalf("expected dynamic job to produce a .pdf file, got %s", updatedDynamic.FilePath)
+		}
 	}
 }

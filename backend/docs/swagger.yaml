@@ -1408,8 +1408,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Inicia a extração assíncrona do relatório customizado por status
-        de pagamento e métodos múltiplos para o tenant autenticado
+      description: Inicia a extração assíncrona do relatório consolidado em PDF customizado
+        por status de pagamento e métodos múltiplos para o tenant autenticado
       parameters:
       - description: Parâmetros da exportação dinâmica
         in: body
@@ -1440,7 +1440,8 @@ paths:
           description: Erro interno
           schema:
             $ref: '#/definitions/httpx.ErrorEnvelope'
-      summary: Exportar relatório dinâmico filtrado por status e métodos de pagamento
+      summary: Exportar relatório dinâmico em PDF filtrado por status e métodos de
+        pagamento
       tags:
       - Reports
   /api/v1/reports/history:

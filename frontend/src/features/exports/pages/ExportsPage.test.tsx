@@ -47,9 +47,6 @@ describe("ExportsPage", () => {
     vi.spyOn(reportService, "exportClientsPdf").mockResolvedValue({
       message: "Exportação PDF iniciada",
     });
-    vi.spyOn(reportService, "downloadClientsPdfDirect").mockResolvedValue(
-      new Blob(["pdf data"], { type: "application/pdf" }),
-    );
   });
 
   it("renders page header and all export cards", async () => {
@@ -189,6 +186,36 @@ describe("ExportsPage", () => {
       expect(reportService.exportClientsCsv).toHaveBeenCalledWith(
         mockSeasons[0].id,
       );
+    });
+  });
+
+  it("does not render direct download button on consolidated PDF card and triggers async export", async () => {
+    render(
+      <BrowserRouter>
+        <ExportsPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Relatório Consolidado (PDF)"),
+      ).toBeInTheDocument();
+    });
+
+    // Ensure "Download Direto" is not present anywhere
+    expect(
+      screen.queryByRole("button", { name: /download direto/i }),
+    ).not.toBeInTheDocument();
+
+    // Trigger async PDF export via "Solicitar via E-mail"
+    const asyncPdfBtn = screen.getByRole("button", {
+      name: /solicitar via e-mail/i,
+    });
+    fireEvent.click(asyncPdfBtn);
+
+    await waitFor(() => {
+      expect(reportService.exportClientsPdf).toHaveBeenCalled();
+      expect(screen.getByText("Exportação PDF iniciada")).toBeInTheDocument();
     });
   });
 });

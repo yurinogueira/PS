@@ -258,8 +258,8 @@ type ExportDynamicPaymentRequest struct {
 }
 
 // ExportDynamicPayment godoc
-// @Summary      Exportar relatório dinâmico filtrado por status e métodos de pagamento
-// @Description  Inicia a extração assíncrona do relatório customizado por status de pagamento e métodos múltiplos para o tenant autenticado
+// @Summary      Exportar relatório dinâmico em PDF filtrado por status e métodos de pagamento
+// @Description  Inicia a extração assíncrona do relatório consolidado em PDF customizado por status de pagamento e métodos múltiplos para o tenant autenticado
 // @Tags         Reports
 // @Accept       json
 // @Produce      json
@@ -335,7 +335,7 @@ func (h *ReportHandler) ExportDynamicPayment(w http.ResponseWriter, r *http.Requ
 	}
 
 	httpx.Accepted(w, map[string]any{
-		"message": "Geração do relatório dinâmico iniciada com sucesso. O arquivo CSV será enviado para o seu e-mail em instantes.",
+		"message": "Geração do relatório dinâmico em PDF iniciada com sucesso. O arquivo será enviado para o seu e-mail em instantes.",
 		"job":     startedJob,
 	})
 }

@@ -576,7 +576,7 @@
         "paid_clients_csv": "Clientes Pagos (CSV)",
         "unpaid_clients_csv": "Clientes Não Pagos (CSV)",
         "clients_pdf": "Consolidado Geral (PDF)",
-        "dynamic_payment": "Dinâmico por Pagamento (CSV)"
+        "dynamic_payment": "Dinâmico por Pagamento (PDF)"
       }
     },
     "cards": {
@@ -603,13 +603,13 @@
       },
       "dynamicPayment": {
         "title": "Exportação Dinâmica por Pagamento",
-        "description": "Configure filtros customizados por status de quitação e escolha múltiplos métodos de pagamento.",
+        "description": "Configure filtros customizados por status de quitação e forma de pagamento para gerar o relatório consolidado em PDF.",
         "action": "Configurar e Exportar"
       }
     },
     "dynamicDialog": {
       "title": "Exportação Dinâmica por Pagamento",
-      "description": "Selecione os critérios desejados para gerar uma planilha CSV sob medida.",
+      "description": "Selecione os critérios desejados para gerar o relatório consolidado em PDF sob medida.",
       "paidStatusLabel": "Status de Pagamento",
       "paidStatusAll": "Todos os registros",
       "paidStatusPaid": "Apenas Pagos (confirmados)",

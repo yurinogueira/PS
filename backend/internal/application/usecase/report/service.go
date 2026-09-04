@@ -791,7 +791,7 @@ func renderPdfRow(pdf *fpdf.Fpdf, tr func(string) string, colWidths []float64, r
 	pdf.SetXY(startX, startY+rowHeight)
 }
 
-func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string) ([]byte, error) {
+func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string, filters *reportdomain.ReportFilters) ([]byte, error) {
 	if tenantID == "" {
 		return nil, errors.New("tenant ID cannot be empty")
 	}
@@ -812,10 +812,68 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string
 		photogMap[p.ID] = p.Name
 	}
 
+	// Prepare payment filter structures
+	allowedMethodsMap := make(map[string]bool)
+	if filters != nil && len(filters.PaymentMethods) > 0 {
+		for _, m := range filters.PaymentMethods {
+			norm := strings.ToLower(NormalizePaymentMethod(m))
+			allowedMethodsMap[norm] = true
+		}
+	}
+	hasFilter := filters != nil && (filters.IsPaid != nil || len(allowedMethodsMap) > 0)
+
 	// Collect clients
 	personCache := make(map[string]*persondomain.Person)
 	var clients []*clientdomain.SeasonClient
 	err = s.clientRepo.StreamByTenant(ctx, tenantID, seasonID, func(c *clientdomain.SeasonClient) error {
+		if hasFilter {
+			var filteredDogs []clientdomain.Dog
+			for _, dog := range c.Dogs {
+				var filteredPhotos []clientdomain.Photo
+				for _, photo := range dog.Photos {
+					normPay := NormalizePaymentMethod(photo.PaymentMethod)
+					isPaid := normPay != "Não pago" && normPay != ""
+
+					if filters.IsPaid != nil {
+						if *filters.IsPaid && !isPaid {
+							continue
+						}
+						if !*filters.IsPaid && isPaid {
+							continue
+						}
+					}
+
+					if len(allowedMethodsMap) > 0 {
+						if !allowedMethodsMap[strings.ToLower(normPay)] {
+							continue
+						}
+					}
+
+					filteredPhotos = append(filteredPhotos, photo)
+				}
+
+				if len(filteredPhotos) > 0 {
+					dogCopy := dog
+					dogCopy.Photos = filteredPhotos
+					filteredDogs = append(filteredDogs, dogCopy)
+				}
+			}
+
+			if len(filteredDogs) > 0 {
+				clientCopy := *c
+				clientCopy.Dogs = filteredDogs
+				clients = append(clients, &clientCopy)
+				if _, ok := personCache[c.PersonID]; !ok {
+					personObj, pErr := s.personRepo.GetByID(ctx, c.PersonID, tenantID)
+					if pErr != nil || personObj == nil {
+						personObj = &persondomain.Person{Name: "Desconhecido"}
+					}
+					personCache[c.PersonID] = personObj
+				}
+			}
+			return nil
+		}
+
 		clients = append(clients, c)
 		if _, ok := personCache[c.PersonID]; !ok {
 			personObj, pErr := s.personRepo.GetByID(ctx, c.PersonID, tenantID)
@@ -990,7 +1048,7 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string
 }
 
 func (s *Service) GenerateClientsPDF(ctx context.Context, tenantID, seasonID, userEmail, userName string) (string, error) {
-	pdfBytes, err := s.buildClientsPDF(ctx, tenantID, seasonID)
+	pdfBytes, err := s.buildClientsPDF(ctx, tenantID, seasonID, nil)
 	if err != nil {
 		return "", err
 	}
@@ -1018,6 +1076,35 @@ func (s *Service) GenerateClientsPDF(ctx context.Context, tenantID, seasonID, us
 	return relativePath, nil
 }
 
+func (s *Service) GenerateDynamicPaymentPDF(ctx context.Context, tenantID, seasonID string, filters *reportdomain.ReportFilters, userEmail, userName string) (string, error) {
+	pdfBytes, err := s.buildClientsPDF(ctx, tenantID, seasonID, filters)
+	if err != nil {
+		return "", err
+	}
+
+	timestamp := time.Now().UTC().Unix()
+	fileName := fmt.Sprintf("clientes_dinamico_%d.pdf", timestamp)
+	relativePath := fmt.Sprintf("reports/tenant_%s/%s", tenantID, fileName)
+
+	_, err = s.storageProvider.Save(ctx, relativePath, storageport.File{
+		Name:        fileName,
+		Data:        pdfBytes,
+		ContentType: "application/pdf",
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to save dynamic pdf report to storage: %w", err)
+	}
+
+	if userEmail != "" {
+		downloadURL := fmt.Sprintf("%s/reports/download?file=%s", s.appBaseURL, url.QueryEscape(relativePath))
+		if err := s.emailSender.SendReportReadyEmail(ctx, userEmail, userName, "Relatório Dinâmico de Clientes (PDF)", downloadURL); err != nil {
+			log.Printf("[REPORT-EMAIL-ERROR] Failed to send dynamic PDF report ready email to %s: %v", userEmail, err)
+		}
+	}
+
+	return relativePath, nil
+}
+
 func (s *Service) ValidateAccess(ctx context.Context, tenantID, seasonID string) error {
 	if s.tenantValidator != nil {
 		return s.tenantValidator.ValidateCanExportReport(ctx, tenantID, seasonID)
@@ -1026,7 +1113,7 @@ func (s *Service) ValidateAccess(ctx context.Context, tenantID, seasonID string)
 }
 
 func (s *Service) GenerateDirectClientsPDF(ctx context.Context, tenantID, seasonID string) ([]byte, error) {
-	return s.buildClientsPDF(ctx, tenantID, seasonID)
+	return s.buildClientsPDF(ctx, tenantID, seasonID, nil)
 }
 
 func (s *Service) GetReportFile(ctx context.Context, tenantID, relativePath string) ([]byte, error) {
@@ -1295,7 +1382,7 @@ func (s *Service) StartJob(ctx context.Context, job *reportdomain.ReportJob) (*r
 		case reportdomain.TypeClientsPDF:
 			filePath, genErr = s.GenerateClientsPDF(jobCtx, j.TenantID, j.SeasonID, userEmail, userName)
 		case reportdomain.TypeDynamicPayment:
-			filePath, genErr = s.GenerateDynamicPaymentCSV(jobCtx, j.TenantID, j.SeasonID, j.Filters, userEmail, userName)
+			filePath, genErr = s.GenerateDynamicPaymentPDF(jobCtx, j.TenantID, j.SeasonID, j.Filters, userEmail, userName)
 		default:
 			genErr = fmt.Errorf("unsupported report type: %s", j.Type)
 		}
