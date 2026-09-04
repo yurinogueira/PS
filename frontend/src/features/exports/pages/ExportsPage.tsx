@@ -188,7 +188,7 @@ export const ExportsPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto" }}>
+    <Box sx={{ width: "100%" }}>
       {/* Page Header */}
       <Box
         sx={{

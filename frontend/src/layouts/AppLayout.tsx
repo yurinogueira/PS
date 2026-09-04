@@ -69,8 +69,10 @@ export function AppLayout() {
             maxWidth: "100%",
           }}
         >
-          <TenantStatusBanner />
-          <Outlet />
+          <Box sx={{ maxWidth: 1600, mx: "auto", width: "100%" }}>
+            <TenantStatusBanner />
+            <Outlet />
+          </Box>
         </Box>
       </Box>
     </Box>

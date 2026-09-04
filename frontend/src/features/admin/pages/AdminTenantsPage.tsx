@@ -249,7 +249,7 @@ export const AdminTenantsPage = () => {
   );
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ width: "100%" }}>
       {/* Header */}
       <Box
         sx={{

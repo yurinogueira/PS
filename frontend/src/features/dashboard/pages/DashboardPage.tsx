@@ -388,7 +388,7 @@ export const DashboardPage = () => {
   }, [people.length, allSeasonClients]);
 
   return (
-    <Box sx={{ maxWidth: 1600, margin: "0 auto", width: "100%" }}>
+    <Box sx={{ width: "100%" }}>
       {/* Top Header Row with Compact Overview Toggle */}
       <Box
         sx={{
