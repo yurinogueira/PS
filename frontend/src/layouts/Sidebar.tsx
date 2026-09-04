@@ -9,6 +9,10 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
+  Avatar,
+  ButtonBase,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import EventNoteRoundedIcon from "@mui/icons-material/EventNoteRounded";
@@ -19,8 +23,11 @@ import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import SupervisorAccountRoundedIcon from "@mui/icons-material/SupervisorAccountRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../features/auth/state/auth.store";
+import { authService } from "../features/auth/services/auth.service";
 import { getUserRole } from "../features/auth/types/auth.types";
 
 interface SidebarProps {
@@ -38,6 +45,22 @@ export function Sidebar({
   const location = useLocation();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const clearAuth = useAuthStore((state) => state.clear);
+  const isProfileActive = location.pathname.startsWith("/profile");
+
+  const handleLogout = async () => {
+    if (mobileOpen) {
+      onDrawerToggle();
+    }
+    try {
+      await authService.logout();
+    } catch {
+      // ignore network errors on logout
+    } finally {
+      clearAuth();
+      navigate("/login");
+    }
+  };
 
   const menuItems = [
     {
@@ -249,6 +272,125 @@ export function Sidebar({
           </>
         )}
       </List>
+
+      <Box
+        sx={{
+          p: 1.5,
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5,
+          borderTop: "1px solid #E2E8F0",
+          bgcolor: "background.paper",
+        }}
+      >
+        <ButtonBase
+          onClick={() => handleNavigation("/profile")}
+          aria-label={t("layout.myProfile")}
+          data-testid="sidebar-profile-btn"
+          sx={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            p: 1,
+            borderRadius: 2,
+            minWidth: 0,
+            textAlign: "left",
+            justifyContent: "flex-start",
+            bgcolor: isProfileActive
+              ? "rgba(57, 39, 130, 0.08)"
+              : "transparent",
+            border: isProfileActive
+              ? "1px solid rgba(57, 39, 130, 0.2)"
+              : "1px solid transparent",
+            "&:hover": {
+              bgcolor: isProfileActive
+                ? "rgba(57, 39, 130, 0.12)"
+                : "action.hover",
+            },
+            transition: "all 0.2s ease",
+          }}
+        >
+          <Avatar
+            sx={{
+              width: 38,
+              height: 38,
+              bgcolor: "primary.main",
+              color: "primary.contrastText",
+              fontWeight: 700,
+              fontSize: "1rem",
+              flexShrink: 0,
+            }}
+          >
+            {user?.name?.charAt(0).toUpperCase() || (
+              <AccountCircleRoundedIcon sx={{ fontSize: 24 }} />
+            )}
+          </Avatar>
+          <Box sx={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
+            <Tooltip
+              title={user?.name || t("layout.user")}
+              arrow
+              placement="top"
+            >
+              <Typography
+                variant="subtitle2"
+                noWrap
+                sx={{
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                  color: "text.primary",
+                  lineHeight: 1.2,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {user?.name || t("layout.user")}
+              </Typography>
+            </Tooltip>
+            {user?.email && (
+              <Tooltip title={user.email} arrow placement="top">
+                <Typography
+                  variant="caption"
+                  noWrap
+                  sx={{
+                    color: "text.secondary",
+                    fontSize: "0.75rem",
+                    display: "block",
+                    lineHeight: 1.2,
+                    mt: 0.25,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {user.email}
+                </Typography>
+              </Tooltip>
+            )}
+          </Box>
+        </ButtonBase>
+
+        <Tooltip title={t("layout.logout")} arrow placement="top">
+          <IconButton
+            size="small"
+            onClick={handleLogout}
+            aria-label={t("layout.logout")}
+            data-testid="sidebar-logout-btn"
+            sx={{
+              p: 1,
+              color: "text.secondary",
+              flexShrink: 0,
+              "&:hover": {
+                color: "error.main",
+                bgcolor: "error.lighter",
+              },
+            }}
+          >
+            <LogoutRoundedIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
     </Box>
   );
 

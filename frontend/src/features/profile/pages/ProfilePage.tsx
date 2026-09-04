@@ -202,7 +202,7 @@ export function ProfilePage() {
   const isEmailVerified = Boolean(profileData?.user?.emailVerified);
 
   return (
-    <Box sx={{ width: "100%", maxWidth: 1000, mx: "auto" }}>
+    <Box sx={{ width: "100%" }}>
       {/* Page Title */}
       <Box sx={{ mb: 4 }}>
         <Typography
