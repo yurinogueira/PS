@@ -584,12 +584,12 @@
         "title": "Relatório Consolidado (PDF)",
         "description": "Documento completo formatado em A4 paisagem com tabela de clientes, cães, fotos, juízes e pagamentos.",
         "actionDirect": "Download Direto",
-        "actionAsync": "Solicitar via E-mail"
+        "actionAsync": "Exportar Consolidado"
       },
       "clientsCsv": {
         "title": "Relatório Geral de Clientes (CSV)",
         "description": "Planilha consolidada compatível com Excel contendo todos os clientes e fotografias cadastradas.",
-        "action": "Exportar CSV"
+        "action": "Exportar Relatório Geral"
       },
       "paidClientsCsv": {
         "title": "Relatório de Clientes Pagos (CSV)",
