@@ -19,6 +19,19 @@ if (typeof window !== "undefined" && !window.localStorage) {
   });
 }
 
+if (
+  typeof Document !== "undefined" &&
+  !(Document.prototype as unknown as { focus?: () => void }).focus
+) {
+  (Document.prototype as unknown as { focus: () => void }).focus = () => {};
+}
+if (
+  typeof Element !== "undefined" &&
+  !(Element.prototype as unknown as { focus?: () => void }).focus
+) {
+  (Element.prototype as unknown as { focus: () => void }).focus = () => {};
+}
+
 afterEach(() => {
   cleanup();
 });
