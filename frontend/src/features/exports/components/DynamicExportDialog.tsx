@@ -194,47 +194,52 @@ export const DynamicExportDialog: React.FC<DynamicExportDialogProps> = ({
               sx={{ mb: 1 }}
             />
 
-            {!allMethods && (
-              <Box sx={{ mt: 1 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 1.5,
-                  }}
+            <Box sx={{ mt: 1 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 1.5,
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  {t("exports.dynamicDialog.methodsHint")}
+                </Typography>
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={handleSelectAllMethods}
+                  disabled={allMethods}
                 >
-                  <Typography variant="caption" color="text.secondary">
-                    {t("exports.dynamicDialog.methodsHint")}
-                  </Typography>
-                  <Button
-                    size="small"
-                    variant="text"
-                    onClick={handleSelectAllMethods}
-                  >
-                    {selectedMethods.length === AVAILABLE_PAYMENT_METHODS.length
-                      ? "Desmarcar Todos"
-                      : "Selecionar Todos"}
-                  </Button>
-                </Box>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                  {AVAILABLE_PAYMENT_METHODS.map((method) => {
-                    const selected = selectedMethods.includes(method);
-                    return (
-                      <Chip
-                        key={method}
-                        label={method}
-                        clickable
-                        color={selected ? "primary" : "default"}
-                        variant={selected ? "filled" : "outlined"}
-                        onClick={() => handleToggleMethod(method)}
-                        size="medium"
-                      />
-                    );
-                  })}
-                </Box>
+                  {selectedMethods.length === AVAILABLE_PAYMENT_METHODS.length
+                    ? t("exports.dynamicDialog.deselectAll", "Desmarcar Todos")
+                    : t("exports.dynamicDialog.selectAll", "Selecionar Todos")}
+                </Button>
               </Box>
-            )}
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                {AVAILABLE_PAYMENT_METHODS.map((method) => {
+                  const selected =
+                    allMethods || selectedMethods.includes(method);
+                  return (
+                    <Chip
+                      key={method}
+                      label={method}
+                      clickable={!allMethods}
+                      disabled={allMethods}
+                      color={selected ? "primary" : "default"}
+                      variant={selected ? "filled" : "outlined"}
+                      onClick={
+                        !allMethods
+                          ? () => handleToggleMethod(method)
+                          : undefined
+                      }
+                      size="medium"
+                    />
+                  );
+                })}
+              </Box>
+            </Box>
           </Box>
         )}
       </DialogContent>

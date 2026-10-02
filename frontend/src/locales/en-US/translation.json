@@ -618,6 +618,8 @@
       "paymentMethodsLabel": "Specific Payment Methods",
       "allMethods": "Consider all payment methods",
       "methodsHint": "Select one or more payment methods to filter:",
+      "selectAll": "Select All",
+      "deselectAll": "Deselect All",
       "cancel": "Cancel",
       "startExport": "Start Export",
       "exporting": "Starting..."
