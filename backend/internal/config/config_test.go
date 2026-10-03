@@ -42,6 +42,22 @@ func TestConfig_Validate(t *testing.T) {
 			wantErr: ErrJWTSecretInsecure,
 		},
 		{
+			name: "insecure placeholder JWTSecret from .env.example",
+			cfg: Config{
+				JWTSecret:        "substitua_por_uma_chave_secreta_jwt_forte_com_32_chars_min",
+				JWTRefreshSecret: validSecret2,
+			},
+			wantErr: ErrJWTSecretInsecure,
+		},
+		{
+			name: "insecure placeholder JWTSecret from deploy/backend.env.example",
+			cfg: Config{
+				JWTSecret:        "substitua_por_uma_chave_secreta_jwt_forte",
+				JWTRefreshSecret: validSecret2,
+			},
+			wantErr: ErrJWTSecretInsecure,
+		},
+		{
 			name: "too short JWTSecret (<32 chars)",
 			cfg: Config{
 				JWTSecret:        "short-secret-12345",
@@ -62,6 +78,22 @@ func TestConfig_Validate(t *testing.T) {
 			cfg: Config{
 				JWTSecret:        validSecret1,
 				JWTRefreshSecret: "change-me-too",
+			},
+			wantErr: ErrJWTRefreshSecretInsecure,
+		},
+		{
+			name: "insecure placeholder JWTRefreshSecret from .env.example",
+			cfg: Config{
+				JWTSecret:        validSecret1,
+				JWTRefreshSecret: "substitua_por_uma_chave_secreta_refresh_forte_32_chars",
+			},
+			wantErr: ErrJWTRefreshSecretInsecure,
+		},
+		{
+			name: "insecure placeholder JWTRefreshSecret from deploy/backend.env.example",
+			cfg: Config{
+				JWTSecret:        validSecret1,
+				JWTRefreshSecret: "substitua_por_uma_chave_secreta_refresh_forte",
 			},
 			wantErr: ErrJWTRefreshSecretInsecure,
 		},

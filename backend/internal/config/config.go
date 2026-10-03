@@ -23,6 +23,28 @@ var (
 var insecureDefaultSecrets = map[string]struct{}{
 	"change-me":     {},
 	"change-me-too": {},
+	"substitua_por_uma_chave_secreta_jwt_forte":                  {},
+	"substitua_por_uma_chave_secreta_refresh_forte":              {},
+	"substitua_por_uma_chave_secreta_jwt_forte_com_32_chars_min": {},
+	"substitua_por_uma_chave_secreta_refresh_forte_32_chars":     {},
+}
+
+func isInsecureSecret(secret string) bool {
+	trimmed := strings.ToLower(strings.TrimSpace(secret))
+	if trimmed == "" {
+		return false
+	}
+	if _, ok := insecureDefaultSecrets[trimmed]; ok {
+		return true
+	}
+	if strings.Contains(trimmed, "substitua") ||
+		strings.Contains(trimmed, "change-me") ||
+		strings.Contains(trimmed, "change_me") ||
+		strings.Contains(trimmed, "your-secret") ||
+		strings.Contains(trimmed, "example-secret") {
+		return true
+	}
+	return false
 }
 
 type Config struct {
@@ -54,7 +76,7 @@ func (c Config) Validate() error {
 	if c.JWTSecret == "" {
 		return ErrJWTSecretEmpty
 	}
-	if _, ok := insecureDefaultSecrets[c.JWTSecret]; ok {
+	if isInsecureSecret(c.JWTSecret) {
 		return ErrJWTSecretInsecure
 	}
 	if len(c.JWTSecret) < MinSecretLength {
@@ -64,7 +86,7 @@ func (c Config) Validate() error {
 	if c.JWTRefreshSecret == "" {
 		return ErrJWTRefreshSecretEmpty
 	}
-	if _, ok := insecureDefaultSecrets[c.JWTRefreshSecret]; ok {
+	if isInsecureSecret(c.JWTRefreshSecret) {
 		return ErrJWTRefreshSecretInsecure
 	}
 	if len(c.JWTRefreshSecret) < MinSecretLength {
