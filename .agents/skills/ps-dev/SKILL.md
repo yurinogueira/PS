@@ -11,12 +11,13 @@ Esta skill define as diretrizes de arquitetura, fluxos de edição, documentaç�
 
 ---
 
-## ⚡ Regra de Ouro: Economia de Tokens
+## ⚡ Regra de Ouro: Economia de Tokens & Documentação Canônica
 
 > [!IMPORTANT]
-> **Nunca** execute comandos brutos e verbosos como `go test ./...` ou `npm run lint` diretamente, pois eles poluem o contexto com dezenas de linhas irrelevantes (`? [no test files]`, logs de build, etc.).
+> **1. Consulta Prévia Obrigatória**: Antes de iniciar qualquer alteração ou pesquisa em código, consulte o catálogo canônico em `docs/index.md` (seguindo as diretrizes da skill `ps-docs`). A divulgação progressiva (*progressive disclosure*) evita a leitura de arquivos desnecessários e economiza até 90% dos tokens de contexto.
+> **2. Evite Comandos Verbosos**: **Nunca** execute comandos brutos como `go test ./...` ou `npm run lint` diretamente, pois eles poluem o contexto com dezenas de linhas irrelevantes (`? [no test files]`, logs de build, etc.).
 > **Sempre utilize os scripts auxiliares compactos em `scripts/`**:
-> - `./scripts/check.sh all` ou `./scripts/check.sh backend|frontend`
+> - `./scripts/check.sh all` ou `./scripts/check.sh backend|frontend|docs`
 > - `./scripts/fix.sh`
 > - `./scripts/swagger.sh` (obrigatório ao alterar rotas/handlers do backend)
 > - `./scripts/dev.sh start|stop|status|logs`
@@ -26,6 +27,7 @@ Esta skill define as diretrizes de arquitetura, fluxos de edição, documentaç�
 | Tarefa | Comando Verboso (Evitar) | Comando Compacto (Usar) | Redução de Tokens |
 | :--- | :--- | :--- | :--- |
 | **Checagem Geral** | `go vet + go test + tsc + eslint + prettier + vitest` | `./scripts/check.sh all` | **~85% menos tokens** |
+| **Checar Docs OKF**| `find docs -name '*.md' + check links` | `./scripts/check.sh docs` | Retorna 1 linha em sucesso |
 | **Checar Backend** | `cd backend && go vet ./... && go test ./...` | `./scripts/check.sh backend` | Retorna 1 linha em sucesso |
 | **Checar Frontend** | `cd frontend && npx tsc -b && npm run lint && ...` | `./scripts/check.sh frontend` | Retorna 1 linha em sucesso |
 | **Auto-Formatar** | `go fmt + prettier --write + eslint --fix` | `./scripts/fix.sh` | Retorno limpo e direto |

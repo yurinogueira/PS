@@ -69,6 +69,7 @@
 
 ```text
 PS/
+├── docs/                     # Documentação canônica centralizada (padrão OKF / LLM Wiki)
 ├── backend/                  # API REST em Go (Clean Architecture)
 │   ├── cmd/api/              # Ponto de entrada (main.go)
 │   ├── docs/                 # Documentação Swagger gerada
@@ -86,6 +87,22 @@ PS/
 ├── terraform/                # Definições IaC (OCI, Cloudflare, Mongo Atlas)
 └── docker-compose.yml        # Stack completa para desenvolvimento local
 ```
+
+---
+
+## 📚 Documentação Canônica (Open Knowledge Format)
+
+O PS adota uma base de documentação canônica centralizada estruturada sob a especificação **Open Knowledge Format (OKF)** do Google Cloud, servindo como única fonte da verdade e *LLM Wiki* em [`docs/`](docs/index.md):
+
+| Seção | Catálogo | Finalidade |
+| :--- | :--- | :--- |
+| **🧭 Catálogo Geral** | [`docs/index.md`](docs/index.md) | Ponto de entrada central e guia de navegação progressiva |
+| **🏗️ Arquitetura Global** | [`docs/architecture/`](docs/architecture/overview.md) | Clean Architecture em Go, cookies HttpOnly, isolamento de dados e storage |
+| **🏛️ Subdomínios DDD** | [`docs/domain/`](docs/domain/tenant.md) | Regras de negócio de Tenants, Auth, Clients, Photographers, Seasons e Reports |
+| **🖥️ Engenharia Frontend**| [`docs/frontend/`](docs/frontend/state-management.md) | Estado descentralizado com Zustand, rotas no React Router v7 e MUI v6 |
+| **⚙️ Operações & Runbooks**| [`docs/operations/`](docs/operations/environment-and-config.md) | Variáveis de ambiente, Docker local, topologia OCI e procedimentos |
+| **📜 Decisões (ADRs)** | [`docs/adrs/`](docs/adrs/0001-clean-architecture-go.md) | Registros imutáveis de decisões arquiteturais |
+| **📜 Trilha de Auditoria** | [`docs/log.md`](docs/log.md) | Histórico cronológico de evoluções conceituais |
 
 ---
 
@@ -149,7 +166,8 @@ O repositório inclui utilitários em `scripts/` para desenvolvimento ágil e va
 
 | Script | Finalidade |
 | :--- | :--- |
-| `./scripts/check.sh all` | Executa testes unitários, type-checking, linters e formatação em todo o projeto |
+| `./scripts/check.sh all` | Executa testes unitários, type-checking, linters, formatação e docs em todo o projeto |
+| `./scripts/check.sh docs` | Valida integridade, sintaxe OKF e resolução de links da documentação |
 | `./scripts/check.sh backend` | Valida apenas o backend Go (`go vet` e `go test`) de forma concisa |
 | `./scripts/check.sh frontend` | Valida apenas o frontend React (`tsc`, `eslint`, `vitest`) |
 | `./scripts/fix.sh` | Formata automaticamente o código Go (`go fmt`) e Frontend (`prettier`, `eslint --fix`) |

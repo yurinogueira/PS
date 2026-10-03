@@ -1,0 +1,122 @@
+---
+name: ps-docs
+description: >-
+  Diretrizes e automações para leitura, criação e melhorias contínuas da documentação
+  canônica (OKF) no PS, orientando desenvolvedores e agentes autônomos a consultar
+  o catálogo docs/index.md, manter a sincronia entre código e docs e validar via scripts.
+---
+
+# Skill: Gestão e Governança da Documentação Canônica (OKF) — PS
+
+Esta skill estabelece os padrões e procedimentos obrigatórios para **ler**, **criar** e **evoluir** a documentação canônica do projeto **PS (Photo Storage)**, estruturada sob o padrão **Open Knowledge Format (OKF)** do Google Cloud como um *LLM Wiki* em `docs/`.
+
+---
+
+## 🎯 Por Que a Documentação Canônica é Obrigatória?
+
+No ecossistema do PS, a base em `docs/` é a **Única Fonte Canônica da Verdade**. Ela elimina alucinações de modelos de IA, reduz drasticamente o consumo de tokens na janela de contexto e garante que novos desenvolvedores e agentes compreendam as invariantes arquiteturais, regras de domínio DDD e padrões de segurança sem precisar garimpar o código-fonte.
+
+---
+
+## 📖 1. Protocolo de Leitura (Divulgação Progressiva & Economia de Tokens)
+
+> [!IMPORTANT]
+> **Regra de Ouro**: **NUNCA** leia arquivos de documentação aleatoriamente nem carregue múltiplos documentos de uma vez.
+> Pratique sempre a **Divulgação Progressiva (*Progressive Disclosure*)**:
+
+1. **Passo 1 (Localização no Catálogo)**:
+   - Abra o catálogo mestre `docs/index.md` utilizando `view_file`.
+   - Localize o tópico desejado pelo mapa conceitual ou pelo índice estruturado (`architecture/`, `domain/`, `frontend/`, `operations/`, `adrs/`).
+2. **Passo 2 (Leitura Cirúrgica)**:
+   - Abra diretamente o documento mapeado (ex: `docs/domain/client.md` ou `docs/architecture/auth-and-security.md`).
+   - Leia as regras de negócio, interfaces e referências cruzadas específicas da tarefa em andamento.
+3. **Passo 3 (Navegação via Grafo)**:
+   - Siga os links relativos citados no documento para aprofundar em conceitos correlacionados, evitando buscas cegas no repositório.
+
+---
+
+## ✍️ 2. Protocolo para Criação de Novos Documentos
+
+Ao especificar um novo subdomínio, componente arquitetural, manual de infraestrutura ou Registro de Decisão Arquitetural (ADR):
+
+### 1. Nomenclatura e Localização
+- Salve o arquivo na subpasta semântica correta sob `docs/`:
+  - `docs/architecture/<topico>.md`: Decisões globais de arquitetura, segurança e armazenamento.
+  - `docs/domain/<subdominio>.md`: Regras de negócio, entidades e agregados DDD do backend.
+  - `docs/frontend/<tema>.md`: Padrões de tela, estado Zustand, rotas e componentes MUI v6.
+  - `docs/operations/<assunto>.md` ou `docs/operations/runbooks/<procedimento>.md`: Manuais de infraestrutura, Docker, CI/CD e runbooks de contingência.
+  - `docs/adrs/<numero-sequencial>-<titulo-curto>.md`: Registros de decisão arquitetural imutáveis.
+- Utilize nomes em minúsculas com hífen (`kebab-case`).
+
+### 2. Cabeçalho YAML Frontmatter Obrigatório
+Todo arquivo `.md` em `docs/` deve iniciar na linha 1 com delimitadores `---` e conter:
+
+```yaml
+---
+type: domain # [index | log | architecture | domain | frontend | operations | adr | runbook | concept]
+title: "Título Semântico e Claro"
+description: "Resumo explicativo do propósito e escopo deste documento."
+tags:
+  - domain
+  - client
+  - ddd
+resource: backend/internal/domain/client # Opcional: caminho do código-fonte correspondente
+timestamp: 2026-10-02
+---
+```
+
+#### Tipos Permitidos (`type`):
+- `index`: Reservado para `docs/index.md`.
+- `log`: Reservado para `docs/log.md`.
+- `architecture`: Visão sistêmica, camadas, segurança e storage.
+- `domain`: Regras de negócio, entidades e contratos DDD.
+- `frontend`: Diretrizes de estado, componentes UI e rotas SPA.
+- `operations`: Manuais de ambiente, deploy, Docker e pipelines.
+- `runbook`: Procedimentos passo a passo de recuperação ou manutenção.
+- `adr`: Architecture Decision Records.
+
+### 3. Grafo de Links e Conexões Bidirecionais
+- Todas as referências cruzadas devem utilizar caminhos relativos válidos do Markdown (ex: `[Visão Geral](../architecture/overview.md)` ou `[ADR 0001](../adrs/0001-clean-architecture-go.md)`).
+- Todo documento criado deve conter um link de retorno para o catálogo mestre: `[Catálogo Canônico](../index.md)`.
+
+### 4. Indexação Mandatória em `docs/index.md`
+- **Obrigatório**: Todo novo documento adicionado deve ter seu link e breve descrição inseridos na respectiva seção de `docs/index.md`. O validador rejeitará documentos órfãos.
+
+### 5. Registro Cronológico em `docs/log.md`
+- Registre a adição ou evolução no arquivo `docs/log.md` com a data atual e resumo das motivações.
+
+---
+
+## 🔄 3. Protocolo de Manutenção e Melhorias ("Código e Doc no Mesmo PR")
+
+> [!CAUTION]
+> **Divergência Zero**: Se uma alteração de código modificar entidades de domínio, endpoints REST, variáveis de ambiente, fluxos de segurança ou componentes de UI, a documentação canônica correspondente **DEVE** ser atualizada no mesmo commit ou pull request.
+
+- **Alteração em Entidades Go (`backend/internal/domain/`)**: Atualize o respectivo arquivo em `docs/domain/`.
+- **Alteração em Autenticação ou Headers HTTP**: Atualize `docs/architecture/auth-and-security.md`.
+- **Alteração em Stores Zustand ou Rotas**: Atualize `docs/frontend/state-management.md` ou `docs/frontend/routing-and-rbac.md`.
+- **Alteração em Infraestrutura ou Scripts**: Atualize `docs/operations/`.
+
+---
+
+## 🧪 4. Validação Automatizada Pré-Commit
+
+Antes de submeter alterações ou abrir Pull Requests, execute sempre o validador automatizado:
+
+```bash
+# Validação específica da documentação (execução em milissegundos):
+./scripts/check-docs.sh
+
+# Ou via o script unificado de checagem do PS:
+./scripts/check.sh docs
+
+# Validação completa de todo o repositório (Go + Frontend + Terraform + Docs):
+./scripts/check.sh all
+```
+
+O validador verifica:
+1. Conformidade estrita da sintaxe YAML frontmatter.
+2. Presença dos campos obrigatórios (`type`, `title`, `description`).
+3. Uso de valores permitidos no campo `type`.
+4. Resolução de 100% dos links Markdown locais (zero links quebrados).
+5. Indexação de todos os arquivos no catálogo `docs/index.md`.
