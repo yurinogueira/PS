@@ -4,11 +4,11 @@ terraform {
   required_providers {
     oci = {
       source  = "oracle/oci"
-      version = "~> 9.7.1"
+      version = "~> 9.8.0"
     }
     mongodbatlas = {
       source  = "mongodb/mongodbatlas"
-      version = "~> 2.18.0"
+      version = "~> 2.19.0"
     }
     random = {
       source  = "hashicorp/random"
