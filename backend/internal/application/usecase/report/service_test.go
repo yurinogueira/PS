@@ -123,7 +123,8 @@ func (m *mockPhotographerRepo) Delete(ctx context.Context, id, tenantID string) 
 }
 
 type mockStorageProvider struct {
-	files map[string][]byte
+	files     map[string][]byte
+	deleteErr error
 }
 
 func (m *mockStorageProvider) Save(ctx context.Context, path string, file storageport.File) (storageport.StoredObject, error) {
@@ -140,6 +141,9 @@ func (m *mockStorageProvider) Get(ctx context.Context, path string) ([]byte, err
 	return nil, errors.New("file not found")
 }
 func (m *mockStorageProvider) Delete(ctx context.Context, path string) error {
+	if m.deleteErr != nil {
+		return m.deleteErr
+	}
 	delete(m.files, path)
 	return nil
 }
@@ -1055,7 +1059,8 @@ func TestGeneratePaidClientsCSV(t *testing.T) {
 }
 
 type mockTestJobRepo struct {
-	jobs []*reportdomain.ReportJob
+	jobs           []*reportdomain.ReportJob
+	markExpiredErr error
 }
 
 func (m *mockTestJobRepo) Create(ctx context.Context, job *reportdomain.ReportJob) error {
@@ -1121,6 +1126,9 @@ func (m *mockTestJobRepo) FindExpiredCompleted(ctx context.Context, cutoff time.
 }
 
 func (m *mockTestJobRepo) MarkAsExpired(ctx context.Context, id string, expiredAt time.Time) error {
+	if m.markExpiredErr != nil {
+		return m.markExpiredErr
+	}
 	for _, j := range m.jobs {
 		if j.ID == id {
 			j.Status = reportdomain.StatusExpired
@@ -1670,5 +1678,231 @@ func TestStartJob_SetsExpiresAtOnCompletion(t *testing.T) {
 	expectedMin := time.Now().UTC().Add(29 * 24 * time.Hour)
 	if updated.ExpiresAt.Before(expectedMin) {
 		t.Errorf("expected ExpiresAt to be ~30 days in future, got %v", *updated.ExpiresAt)
+	}
+}
+
+func TestStartJob_FailedJobDoesNotSetExpiresAt(t *testing.T) {
+	jobRepo := &mockTestJobRepo{}
+	storage := &mockStorageProvider{files: make(map[string][]byte)}
+
+	svc := NewService(&mockClientRepo{}, &mockPersonRepo{people: make(map[string]*persondomain.Person)}, &mockPhotographerRepo{}, storage, &mockEmailSender{}, "http://localhost:8080").
+		WithReportRepo(jobRepo)
+
+	job := &reportdomain.ReportJob{
+		TenantID: "tenant-1",
+		Type:     reportdomain.ReportType("invalid_type"),
+	}
+
+	started, err := svc.StartJob(context.Background(), job)
+	if err != nil {
+		t.Fatalf("failed to start job: %v", err)
+	}
+
+	time.Sleep(100 * time.Millisecond)
+
+	updated, err := svc.GetJob(context.Background(), started.ID, "tenant-1")
+	if err != nil {
+		t.Fatalf("failed to get job: %v", err)
+	}
+
+	if updated.Status != reportdomain.StatusFailed {
+		t.Fatalf("expected failed status, got %s", updated.Status)
+	}
+	if updated.ExpiresAt != nil {
+		t.Fatalf("expected ExpiresAt to be nil on failed job, got %v", updated.ExpiresAt)
+	}
+}
+
+func TestGetReportFile_LegacyExpiredWithoutExpiresAt(t *testing.T) {
+	path := "reports/tenant_t1/legacy_report.csv"
+	storage := &mockStorageProvider{
+		files: map[string][]byte{
+			path: []byte("col1,col2"),
+		},
+	}
+
+	now := time.Now().UTC()
+	oldDate := now.Add(-35 * 24 * time.Hour)
+	jobRepo := &mockTestJobRepo{
+		jobs: []*reportdomain.ReportJob{
+			{
+				ID:        "job-legacy-1",
+				TenantID:  "t1",
+				FilePath:  path,
+				Status:    reportdomain.StatusCompleted,
+				CreatedAt: oldDate,
+				ExpiresAt: nil, // Legacy job created before feature
+			},
+		},
+	}
+
+	svc := NewService(&mockClientRepo{}, &mockPersonRepo{people: make(map[string]*persondomain.Person)}, &mockPhotographerRepo{}, storage, &mockEmailSender{}, "http://localhost:8080").
+		WithReportRepo(jobRepo)
+
+	_, err := svc.GetReportFile(context.Background(), "t1", path)
+	if !errors.Is(err, ErrReportExpired) {
+		t.Fatalf("expected ErrReportExpired for legacy report older than 30 days, got %v", err)
+	}
+}
+
+func TestCleanupExpiredReports_TenantIsolationAndPathTraversalSafety(t *testing.T) {
+	now := time.Now().UTC()
+	oldDate := now.Add(-35 * 24 * time.Hour)
+
+	victimPath := "reports/tenant_victim/sensitive.csv"
+	traversalPath := "reports/tenant_t1/../../etc/shadow"
+
+	storage := &mockStorageProvider{
+		files: map[string][]byte{
+			victimPath:    []byte("confidential"),
+			traversalPath: []byte("root"),
+		},
+	}
+
+	jobRepo := &mockTestJobRepo{
+		jobs: []*reportdomain.ReportJob{
+			{
+				ID:        "job-cross-tenant",
+				TenantID:  "t1",
+				Status:    reportdomain.StatusCompleted,
+				FilePath:  victimPath, // Attacker trying to delete victim tenant's file
+				CreatedAt: oldDate,
+			},
+			{
+				ID:        "job-traversal",
+				TenantID:  "t1",
+				Status:    reportdomain.StatusCompleted,
+				FilePath:  traversalPath, // Path traversal attempt
+				CreatedAt: oldDate,
+			},
+		},
+	}
+
+	svc := NewService(&mockClientRepo{}, &mockPersonRepo{people: make(map[string]*persondomain.Person)}, &mockPhotographerRepo{}, storage, &mockEmailSender{}, "http://localhost:8080").
+		WithReportRepo(jobRepo)
+
+	_, err := svc.CleanupExpiredReports(context.Background(), 30*24*time.Hour, 50)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Neither sensitive file should have been deleted from storage!
+	if _, exists := storage.files[victimPath]; !exists {
+		t.Fatalf("SECURITY VIOLATION: victim file %s was deleted by cross-tenant job!", victimPath)
+	}
+	if _, exists := storage.files[traversalPath]; !exists {
+		t.Fatalf("SECURITY VIOLATION: traversal file %s was deleted!", traversalPath)
+	}
+}
+
+func TestCleanupExpiredReports_TransientStorageErrorDoesNotMarkExpired(t *testing.T) {
+	now := time.Now().UTC()
+	oldDate := now.Add(-35 * 24 * time.Hour)
+	filePath := "reports/tenant_t1/file.csv"
+
+	storage := &mockStorageProvider{
+		files: map[string][]byte{
+			filePath: []byte("data"),
+		},
+		deleteErr: errors.New("500 internal server error from storage bucket"),
+	}
+
+	jobRepo := &mockTestJobRepo{
+		jobs: []*reportdomain.ReportJob{
+			{
+				ID:        "job-fail-storage",
+				TenantID:  "t1",
+				Status:    reportdomain.StatusCompleted,
+				FilePath:  filePath,
+				CreatedAt: oldDate,
+			},
+		},
+	}
+
+	svc := NewService(&mockClientRepo{}, &mockPersonRepo{people: make(map[string]*persondomain.Person)}, &mockPhotographerRepo{}, storage, &mockEmailSender{}, "http://localhost:8080").
+		WithReportRepo(jobRepo)
+
+	purged, err := svc.CleanupExpiredReports(context.Background(), 30*24*time.Hour, 50)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if purged != 0 {
+		t.Fatalf("expected 0 purged because storage delete failed, got %d", purged)
+	}
+
+	// Job status must remain completed so the next run can retry
+	job, _ := jobRepo.GetByID(context.Background(), "job-fail-storage", "t1")
+	if job.Status != reportdomain.StatusCompleted {
+		t.Fatalf("expected job to remain completed on storage failure, got %s", job.Status)
+	}
+}
+
+func TestCleanupExpiredReports_EmptyFilePathHandledCleanly(t *testing.T) {
+	now := time.Now().UTC()
+	oldDate := now.Add(-35 * 24 * time.Hour)
+
+	storage := &mockStorageProvider{files: make(map[string][]byte)}
+	jobRepo := &mockTestJobRepo{
+		jobs: []*reportdomain.ReportJob{
+			{
+				ID:        "job-empty-path",
+				TenantID:  "t1",
+				Status:    reportdomain.StatusCompleted,
+				FilePath:  "", // No file generated
+				CreatedAt: oldDate,
+			},
+		},
+	}
+
+	svc := NewService(&mockClientRepo{}, &mockPersonRepo{people: make(map[string]*persondomain.Person)}, &mockPhotographerRepo{}, storage, &mockEmailSender{}, "http://localhost:8080").
+		WithReportRepo(jobRepo)
+
+	purged, err := svc.CleanupExpiredReports(context.Background(), 30*24*time.Hour, 50)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if purged != 1 {
+		t.Fatalf("expected 1 purged, got %d", purged)
+	}
+
+	job, _ := jobRepo.GetByID(context.Background(), "job-empty-path", "t1")
+	if job.Status != reportdomain.StatusExpired {
+		t.Fatalf("expected job to be expired, got %s", job.Status)
+	}
+}
+
+func TestCleanupExpiredReports_BatchNoProgressTerminatesWithoutInfiniteLoop(t *testing.T) {
+	now := time.Now().UTC()
+	oldDate := now.Add(-35 * 24 * time.Hour)
+
+	storage := &mockStorageProvider{files: make(map[string][]byte)}
+	jobRepo := &mockTestJobRepo{
+		jobs: []*reportdomain.ReportJob{
+			{
+				ID:        "job-db-err-1",
+				TenantID:  "t1",
+				Status:    reportdomain.StatusCompleted,
+				CreatedAt: oldDate,
+			},
+			{
+				ID:        "job-db-err-2",
+				TenantID:  "t1",
+				Status:    reportdomain.StatusCompleted,
+				CreatedAt: oldDate,
+			},
+		},
+		markExpiredErr: errors.New("mongo connection timeout"),
+	}
+
+	svc := NewService(&mockClientRepo{}, &mockPersonRepo{people: make(map[string]*persondomain.Person)}, &mockPhotographerRepo{}, storage, &mockEmailSender{}, "http://localhost:8080").
+		WithReportRepo(jobRepo)
+
+	// Batch size 1: if each batch makes 0 progress, it must break instead of looping infinitely
+	purged, err := svc.CleanupExpiredReports(context.Background(), 30*24*time.Hour, 1)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if purged != 0 {
+		t.Fatalf("expected 0 purged, got %d", purged)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"ps/internal/application/ports/client"
@@ -40,6 +41,7 @@ type App struct {
 	handler       *rest.Router
 	mongoClient   *mongo.Client
 	cleanupCancel context.CancelFunc
+	workerWg      sync.WaitGroup
 }
 
 func New(ctx context.Context, cfg config.Config) (*App, error) {
@@ -115,15 +117,17 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	handler := rest.NewRouter(cfg, users, tenants, hasher, tokens, emailSender, seasons, photographers, persons, clients, storageProvider, rMongo, alMongo)
 
 	workerCtx, workerCancel := context.WithCancel(context.Background())
-	if handler.ReportService() != nil {
-		StartReportCleanupWorker(workerCtx, handler.ReportService())
-	}
-
-	return &App{
+	app := &App{
 		handler:       handler,
 		mongoClient:   mongoClient,
 		cleanupCancel: workerCancel,
-	}, nil
+	}
+
+	if handler.ReportService() != nil {
+		StartReportCleanupWorker(workerCtx, handler.ReportService(), &app.workerWg)
+	}
+
+	return app, nil
 }
 
 func (a *App) Handler() *rest.Router {
@@ -134,6 +138,19 @@ func (a *App) Close(ctx context.Context) error {
 	if a.cleanupCancel != nil {
 		a.cleanupCancel()
 	}
+
+	// Graceful shutdown: wait for background worker to terminate before closing database connection
+	done := make(chan struct{})
+	go func() {
+		a.workerWg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-ctx.Done():
+	}
+
 	if a.mongoClient != nil {
 		return a.mongoClient.Disconnect(ctx)
 	}
@@ -141,8 +158,15 @@ func (a *App) Close(ctx context.Context) error {
 }
 
 // StartReportCleanupWorker starts a lightweight daily background routine that deletes expired reports (TTL 30 days)
-func StartReportCleanupWorker(ctx context.Context, reportService *reportusecase.Service) {
+func StartReportCleanupWorker(ctx context.Context, reportService *reportusecase.Service, wg ...*sync.WaitGroup) {
+	if len(wg) > 0 && wg[0] != nil {
+		wg[0].Add(1)
+	}
 	go func() {
+		if len(wg) > 0 && wg[0] != nil {
+			defer wg[0].Done()
+		}
+
 		// Wait 5 minutes initially to not overload boot on low-memory VMs
 		initialTimer := time.NewTimer(5 * time.Minute)
 		select {

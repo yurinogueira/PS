@@ -38,6 +38,12 @@ func (r *repository) EnsureIndexes(ctx context.Context) error {
 		},
 		{
 			Keys: bson.D{
+				{Key: "tenant_id", Value: 1},
+				{Key: "file_path", Value: 1},
+			},
+		},
+		{
+			Keys: bson.D{
 				{Key: "status", Value: 1},
 				{Key: "created_at", Value: 1},
 			},

@@ -152,4 +152,33 @@ describe("ExportHistoryTable", () => {
       });
     }
   });
+
+  it("displays expired error message in snackbar if download returns 410 Gone", async () => {
+    vi.spyOn(reportService, "downloadReport").mockRejectedValue({
+      response: { status: 410 },
+    });
+
+    render(<ExportHistoryTable />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Clientes Geral (CSV)")).toBeInTheDocument();
+    });
+
+    const downloadIcons = screen.getAllByTestId("DownloadRoundedIcon");
+    const enabledButton = downloadIcons
+      .map((icon) => icon.closest("button"))
+      .find((btn) => btn && !btn.hasAttribute("disabled"));
+
+    expect(enabledButton).toBeDefined();
+    if (enabledButton) {
+      fireEvent.click(enabledButton);
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            "Este relatório expirou e não está mais disponível para download.",
+          ),
+        ).toBeInTheDocument();
+      });
+    }
+  });
 });
