@@ -195,7 +195,7 @@
     "delete": "Delete",
     "confirmDelete": "Confirm Deletion",
     "confirmDeleteDescription": "Are you sure you want to delete this event? All associated data will be lost.",
-    "cascadeWarning": "Warning: Deleting this event will permanently remove all associated entities and records in cascade (such as client links, dogs, and photos).",
+    "cascadeWarning": "Warning: Deleting this event will permanently remove all associated entities and records in cascade (such as client participation, dogs, and photos).",
     "associatedPhotographers_one": "1 associated",
     "associatedPhotographers_other": "{{count}} associated",
     "noPhotographers": "No photographers",

@@ -195,7 +195,7 @@
     "delete": "Excluir",
     "confirmDelete": "Confirmar Exclusão",
     "confirmDeleteDescription": "Tem certeza que deseja excluir este evento? Todos os dados associados serão perdidos.",
-    "cascadeWarning": "Atenção: Ao excluir este evento, todas as entidades e registros vinculados a ele (como vínculos de clientes, cães e fotos participantes) serão removidos permanentemente em cascata.",
+    "cascadeWarning": "Atenção: Ao excluir este evento, todas as entidades e registros vinculados a ele (como a participação de clientes, cães e fotos participantes) serão removidos permanentemente em cascata.",
     "associatedPhotographers_one": "1 associado",
     "associatedPhotographers_other": "{{count}} associados",
     "noPhotographers": "Nenhum fotógrafo",

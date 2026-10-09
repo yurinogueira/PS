@@ -73,6 +73,9 @@ describe("SeasonsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Confirmar Exclusão")).toBeInTheDocument();
       expect(
+        screen.getByText(/como a participação de clientes/i),
+      ).toBeInTheDocument();
+      expect(
         screen.getByText(/removidos permanentemente em cascata/i),
       ).toBeInTheDocument();
     });
