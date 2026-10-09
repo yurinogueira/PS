@@ -95,7 +95,7 @@ check_terraform() {
 }
 
 check_docs() {
-  "$PROJECT_ROOT/scripts/check-docs.sh"
+  "$PROJECT_ROOT/scripts/check-docs.sh" --verify-sync
 }
 
 TARGET="${1:-all}"

@@ -48,6 +48,8 @@ A identidade cromática utiliza uma harmonia análoga focada em clareza operacio
 
 - **`AppLayout`**: Contêiner mestre com `Sidebar`, `Topbar` com seletor de temporada ativa e área de conteúdo rolável.
 - **`DataTable`**: Tabelas padronizadas com paginação no servidor, ordenação por cabeçalho e feedback de carregamento em esqueleto (`Skeleton`).
+- **`AddDogModal`**: Diálogo rápido para inclusão de cão e lote inicial de fotos/pagamentos diretamente a partir do Dashboard (`+ 🐾`) ou visão geral, agilizando a recepção de participantes.
+- **`ClientDetailsModal` & `LinkClientModal`**: Modais com autocomplete múltiplo (`freeSolo`) para atribuição de competições e fotos a cães existentes.
 - **`ConfirmDialog`**: Modal unificado para operações destrutivas (exclusão de clientes, expiração de tokens).
 
 ---

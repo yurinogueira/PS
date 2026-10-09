@@ -13,7 +13,7 @@ timestamp: 2026-10-02
 
 # 🐳 Docker e Ambiente Local de Desenvolvimento — PS
 
-O desenvolvimento local do **PS (Photo Storage)** é padronizado via **Docker Compose**, permitindo subir toda a stack (MongoDB, Backend Go e Frontend React) com um único comando e sem a necessidade de instalar bancos de dados localmente no sistema operacional do host.
+O desenvolvimento local do **PS (Photo Storage)** é padronizado via **Docker Compose**, permitindo subir toda a stack (MongoDB 9, Backend Go 1.26 e Frontend React 19) com um único comando e sem a necessidade de instalar bancos de dados localmente no sistema operacional do host.
 
 Para navegação geral, retorne ao [Catálogo Canônico](../index.md).
 
@@ -50,7 +50,7 @@ Utilize sempre o script otimizado `scripts/dev.sh`, que fornece respostas limpas
 | **Frontend Web App** | `5173` | `http://localhost:5173` |
 | **Backend REST API** | `8080` | `http://localhost:8080/api/v1` |
 | **Swagger UI** | `8080` | `http://localhost:8080/swagger/index.html` (com `LOG_LEVEL=debug`) |
-| **MongoDB Database** | `27017` | `mongodb://localhost:27017/ps` |
+| **MongoDB Database (v9)** | `27017` | `mongodb://localhost:27017/ps` |
 
 ---
 

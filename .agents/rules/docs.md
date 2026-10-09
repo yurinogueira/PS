@@ -16,18 +16,37 @@ Estas diretrizes são **mandatórias** e devem ser observadas por desenvolvedore
 
 ---
 
-## 🔄 2. Sincronização Obrigatória de Código e Documentação
+## 🔄 2. Sincronização Universal e Mandatória ("Zero-Divergence & Continuous Docs")
 
-- Qualquer alteração de regras de negócio, contratos de API, schemas de banco de dados, fluxos de segurança ou configurações operacionais **DEVE** vir acompanhada da atualização correspondente na documentação canônica no mesmo Pull Request.
-- **Proibido Documento Órfão**: Todo novo arquivo `.md` criado em `docs/` deve conter cabeçalho YAML frontmatter com campo `type:` válido e ser indexado em `docs/index.md`.
-- **Proibido Link Quebrado**: Todas as referências cruzadas entre documentos devem utilizar Markdown links relativos estritamente válidos.
+> [!CAUTION]
+> **Regra Universal Inegociável**: **TODA E QUALQUER** modificação realizada no repositório — sem exceção alguma — exige atualização da documentação canônica e registro histórico datado no mesmo commit ou Pull Request.
+> Isso se aplica estritamente a:
+> 1. **Novas Funcionalidades (`feat`)**: novas rotas, componentes de UI, fluxos de navegação, contratos de API ou entidades DDD.
+> 2. **Correção de Defeitos (`fix`)**: correções de regras de negócio, ajustes de validação, correções de segurança ou comportamentos corrigidos.
+> 3. **Atualização de Versões e Dependências (`chore`/`deps`/`ci`)**: bumps de runtime (ex: Go, Node), bibliotecas (Vite, React, MUI, drivers), imagens Docker (ex: MongoDB) ou providers Terraform.
+> 4. **Refatorações e Arquitetura (`refactor`/`perf`)**: reestruturações de pastas, melhorias de desempenho, alteração de contratos ou novos ADRs.
+
+### Deveres Inegociáveis do Agente em Toda Tarefa:
+1. **Atualizar os Documentos Canônicos Correspondentes em `docs/`**:
+   - Alterou entidades ou use cases? Atualize `docs/domain/`.
+   - Alterou autenticação, permissões ou segurança? Atualize `docs/architecture/auth-and-security.md`.
+   - Alterou telas, componentes, layouts ou rotas? Atualize `docs/frontend/`.
+   - Alterou Docker, dependências, pipelines ou env vars? Atualize `docs/operations/`.
+2. **Proibido Documento Órfão**: Todo novo arquivo `.md` criado sob `docs/` deve conter cabeçalho YAML frontmatter com campo `type:` válido e ser indexado em `docs/index.md`.
+3. **Proibido Link Quebrado**: Todas as referências cruzadas devem utilizar links Markdown relativos válidos.
+4. **Registro Histórico Obrigatório em `docs/log.md`**:
+   - Cada entrega **DEVE** incluir uma nova seção em `docs/log.md` no formato:
+     `## 📅 AAAA-MM-DD — <Título Semântico> (#<id_issue_ou_pr>)`
+   - O registro deve descrever objetivamente o escopo da alteração, justificativa, componentes afetados e links para os documentos atualizados.
+   - O campo `timestamp:` no frontmatter de `docs/log.md` deve ser atualizado para a data da modificação.
 
 ---
 
-## 🧪 3. Validação Mandatória
+## 🧪 3. Validação Mandatória Pré-Commit
 
-- Antes de abrir ou mesclar Pull Requests, execute a verificação automatizada:
+- Antes de abrir Pull Requests ou concluir tarefas, execute a validação automatizada:
   ```bash
   ./scripts/check.sh docs
   ```
-- O pipeline `.github/workflows/docs.yml` bloqueará integrações que violem o padrão OKF ou introduzam referências quebradas.
+- O pipeline `.github/workflows/docs.yml` e o checklist de PR bloquearão entregas que não tenham documentação ou violem a conformidade OKF.
+

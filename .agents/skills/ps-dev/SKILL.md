@@ -2,7 +2,8 @@
 name: ps-dev
 description: >-
   Guia e comandos otimizados para editar, validar e executar o projeto PS
-  (Go backend, React frontend e Docker Compose), minimizando o consumo de tokens.
+  (Go backend, React frontend e Docker Compose), minimizando o consumo de tokens
+  e garantindo a atualização mandatória da documentação canônica (OKF) e docs/log.md em cada entrega.
 ---
 
 # Skill: Desenvolvimento e Execução do PS
@@ -15,7 +16,8 @@ Esta skill define as diretrizes de arquitetura, fluxos de edição, documentaç�
 
 > [!IMPORTANT]
 > **1. Consulta Prévia Obrigatória**: Antes de iniciar qualquer alteração ou pesquisa em código, consulte o catálogo canônico em `docs/index.md` (seguindo as diretrizes da skill `ps-docs`). A divulgação progressiva (*progressive disclosure*) evita a leitura de arquivos desnecessários e economiza até 90% dos tokens de contexto.
-> **2. Evite Comandos Verbosos**: **Nunca** execute comandos brutos como `go test ./...` ou `npm run lint` diretamente, pois eles poluem o contexto com dezenas de linhas irrelevantes (`? [no test files]`, logs de build, etc.).
+> **2. Documentação e Log Obrigatórios em Toda Tarefa**: Qualquer alteração (nova feature, correção de bug, atualização de versões/dependências ou refatoração) exige a atualização da respectiva documentação canônica em `docs/` e o registro cronológico datado em `docs/log.md` antes de finalizar o trabalho.
+> **3. Evite Comandos Verbosos**: **Nunca** execute comandos brutos como `go test ./...` ou `npm run lint` diretamente, pois eles poluem o contexto com dezenas de linhas irrelevantes (`? [no test files]`, logs de build, etc.).
 > **Sempre utilize os scripts auxiliares compactos em `scripts/`**:
 > - `./scripts/check.sh all` ou `./scripts/check.sh backend|frontend|docs`
 > - `./scripts/fix.sh`
@@ -40,7 +42,7 @@ Esta skill define as diretrizes de arquitetura, fluxos de edição, documentaç�
 ## 🏗️ Visão Geral da Arquitetura
 
 ### 1. Backend (`backend/`)
-- **Linguagem**: Go 1.25.
+- **Linguagem**: Go 1.26.
 - **Padrão**: Clean Architecture + DDD.
 - **Estrutura de Pastas**:
   - `internal/domain/`: Entidades puras, regras de negócio, permissões/roles. Todos os structs de domínio expostos na API devem conter tags `json:"camelCase"`.
@@ -104,7 +106,16 @@ Esta skill define as diretrizes de arquitetura, fluxos de edição, documentaç�
    ./scripts/fix.sh
    ```
 
-### 3. Rodando o Projeto com Docker Compose
+### 3. Atualizando a Documentação Canônica (OKF) & Trilha de Auditoria
+1. Identifique os documentos canônicos impactados sob `docs/` (`domain/`, `architecture/`, `frontend/`, `operations/`).
+2. Atualize o conteúdo técnico refletindo fielmente o código novo ou corrigido.
+3. Insira o registro cronológico no topo de `docs/log.md` com a data atual (`AAAA-MM-DD`), escopo, PR/issue e descrição.
+4. Valide a documentação:
+   ```bash
+   ./scripts/check.sh docs
+   ```
+
+### 4. Rodando o Projeto com Docker Compose
 Para inicializar e gerenciar a stack completa:
 - **Iniciar serviços**: `./scripts/dev.sh start`
 - **Verificar status**: `./scripts/dev.sh status`

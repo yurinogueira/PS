@@ -69,6 +69,12 @@ Ao relatar um defeito, siga rigorosamente a seguinte estrutura:
 
 ### Gravidade / Severidade
 [🔴 Bloqueante | 🟠 Alta | 🟡 Média | 🟢 Baixa]
+
+### Critérios de Resolução & Documentação
+- [ ] Causa raiz corrigida e validada com testes unitários/integrados
+- [ ] Documentação canônica sob `docs/` atualizada com o comportamento corrigido
+- [ ] Registro cronológico datado adicionado em `docs/log.md`
+- [ ] 100% de aprovação na validação unificada `./scripts/check.sh all`
 ```
 
 ---
@@ -103,6 +109,7 @@ Ao propor uma nova funcionalidade, melhoria técnica ou automação de infraestr
 - [ ] Frontend - Telas e Componentes MUI (`frontend/src/features/`)
 - [ ] CI/CD & Workflows - GitHub Actions (`.github/workflows/`)
 - [ ] Infraestrutura & IaC - Terraform / Docker (`terraform/`, `deploy/`)
+- [ ] Documentação Canônica & Auditoria - OKF (`docs/`, `docs/log.md`)
 
 ### Detalhes Técnicos e Arquitetura Proposta
 - **Arquivos Criados / Modificados / Deletados**: Caminhos exatos no repositório.
@@ -117,8 +124,38 @@ Ao propor uma nova funcionalidade, melhoria técnica ou automação de infraestr
 ### Checklist de Implementação
 - [ ] [Passo 1: Criação/ajuste de arquivos estruturais]
 - [ ] [Passo 2: Implementação dos fluxos principais / jobs / use cases]
-- [ ] [Passo 3: Remoção de arquivos obsoletos ou código redundante]
-- [ ] [Passo 4: Validação completa via `./scripts/check.sh all`]
+- [ ] [Passo 3: Testes unitários e verificação local]
+- [ ] [Passo 4: Atualização da documentação canônica sob docs/ e registro datado em docs/log.md]
+- [ ] [Passo 5: Validação completa via `./scripts/check.sh all`]
+```
+
+---
+
+## 📦 Fluxo para Criação de Issues de Atualização de Versões / Manutenção (`chore` / `deps`)
+
+Ao planejar ou registrar tarefas de atualização de dependências, runtimes (Go, Node), bancos (MongoDB) ou ferramentas de infraestrutura/CI:
+
+```markdown
+### Visão Geral da Atualização
+[Descrição da biblioteca, runtime ou ferramenta a ser atualizada, versão atual vs. nova versão e motivação (segurança, novos recursos, suporte)]
+
+### Componentes e Ambientes Afetados
+- [ ] Runtimes & SDKs (Go, Node)
+- [ ] Dependências de Backend (`backend/go.mod`)
+- [ ] Dependências de Frontend (`frontend/package.json`)
+- [ ] Banco de Dados / Imagens Docker (`docker-compose.yml`, MongoDB)
+- [ ] Pipelines de CI/CD (`.github/workflows/`)
+- [ ] Infraestrutura & Provedores IaC (`terraform/`)
+- [ ] Documentação Canônica & Auditoria (`docs/`, `docs/log.md`)
+
+### Riscos de Quebra & Breaking Changes Mapeadas
+- [Depreciações conhecidas, mudanças de contrato ou flags alteradas]
+
+### Critérios de Aceite & Validação
+- [ ] Atualização aplicada com sucesso no código/configuração
+- [ ] Suíte de testes passando integralmente (`./scripts/check.sh all`)
+- [ ] Documentação canônica atualizada (`docs/operations/`, `docs/index.md`, skills)
+- [ ] Registro cronológico datado inserido em `docs/log.md`
 ```
 
 ---

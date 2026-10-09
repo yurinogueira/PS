@@ -69,12 +69,13 @@ type Photo struct {
 ### 2. Gestão de Cães e Competições (`Dog`)
 - Um cliente pode registrar múltiplos cães participantes.
 - Cada cão mantém sua raça (`Breed`), histórico de competições ganhas (`CompetitionsWon`, `WonCompetitions`) e juízes que avaliaram as pistas (`Judges`).
+- Cães e fotos podem ser adicionados via fluxo detalhado de clientes (`ClientDetailsModal`) ou pelo diálogo rápido direto do Dashboard (`AddDogModal`).
 
 ### 3. Registro e Faturamento de Fotos (`Photo`)
 - Cada foto contém o número do arquivo original (`FileNumber`) e a vinculação com o fotógrafo que realizou o disparo (`PhotographerID`).
-- **Competições por Foto**: Cada foto pode ser associada a uma ou mais competições (`Competitions`), permitindo rastrear o contexto exato do registro fotográfico e priorizar essa informação nos relatórios analíticos (com fallback para as competições do cão).
-- **Métodos de Pagamento Suportados**: `Pix`, `Cartão de Crédito`, `Cartão de Débito`, `Dinheiro` ou `Não pago`.
-- **Valores e Moeda**: Suporta moedas internacionais (ex: `BRL`, `USD`, `EUR`) através do campo `Currency`, com valor monetário explícito (`AmountPaid`).
+- **Competições por Foto**: Cada foto pode ser associada a uma ou mais competições (`Competitions`), permitindo ao operador selecionar competições já ganhas pelo cão ou cadastrar novas livremente (*freeSolo*). O backend higieniza espaços e remove duplicatas. Nos relatórios, as competições da foto têm prioridade, utilizando as do cão como fallback retroativo.
+- **Métodos de Pagamento Suportados**: `Pix`, `Cartão de Crédito`, `Cartão de Débito`, `Dinheiro`, `Outro` ou `Não pago`.
+- **Valores e Moedas Suportadas**: Suporta moedas `BRL` (Real brasileiro), `USD` (Dólar americano) e `OTHER` (Outra moeda estrangeira/genérica) através do campo `Currency`, com valor monetário explícito (`AmountPaid`). Os dashboards e extratos agregam e exibem a arrecadação total separada por cada moeda.
 
 ---
 
