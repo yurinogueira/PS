@@ -64,14 +64,14 @@ export function Sidebar({
 
   const menuItems = [
     {
-      text: t("layout.nav.overview"),
-      icon: <DashboardRoundedIcon />,
-      path: "/dashboard",
-    },
-    {
       text: t("layout.nav.seasons"),
       icon: <EventNoteRoundedIcon />,
       path: "/seasons",
+    },
+    {
+      text: t("layout.nav.overview"),
+      icon: <DashboardRoundedIcon />,
+      path: "/dashboard",
     },
     {
       text: t("layout.nav.photographers"),

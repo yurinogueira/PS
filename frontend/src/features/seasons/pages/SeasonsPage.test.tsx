@@ -7,6 +7,15 @@ import { photographerService } from "../../../services/api/photographer.service"
 import { useSeasonStore } from "../../../store/seasonStore";
 import i18n from "../../../i18n";
 
+const mockedNavigate = vi.fn();
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
+  return {
+    ...actual,
+    useNavigate: () => mockedNavigate,
+  };
+});
+
 describe("SeasonsPage", () => {
   const mockSeasons: Season[] = [
     {
@@ -25,6 +34,7 @@ describe("SeasonsPage", () => {
 
   beforeEach(async () => {
     vi.restoreAllMocks();
+    mockedNavigate.mockClear();
     await i18n.changeLanguage("pt-BR");
     useSeasonStore.setState({ activeSeason: null });
     vi.spyOn(seasonService, "list").mockResolvedValue(mockSeasons);
@@ -127,7 +137,7 @@ describe("SeasonsPage", () => {
     expect(screen.getByText("Juiz B")).toBeInTheDocument();
   });
 
-  it("allows setting a season as active from the table", async () => {
+  it("allows setting a season as active and navigates to /dashboard when clicking set as active button", async () => {
     render(
       <BrowserRouter>
         <SeasonsPage />
@@ -144,6 +154,45 @@ describe("SeasonsPage", () => {
     fireEvent.click(setAsActiveButtons[0]);
 
     expect(useSeasonStore.getState().activeSeason?.id).toBe("season-1");
+    expect(mockedNavigate).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("selects season as active and navigates to /dashboard when clicking a season row", async () => {
+    render(
+      <BrowserRouter>
+        <SeasonsPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Agility Cup 2026")).toBeInTheDocument();
+    });
+
+    const rowText = screen.getByText("Agility Cup 2026");
+    fireEvent.click(rowText);
+
+    expect(useSeasonStore.getState().activeSeason?.id).toBe("season-2");
+    expect(mockedNavigate).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("opens edit modal without navigating to /dashboard when clicking the edit button", async () => {
+    render(
+      <BrowserRouter>
+        <SeasonsPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Dog Show 2026")).toBeInTheDocument();
+    });
+
+    const editButtons = screen.getAllByRole("button", {
+      name: /editar evento/i,
+    });
+    fireEvent.click(editButtons[0]);
+
+    expect(screen.getByText("Editar Evento")).toBeInTheDocument();
+    expect(mockedNavigate).not.toHaveBeenCalled();
   });
 
   it("filters seasons using search input and clears filter", async () => {

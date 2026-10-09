@@ -205,6 +205,7 @@
     "inactiveBadge": "Inativo",
     "selectActive": "Definir como Ativo",
     "activeSeasonDesc": "Evento atualmente selecionado",
+    "rowClickTooltip": "Selecionar evento e abrir Visão Geral",
     "blockedAction": "Ação bloqueada pelo status do plano/pagamento.",
     "fields": {
       "name": "Nome do Evento",
