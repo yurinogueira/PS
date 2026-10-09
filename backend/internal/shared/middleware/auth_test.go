@@ -1,12 +1,14 @@
 package middleware_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	portauth "ps/internal/application/ports/auth"
 	domainuser "ps/internal/domain/user"
+	usermemory "ps/internal/infrastructure/user/memory"
 	"ps/internal/shared/middleware"
 )
 
@@ -21,7 +23,7 @@ func (m *mockTokenService) GeneratePair(user domainuser.User) (portauth.TokenPai
 func (m *mockTokenService) GenerateAccessToken(user domainuser.User) (string, error) {
 	return "", nil
 }
-func (m *mockTokenService) GenerateRefreshToken(userID string) (string, error) {
+func (m *mockTokenService) GenerateRefreshToken(userID string, tokenVersion ...int) (string, error) {
 	return "", nil
 }
 func (m *mockTokenService) ParseAccessToken(token string) (portauth.TokenClaims, error) {
@@ -111,5 +113,89 @@ func TestRequireAdminOrManager(t *testing.T) {
 	chain.ServeHTTP(rec, req)
 	if rec.Code != http.StatusForbidden {
 		t.Fatalf("expected 403 for regular user, got %d", rec.Code)
+	}
+}
+
+func TestRequireAdmin_DatabaseAndTokenVersionValidation(t *testing.T) {
+	dummyHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
+
+	userRepo := usermemory.NewRepository()
+	ctx := context.Background()
+
+	// Create user in DB as admin with tokenVersion 2
+	user, err := userRepo.Create(ctx, domainuser.User{
+		Name:         "Admin Alice",
+		Email:        "alice@admin.com",
+		Role:         domainuser.RoleAdmin,
+		SuperAdmin:   true,
+		TokenVersion: 2,
+	})
+	if err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+
+	// 1. Valid token matching DB role and tokenVersion
+	validTokenSvc := &mockTokenService{
+		claims: portauth.TokenClaims{
+			UserID:       user.ID,
+			Role:         "admin",
+			SuperAdmin:   true,
+			TokenVersion: 2,
+		},
+	}
+	chainValid := middleware.Auth(validTokenSvc)(middleware.RequireAdmin(userRepo)(dummyHandler))
+	reqValid := httptest.NewRequest("GET", "/admin/users", nil)
+	reqValid.AddCookie(&http.Cookie{Name: "ps_access_token", Value: "valid"})
+	recValid := httptest.NewRecorder()
+	chainValid.ServeHTTP(recValid, reqValid)
+	if recValid.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for valid admin, got %d", recValid.Code)
+	}
+
+	// 2. Token version is stale (tokenVersion 1 < DB tokenVersion 2) -> 401 Unauthorized
+	staleTokenSvc := &mockTokenService{
+		claims: portauth.TokenClaims{
+			UserID:       user.ID,
+			Role:         "admin",
+			SuperAdmin:   true,
+			TokenVersion: 1,
+		},
+	}
+	chainStale := middleware.Auth(staleTokenSvc)(middleware.RequireAdmin(userRepo)(dummyHandler))
+	reqStale := httptest.NewRequest("GET", "/admin/users", nil)
+	reqStale.AddCookie(&http.Cookie{Name: "ps_access_token", Value: "stale"})
+	recStale := httptest.NewRecorder()
+	chainStale.ServeHTTP(recStale, reqStale)
+	if recStale.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 Unauthorized for stale token version, got %d", recStale.Code)
+	}
+
+	// 3. User demoted in DB to "user" (even if token claims say "admin") -> 403 Forbidden
+	user.Role = domainuser.RoleUser
+	user.SuperAdmin = false
+	user.TokenVersion = 3
+	_, err = userRepo.Update(ctx, user)
+	if err != nil {
+		t.Fatalf("failed to update user: %v", err)
+	}
+
+	demotedTokenSvc := &mockTokenService{
+		claims: portauth.TokenClaims{
+			UserID:       user.ID,
+			Role:         "admin",
+			SuperAdmin:   true,
+			TokenVersion: 3,
+		},
+	}
+	chainDemoted := middleware.Auth(demotedTokenSvc)(middleware.RequireAdmin(userRepo)(dummyHandler))
+	reqDemoted := httptest.NewRequest("GET", "/admin/users", nil)
+	reqDemoted.AddCookie(&http.Cookie{Name: "ps_access_token", Value: "demoted"})
+	recDemoted := httptest.NewRecorder()
+	chainDemoted.ServeHTTP(recDemoted, reqDemoted)
+	if recDemoted.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 Forbidden for demoted admin, got %d", recDemoted.Code)
 	}
 }

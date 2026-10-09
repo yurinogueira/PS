@@ -14,11 +14,12 @@ import (
 )
 
 var (
-	ErrUserNotFound     = userport.ErrNotFound
-	ErrTenantNotFound   = tenantport.ErrNotFound
-	ErrInvalidInput     = errors.New("invalid input")
-	ErrInvalidRole      = errors.New("invalid role")
-	ErrLastAdminLockout = errors.New("cannot demote the last active administrator")
+	ErrUserNotFound        = userport.ErrNotFound
+	ErrTenantNotFound      = tenantport.ErrNotFound
+	ErrInvalidInput        = errors.New("invalid input")
+	ErrInvalidRole         = errors.New("invalid role")
+	ErrLastAdminLockout    = errors.New("cannot demote the last active administrator")
+	ErrCannotChangeOwnRole = errors.New("cannot change own role")
 )
 
 type Service struct {
@@ -96,10 +97,15 @@ func (s *Service) AssignTenant(ctx context.Context, userID, tenantID string) (do
 	return updated, nil
 }
 
-func (s *Service) UpdateUserRole(ctx context.Context, userID, newRole string) (domainuser.User, error) {
-	cleanUserID := strings.TrimSpace(userID)
-	if cleanUserID == "" {
+func (s *Service) UpdateUserRole(ctx context.Context, actorUserID, targetUserID, newRole string) (domainuser.User, error) {
+	cleanActorID := strings.TrimSpace(actorUserID)
+	cleanTargetID := strings.TrimSpace(targetUserID)
+	if cleanTargetID == "" {
 		return domainuser.User{}, ErrInvalidInput
+	}
+
+	if cleanActorID != "" && cleanActorID == cleanTargetID {
+		return domainuser.User{}, ErrCannotChangeOwnRole
 	}
 
 	targetRole := domainuser.Role(strings.ToLower(strings.TrimSpace(newRole)))
@@ -107,7 +113,7 @@ func (s *Service) UpdateUserRole(ctx context.Context, userID, newRole string) (d
 		return domainuser.User{}, ErrInvalidRole
 	}
 
-	u, err := s.users.FindByID(ctx, cleanUserID)
+	u, err := s.users.FindByID(ctx, cleanTargetID)
 	if err != nil {
 		return domainuser.User{}, ErrUserNotFound
 	}
@@ -136,6 +142,7 @@ func (s *Service) UpdateUserRole(ctx context.Context, userID, newRole string) (d
 
 	u.Role = targetRole
 	u.SuperAdmin = (targetRole == domainuser.RoleAdmin)
+	u.TokenVersion++
 	u.UpdatedAt = time.Now().UTC()
 
 	updated, err := s.users.Update(ctx, u)

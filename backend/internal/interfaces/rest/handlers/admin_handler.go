@@ -9,6 +9,7 @@ import (
 	tenantusecase "ps/internal/application/usecase/tenant"
 	domaintenant "ps/internal/domain/tenant"
 	"ps/internal/shared/httpx"
+	"ps/internal/shared/middleware"
 )
 
 type AdminHandler struct {
@@ -356,9 +357,12 @@ func (h *AdminHandler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updated, err := h.adminService.UpdateUserRole(r.Context(), id, input.Role)
+	actorUserID := middleware.GetUserID(r.Context())
+	updated, err := h.adminService.UpdateUserRole(r.Context(), actorUserID, id, input.Role)
 	if err != nil {
 		switch {
+		case errors.Is(err, adminusecase.ErrCannotChangeOwnRole):
+			httpx.Error(w, http.StatusBadRequest, "Não é permitido alterar sua própria função", nil)
 		case errors.Is(err, adminusecase.ErrUserNotFound):
 			httpx.Error(w, http.StatusNotFound, "User not found", nil)
 		case errors.Is(err, adminusecase.ErrInvalidInput):

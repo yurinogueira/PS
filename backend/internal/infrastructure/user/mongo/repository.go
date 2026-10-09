@@ -28,6 +28,7 @@ type userDoc struct {
 	TenantID                   string     `bson:"tenantId"`
 	SuperAdmin                 bool       `bson:"superAdmin,omitempty"`
 	Role                       string     `bson:"role,omitempty"`
+	TokenVersion               int        `bson:"tokenVersion,omitempty"`
 	CreatedAt                  time.Time  `bson:"createdAt"`
 	UpdatedAt                  time.Time  `bson:"updatedAt,omitempty"`
 }
@@ -55,6 +56,7 @@ func (d userDoc) toDomain() domainuser.User {
 		TenantID:                   d.TenantID,
 		SuperAdmin:                 role == domainuser.RoleAdmin,
 		Role:                       role,
+		TokenVersion:               d.TokenVersion,
 		CreatedAt:                  d.CreatedAt,
 		UpdatedAt:                  d.UpdatedAt,
 	}
@@ -123,6 +125,7 @@ func (r *Repository) Create(ctx context.Context, user domainuser.User) (domainus
 		TenantID:                   user.TenantID,
 		SuperAdmin:                 user.GetRole() == domainuser.RoleAdmin,
 		Role:                       string(user.GetRole()),
+		TokenVersion:               user.TokenVersion,
 		CreatedAt:                  user.CreatedAt,
 		UpdatedAt:                  user.UpdatedAt,
 	}
@@ -159,6 +162,7 @@ func (r *Repository) Update(ctx context.Context, user domainuser.User) (domainus
 			"tenantId":                   user.TenantID,
 			"superAdmin":                 role == domainuser.RoleAdmin,
 			"role":                       string(role),
+			"tokenVersion":               user.TokenVersion,
 			"updatedAt":                  user.UpdatedAt,
 		},
 	}

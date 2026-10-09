@@ -799,6 +799,7 @@
       "assignTenant": "Assign Tenant",
       "changeTenant": "Change Tenant",
       "editRole": "Change Role",
+      "cannotChangeOwnRole": "You cannot change your own role",
       "assignModal": {
         "title": "Assign Organization (Tenant)",
         "organization": "Organization",
