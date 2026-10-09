@@ -80,26 +80,30 @@ git checkout -b <tipo>/<nome-da-branch>
 > **Nenhum PR é considerado completo sem essa etapa.**
 
 #### Matriz de Ação Documental por Tipo de Tarefa:
-| Tipo de Tarefa | Documento Canônico a Atualizar | Ação em `docs/log.md` |
+| Tipo de Tarefa | Documento Canônico a Atualizar | Ação em `docs/logs/AAAA-MM-DD.md` e `docs/log.md` |
 | :--- | :--- | :--- |
-| **Nova Feature (`feat`)** | `docs/domain/`, `docs/frontend/` e/ou `docs/architecture/` | Registrar nova entrada datada com escopo e endpoints/telas adicionados |
-| **Correção de Bug (`fix`)** | Documento do componente afetado (`docs/architecture/auth-and-security.md`, `docs/domain/...`) | Registrar causa raiz, correção aplicada e mitigação de regressão |
-| **Atualização de Versão / Deps (`chore`/`deps`/`ci`)** | `docs/operations/docker-and-local-dev.md`, `docs/operations/ci-cd-pipelines.md`, `docs/index.md` | Registrar bumps de runtimes (Go, Node), banco (MongoDB), libs ou providers |
-| **Decisão Estrutural (`refactor`/`arch`)** | Novo ADR em `docs/adrs/` e indexação em `docs/index.md` | Registrar motivação arquitetural e consequências da decisão |
+| **Nova Feature (`feat`)** | `docs/domain/`, `docs/frontend/` e/ou `docs/architecture/` | Seção no arquivo diário do dia com telas/endpoints; bullet no `docs/log.md` |
+| **Correção de Bug (`fix`)** | Documento do componente afetado (`docs/architecture/auth-and-security.md`, `docs/domain/...`) | Seção no arquivo diário do dia com causa raiz e mitigação; bullet no `docs/log.md` |
+| **Atualização de Versão / Deps (`chore`/`deps`/`ci`)** | `docs/operations/docker-and-local-dev.md`, `docs/operations/ci-cd-pipelines.md`, `docs/index.md` | Seção no arquivo diário do dia com bumps detalhados; bullet no `docs/log.md` |
+| **Decisão Estrutural (`refactor`/`arch`)** | Novo ADR em `docs/adrs/` e indexação em `docs/index.md` | Seção no arquivo diário do dia com motivação técnica; bullet no `docs/log.md` |
 
-#### Como Registrar em `docs/log.md`:
-Adicione uma seção no topo do histórico (abaixo do cabeçalho):
-```markdown
-## 📅 AAAA-MM-DD — <Título Semântico> (#<id_da_issue_ou_pr>)
+#### Como Registrar no Log Diário (`docs/logs/AAAA-MM-DD.md`) e Catálogo Central (`docs/log.md`):
+1. **No arquivo diário `docs/logs/AAAA-MM-DD.md`**:
+   - Se o arquivo do dia já existir, adicione uma nova seção:
+     ```markdown
+     ## 🎯 <Título Semântico> (#<id_da_issue_ou_pr>)
 
-### 🎯 Resumo da Alteração
-[Contexto, motivação e impacto das alterações]
+     ### 📋 Resumo da Alteração
+     [Contexto, motivação e impacto das alterações]
 
-### 🛠️ Modificações Realizadas
-- **Camada/Módulo**: [Detalhamento técnico das mudanças]
-- **Documentos Canônicos Atualizados**: [docs/caminho/arquivo.md](caminho/arquivo.md)
-```
-Atualize também o campo `timestamp: AAAA-MM-DD` no frontmatter de `docs/log.md`.
+     ### 🛠️ Modificações Realizadas
+     - **Camada/Módulo**: [Detalhamento técnico das mudanças]
+     - **Documentos Canônicos Atualizados**: [docs/caminho/arquivo.md](../caminho/arquivo.md)
+     ```
+   - Se for o primeiro registro do dia, crie `docs/logs/AAAA-MM-DD.md` com YAML frontmatter (`type: log`, `timestamp: AAAA-MM-DD`, etc.).
+2. **No catálogo central `docs/log.md`**:
+   - Adicione o bullet point com link para a seção no dia correspondente (ou crie a entrada da data se for o primeiro registro do dia).
+   - Atualize `timestamp: AAAA-MM-DD` no frontmatter de `docs/log.md`.
 
 ---
 

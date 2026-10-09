@@ -4,7 +4,7 @@ description: >-
   Auditoria contínua de segurança, prevenção de vulnerabilidades (OWASP Top 10),
   validação de autenticação por cookies HttpOnly, proteção contra enumeração,
   hashing seguro de tokens, mitigação de SMTP injection, rate limiting, sanitização
-  de infraestrutura e atualização mandatória da documentação canônica de segurança (OKF) e docs/log.md.
+  de infraestrutura e atualização mandatória da documentação canônica de segurança (OKF), do log diário (docs/logs/) e docs/log.md.
 ---
 
 # Skill: Segurança, Defesa em Profundidade e Prevenção de Vulnerabilidades — PS
@@ -80,7 +80,7 @@ Antes de submeter qualquer modificação que envolva autenticação, usuários, 
 
 ### 7. Checklist de Documentação Canônica de Segurança (OKF) & Log de Auditoria
 - [ ] **Documentação Canônica Atualizada**: Qualquer correção de vulnerabilidade (ex: dessincronização de roles em sessão, DoS em bcrypt, timing attacks), ajuste em autenticação, roles, cookies, headers, rate limiting ou sanitização deve atualizar obrigatoriamente `docs/architecture/auth-and-security.md` (e `docs/domain/auth.md` se impactar entidades DDD de autenticação).
-- [ ] **Trilha de Auditoria em `docs/log.md`**: Adicionar entrada datada no topo de `docs/log.md` no formato padronizado `## 📅 AAAA-MM-DD — <Título> (#<issue_ou_pr>)` registrando a vulnerabilidade mitigada, causa raiz, correção aplicada e arquivos atualizados.
+- [ ] **Trilha de Auditoria no Log Diário (`docs/logs/AAAA-MM-DD.md`)**: Registrar seção detalhada no arquivo diário correspondente com a vulnerabilidade mitigada, causa raiz, correção aplicada e arquivos atualizados, adicionando sumário correspondente em `docs/log.md`.
 - [ ] **Validação Automatizada de Documentação**: Executar `./scripts/check.sh docs` e `./scripts/check.sh all` garantindo 100% de conformidade antes de submeter commits ou Pull Requests.
 
 ---

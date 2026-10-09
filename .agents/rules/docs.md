@@ -34,11 +34,14 @@ Estas diretrizes são **mandatórias** e devem ser observadas por desenvolvedore
    - Alterou Docker, dependências, pipelines ou env vars? Atualize `docs/operations/`.
 2. **Proibido Documento Órfão**: Todo novo arquivo `.md` criado sob `docs/` deve conter cabeçalho YAML frontmatter com campo `type:` válido e ser indexado em `docs/index.md`.
 3. **Proibido Link Quebrado**: Todas as referências cruzadas devem utilizar links Markdown relativos válidos.
-4. **Registro Histórico Obrigatório em `docs/log.md`**:
-   - Cada entrega **DEVE** incluir uma nova seção em `docs/log.md` no formato:
-     `## 📅 AAAA-MM-DD — <Título Semântico> (#<id_issue_ou_pr>)`
-   - O registro deve descrever objetivamente o escopo da alteração, justificativa, componentes afetados e links para os documentos atualizados.
-   - O campo `timestamp:` no frontmatter de `docs/log.md` deve ser atualizado para a data da modificação.
+4. **Registro Histórico Particionado por Dia (`docs/logs/AAAA-MM-DD.md` e `docs/log.md`)**:
+   - Cada entrega **DEVE** ser registrada no arquivo diário correspondente à data atual (`docs/logs/AAAA-MM-DD.md`):
+     - **Se o arquivo do dia já existir**: Adicione uma nova seção de nível 2:
+       `## 🎯 <Título Semântico> (#<id_issue_ou_pr>)`
+       com o resumo, modificações por camada e documentos canônicos atualizados.
+     - **Se for o primeiro registro do dia**: Crie o arquivo `docs/logs/AAAA-MM-DD.md` com frontmatter YAML (`type: log`, `timestamp: AAAA-MM-DD`, etc.), adicione a seção da intervenção e registre o novo dia no catálogo central [docs/log.md](log.md).
+   - O catálogo central [docs/log.md](log.md) atua como índice enxuto, mantendo a listagem das datas com links para os arquivos diários e sumário em bullet points, economizando tokens e evitando arquivos gigantes.
+   - O campo `timestamp:` no frontmatter de `docs/log.md` e do arquivo diário deve refletir a data da modificação (ISO `AAAA-MM-DD`).
 
 ---
 

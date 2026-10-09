@@ -3,7 +3,7 @@ name: ps-dev
 description: >-
   Guia e comandos otimizados para editar, validar e executar o projeto PS
   (Go backend, React frontend e Docker Compose), minimizando o consumo de tokens
-  e garantindo a atualização mandatória da documentação canônica (OKF) e docs/log.md em cada entrega.
+  e garantindo a atualização mandatória da documentação canônica (OKF), do log diário (docs/logs/) e docs/log.md em cada entrega.
 ---
 
 # Skill: Desenvolvimento e Execução do PS
@@ -16,7 +16,7 @@ Esta skill define as diretrizes de arquitetura, fluxos de edição, documentaç�
 
 > [!IMPORTANT]
 > **1. Consulta Prévia Obrigatória**: Antes de iniciar qualquer alteração ou pesquisa em código, consulte o catálogo canônico em `docs/index.md` (seguindo as diretrizes da skill `ps-docs`). A divulgação progressiva (*progressive disclosure*) evita a leitura de arquivos desnecessários e economiza até 90% dos tokens de contexto.
-> **2. Documentação e Log Obrigatórios em Toda Tarefa**: Qualquer alteração (nova feature, correção de bug, atualização de versões/dependências ou refatoração) exige a atualização da respectiva documentação canônica em `docs/` e o registro cronológico datado em `docs/log.md` antes de finalizar o trabalho.
+> **2. Documentação e Log Obrigatórios em Toda Tarefa**: Qualquer alteração (nova feature, correção de bug, atualização de versões/dependências ou refatoração) exige a atualização da respectiva documentação canônica em `docs/` e o registro datado no arquivo diário correspondente sob `docs/logs/AAAA-MM-DD.md` (indexado em `docs/log.md`) antes de finalizar o trabalho.
 > **3. Evite Comandos Verbosos**: **Nunca** execute comandos brutos como `go test ./...` ou `npm run lint` diretamente, pois eles poluem o contexto com dezenas de linhas irrelevantes (`? [no test files]`, logs de build, etc.).
 > **Sempre utilize os scripts auxiliares compactos em `scripts/`**:
 > - `./scripts/check.sh all` ou `./scripts/check.sh backend|frontend|docs`
