@@ -1174,7 +1174,7 @@ export const DashboardPage = () => {
                   display: { xs: "none", md: "block" },
                 }}
               >
-                <Table sx={{ minWidth: 650 }}>
+                <Table sx={{ minWidth: 880 }}>
                   <TableHead sx={{ bgcolor: "grey.50" }}>
                     <TableRow>
                       <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
@@ -1191,7 +1191,11 @@ export const DashboardPage = () => {
                       </TableCell>
                       <TableCell
                         align="right"
-                        sx={{ fontWeight: 700, whiteSpace: "nowrap" }}
+                        sx={{
+                          fontWeight: 700,
+                          whiteSpace: "nowrap",
+                          width: "1%",
+                        }}
                       >
                         {t("clients.columns.actions")}
                       </TableCell>
@@ -1339,12 +1343,20 @@ export const DashboardPage = () => {
                             />
                           </TableCell>
 
-                          <TableCell align="right">
+                          <TableCell
+                            align="right"
+                            sx={{
+                              whiteSpace: "nowrap",
+                              width: "1%",
+                            }}
+                          >
                             <Box
                               sx={{
-                                display: "flex",
+                                display: "inline-flex",
+                                alignItems: "center",
                                 justifyContent: "flex-end",
                                 gap: 1,
+                                flexWrap: "nowrap",
                               }}
                             >
                               <Tooltip
@@ -1393,6 +1405,7 @@ export const DashboardPage = () => {
                                   borderRadius: 2,
                                   textTransform: "none",
                                   fontWeight: 600,
+                                  px: { md: 1, lg: 1.5 },
                                 }}
                               >
                                 {t("dashboard.actions.dogsAndPhotos")}
@@ -1408,6 +1421,7 @@ export const DashboardPage = () => {
                                 sx={{
                                   borderRadius: 2,
                                   textTransform: "none",
+                                  px: { md: 1, lg: 1.5 },
                                 }}
                               >
                                 {t("dashboard.actions.editData")}

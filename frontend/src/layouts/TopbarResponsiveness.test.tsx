@@ -89,4 +89,19 @@ describe("Topbar Responsiveness and Text Truncation (Issue #65)", () => {
       expect(screen.getByText("Nenhum evento")).toBeInTheDocument();
     });
   });
+
+  it("renders admin panel title with nowrap and flexShrink 0 to avoid truncation (Issue #131)", async () => {
+    render(
+      <BrowserRouter>
+        <Topbar onDrawerToggle={vi.fn()} />
+      </BrowserRouter>,
+    );
+
+    const titleEl = screen.getByText("Painel Administrativo");
+    expect(titleEl).toBeInTheDocument();
+    expect(titleEl).toHaveStyle({
+      whiteSpace: "nowrap",
+      flexShrink: "0",
+    });
+  });
 });

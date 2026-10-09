@@ -401,4 +401,26 @@ describe("PersonDetailsPage", () => {
       screen.getAllByText("Nenhum fotógrafo vinculado a este evento.").length,
     ).toBeGreaterThan(0);
   });
+
+  it("renders dogs panel header with nowrap button and whitespace styling (Issue #131)", async () => {
+    render(
+      <MemoryRouter initialEntries={["/people/p123"]}>
+        <Routes>
+          <Route path="/people/:id" element={<PersonDetailsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Mariana Souza")).toBeInTheDocument();
+    const addDogBtn = screen.getByRole("button", { name: /adicionar/i });
+    expect(addDogBtn).toBeInTheDocument();
+    expect(addDogBtn).toHaveStyle({
+      whiteSpace: "nowrap",
+    });
+
+    const dogsTitle = screen.getByText("Cachorros");
+    expect(dogsTitle).toHaveStyle({
+      whiteSpace: "nowrap",
+    });
+  });
 });

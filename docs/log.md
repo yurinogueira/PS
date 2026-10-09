@@ -20,6 +20,7 @@ Para acessar o índice estrutural completo de toda a documentação, consulte o 
 ---
 
 ## 📅 [2026-10-09](logs/2026-10-09.md) — Intervenções em UI, Segurança, Limpeza e Governança
+- **[Layout & Responsividade Intermediária](logs/2026-10-09.md#🎯-correção-de-layout-e-sobreposição-em-resolução-intermediária-1072x819-issue-131)** (Issue #131): Resolução de truncamento no Topbar, overflow e corte de ações no Dashboard e empilhamento responsivo no Master-Detail de pessoas.
 - **[Particionamento Diário de Logs](logs/2026-10-09.md#🎯-particionamento-diário-de-logs-da-base-de-conhecimento-docslogs-aaaa-mm-ddmd)**: Migração para arquitetura particionada por data (`docs/logs/AAAA-MM-DD.md`) com catálogo central (`docs/log.md`), reduzindo o consumo de tokens e eliminando conflitos de merge no Git.
 - **[i18n & Fotógrafos](logs/2026-10-09.md#correção-de-chave-i18n-na-raça-e-filtragem-de-fotógrafos-pelo-evento-ativo-issue-132)** (Issue #132): Correção da chave de tradução `breed` e restrição da lista de fotógrafos aos profissionais ativos no evento.
 - **[Saneamento de Scripts](logs/2026-10-09.md#remoção-de-scripts-legados-de-migração-e-saneamento-da-raiz-do-projeto)**: Remoção de 15 scripts Python temporários e limpeza de resíduos legados na raiz do projeto.

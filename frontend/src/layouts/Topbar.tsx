@@ -123,13 +123,19 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
             display: "flex",
             alignItems: "center",
             minWidth: 0,
+            mr: 1,
           }}
         >
           <Typography
             variant="h6"
-            noWrap
             component="div"
-            sx={{ display: { xs: "none", sm: "block" } }}
+            sx={{
+              display: { xs: "none", sm: "block" },
+              fontWeight: 700,
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+              fontSize: { sm: "1.1rem", md: "1.15rem", lg: "1.25rem" },
+            }}
           >
             {t("layout.adminPanel")}
           </Typography>
@@ -137,9 +143,10 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
 
         <Box
           sx={{
-            minWidth: { xs: 130, sm: 180, md: 220 },
-            maxWidth: { xs: 165, sm: 240, md: 270 },
-            mr: { xs: 0.75, sm: 1.5, md: 2 },
+            minWidth: { xs: 120, sm: 150, md: 170, lg: 220 },
+            maxWidth: { xs: 160, sm: 190, md: 210, lg: 270 },
+            mr: { xs: 0.75, sm: 1, md: 1.5, lg: 2 },
+            flexShrink: 1,
           }}
         >
           <FormControl fullWidth size="small">
@@ -311,7 +318,7 @@ export function Topbar({ onDrawerToggle }: TopbarProps) {
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                maxWidth: { sm: 110, md: 160, lg: 240 },
+                maxWidth: { sm: 80, md: 90, lg: 220 },
               }}
             >
               {user?.name || t("layout.user")}

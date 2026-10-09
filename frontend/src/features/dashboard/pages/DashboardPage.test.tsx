@@ -626,4 +626,56 @@ describe("DashboardPage", () => {
       expect(clientService.getById).toHaveBeenCalledWith("client-1");
     });
   });
+
+  it("renders desktop table with minWidth 880 and nowrap actions to prevent clipping (Issue #131)", async () => {
+    useSeasonStore.setState({
+      activeSeason: { id: "season-1", name: "Temporada Oficial 2026" },
+    });
+
+    vi.spyOn(clientService, "list").mockResolvedValue({
+      data: [
+        {
+          id: "client-1",
+          person_id: "person-1",
+          season_id: "season-1",
+          dogs: [],
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    });
+
+    vi.spyOn(personService, "list").mockResolvedValue([
+      {
+        id: "person-1",
+        name: "Carlos Ferreira",
+        email: "carlos@example.com",
+        alternative_email: "",
+        phone: "1199999999",
+      },
+    ]);
+
+    render(
+      <BrowserRouter>
+        <DashboardPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getAllByText("Carlos Ferreira").length,
+      ).toBeGreaterThanOrEqual(1);
+    });
+
+    const table = screen.getByRole("table");
+    expect(table).toHaveStyle({
+      minWidth: "880px",
+    });
+
+    const actionHeaders = screen.getAllByText("Ações");
+    expect(actionHeaders[0].closest("th")).toHaveStyle({
+      whiteSpace: "nowrap",
+    });
+  });
 });
