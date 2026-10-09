@@ -368,6 +368,7 @@ export const DashboardPage = () => {
     let totalPhotos = 0;
     let totalRevenueBRL = 0;
     let totalRevenueUSD = 0;
+    let totalRevenueOther = 0;
 
     allSeasonClients.forEach((c) => {
       const dogs = c.dogs || [];
@@ -379,6 +380,8 @@ export const DashboardPage = () => {
           if (p.payment_method !== "Não pago" && p.amount_paid) {
             if (p.currency === "USD") {
               totalRevenueUSD += p.amount_paid;
+            } else if (p.currency === "OTHER") {
+              totalRevenueOther += p.amount_paid;
             } else {
               totalRevenueBRL += p.amount_paid;
             }
@@ -394,6 +397,7 @@ export const DashboardPage = () => {
       totalPhotos,
       totalRevenueBRL,
       totalRevenueUSD,
+      totalRevenueOther,
     };
   }, [people.length, allSeasonClients]);
 
@@ -921,6 +925,27 @@ export const DashboardPage = () => {
                       >
                         $ {metrics.totalRevenueUSD.toFixed(2)}
                       </Typography>
+                      {metrics.totalRevenueOther > 0 && (
+                        <Typography
+                          variant="h6"
+                          noWrap
+                          sx={{
+                            fontWeight: 800,
+                            color: "success.main",
+                            whiteSpace: "nowrap",
+                            fontSize: {
+                              xs: "0.95rem",
+                              sm: "1.1rem",
+                              md: "0.95rem",
+                              lg: "1.1rem",
+                              xl: "1.25rem",
+                            },
+                            letterSpacing: "-0.5px",
+                          }}
+                        >
+                          Outro {metrics.totalRevenueOther.toFixed(2)}
+                        </Typography>
+                      )}
                     </Box>
                     <Typography
                       variant="caption"

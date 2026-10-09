@@ -528,6 +528,13 @@ describe("DashboardPage", () => {
                   payment_method: "Não pago",
                   amount_paid: 100,
                 },
+                {
+                  file_number: "DSC_004",
+                  photographer_id: "photog-1",
+                  payment_method: "Dinheiro",
+                  currency: "OTHER",
+                  amount_paid: 50,
+                },
               ],
             },
           ],
@@ -557,6 +564,7 @@ describe("DashboardPage", () => {
     await waitFor(() => {
       expect(screen.getByText("R$ 250.00")).toBeInTheDocument();
       expect(screen.getByText("$ 75.00")).toBeInTheDocument();
+      expect(screen.getByText("Outro 50.00")).toBeInTheDocument();
     });
 
     // Check that internal database client IDs are not rendered

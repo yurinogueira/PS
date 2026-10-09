@@ -526,12 +526,17 @@ func TestFormatPaidAmount(t *testing.T) {
 	}{
 		{nil, "BRL", ""},
 		{nil, "USD", ""},
+		{nil, "OTHER", ""},
 		{&val100, "USD", "$ 100.50"},
 		{&val100, "usd", "$ 100.50"},
 		{&val100, "BRL", "R$ 100.50"},
 		{&val100, "", "R$ 100.50"},
+		{&val100, "OTHER", "Outro 100.50"},
+		{&val100, "other", "Outro 100.50"},
+		{&val100, "Outro", "Outro 100.50"},
 		{&valZero, "USD", "$ 0.00"},
 		{&valZero, "BRL", "R$ 0.00"},
+		{&valZero, "OTHER", "Outro 0.00"},
 	}
 
 	for _, tc := range cases {
