@@ -533,14 +533,22 @@ export const PersonDetailsPage = () => {
 
   const dogStats = useMemo(() => {
     if (!selectedDog)
-      return { totalPhotos: 0, totalPaidBRL: 0, totalPaidUSD: 0 };
+      return {
+        totalPhotos: 0,
+        totalPaidBRL: 0,
+        totalPaidUSD: 0,
+        totalPaidOther: 0,
+      };
     const photos = selectedDog.photos || [];
     let totalPaidBRL = 0;
     let totalPaidUSD = 0;
+    let totalPaidOther = 0;
     photos.forEach((p) => {
       if (p.payment_method !== "Não pago" && p.amount_paid) {
         if (p.currency === "USD") {
           totalPaidUSD += p.amount_paid;
+        } else if (p.currency === "OTHER") {
+          totalPaidOther += p.amount_paid;
         } else {
           totalPaidBRL += p.amount_paid;
         }
@@ -550,6 +558,7 @@ export const PersonDetailsPage = () => {
       totalPhotos: photos.length,
       totalPaidBRL,
       totalPaidUSD,
+      totalPaidOther,
     };
   }, [selectedDog]);
 
@@ -1105,8 +1114,21 @@ export const PersonDetailsPage = () => {
                       sx={{ fontWeight: 700 }}
                     />
                   )}
+                  {dogStats.totalPaidOther > 0 && (
+                    <Chip
+                      icon={<AttachMoneyIcon />}
+                      label={t("personDetails.totalCollected", {
+                        currency: "Outro",
+                        amount: dogStats.totalPaidOther.toFixed(2),
+                      })}
+                      color="success"
+                      variant="outlined"
+                      sx={{ fontWeight: 700 }}
+                    />
+                  )}
                   {dogStats.totalPaidBRL === 0 &&
-                    dogStats.totalPaidUSD === 0 && (
+                    dogStats.totalPaidUSD === 0 &&
+                    dogStats.totalPaidOther === 0 && (
                       <Chip
                         icon={<AttachMoneyIcon />}
                         label={t("personDetails.totalCollected", {
@@ -1314,8 +1336,8 @@ export const PersonDetailsPage = () => {
                               {photo.payment_method === "Não pago"
                                 ? t("personDetails.unpaid")
                                 : photo.amount_paid !== undefined
-                                  ? `${photo.currency === "USD" ? "$" : "R$"} ${Number(photo.amount_paid).toFixed(2)}`
-                                  : `${photo.currency === "USD" ? "$" : "R$"} 0.00`}
+                                  ? `${photo.currency === "USD" ? "$" : photo.currency === "OTHER" ? "Outro" : "R$"} ${Number(photo.amount_paid).toFixed(2)}`
+                                  : `${photo.currency === "USD" ? "$" : photo.currency === "OTHER" ? "Outro" : "R$"} 0.00`}
                             </Typography>
                           </Box>
 

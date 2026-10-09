@@ -22,6 +22,7 @@ vi.mock("../../../services/api/client.service", () => ({
   CURRENCIES: [
     { label: "Real (R$)", value: "BRL" },
     { label: "Dólar ($)", value: "USD" },
+    { label: "Outro", value: "OTHER" },
   ],
 }));
 
@@ -188,6 +189,13 @@ describe("PersonDetailsPage", () => {
                   currency: "USD",
                   amount_paid: 40,
                 },
+                {
+                  file_number: "DSC_1003",
+                  photographer_id: "ph1",
+                  payment_method: "Dinheiro",
+                  currency: "OTHER",
+                  amount_paid: 60,
+                },
               ],
             },
           ],
@@ -210,5 +218,9 @@ describe("PersonDetailsPage", () => {
       await screen.findByText("Total Arrecadado: R$ 120.00"),
     ).toBeInTheDocument();
     expect(screen.getByText("Total Arrecadado: $ 40.00")).toBeInTheDocument();
+    expect(
+      screen.getByText("Total Arrecadado: Outro 60.00"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Outro 60.00")).toBeInTheDocument();
   });
 });

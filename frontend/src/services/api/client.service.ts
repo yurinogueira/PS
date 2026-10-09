@@ -3,13 +3,14 @@ import { apiClient } from "./client";
 export const CURRENCIES = [
   { label: "Real (R$)", value: "BRL" },
   { label: "Dólar ($)", value: "USD" },
+  { label: "Outro", value: "OTHER" },
 ];
 
 export interface Photo {
   file_number: string;
   photographer_id: string;
   payment_method: string;
-  currency?: "BRL" | "USD" | string;
+  currency?: "BRL" | "USD" | "OTHER" | string;
   amount_paid?: number;
   judges?: string[];
   created_at?: string;

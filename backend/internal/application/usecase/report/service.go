@@ -126,14 +126,17 @@ func NormalizePaymentMethod(method string) string {
 	}
 }
 
-// FormatPaidAmount formats the amount paid with the proper currency symbol ($ for USD, R$ for BRL / default)
+// FormatPaidAmount formats the amount paid with the proper currency symbol ($ for USD, Outro for OTHER, R$ for BRL / default)
 func FormatPaidAmount(amount *float64, currency string) string {
 	if amount == nil {
 		return ""
 	}
 	symbol := "R$"
-	if strings.ToUpper(strings.TrimSpace(currency)) == "USD" {
+	c := strings.ToUpper(strings.TrimSpace(currency))
+	if c == "USD" {
 		symbol = "$"
+	} else if c == "OTHER" || c == "OUTRO" {
+		symbol = "Outro"
 	}
 	return fmt.Sprintf("%s %.2f", symbol, *amount)
 }
