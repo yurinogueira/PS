@@ -61,6 +61,7 @@ import { useTenantStore } from "../../../store/tenantStore";
 import { useMenuAnchor } from "../../../hooks/useMenuAnchor";
 import { LinkClientModal } from "../../clients/components/LinkClientModal";
 import { ClientDetailsModal } from "../../clients/components/ClientDetailsModal";
+import { AddDogModal } from "../../clients/components/AddDogModal";
 import { formatPhone, maskPhone } from "../../../utils/phone";
 
 export const DashboardPage = () => {
@@ -127,6 +128,10 @@ export const DashboardPage = () => {
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [addDogModalOpen, setAddDogModalOpen] = useState(false);
+  const [selectedAddDogClientId, setSelectedAddDogClientId] = useState<
+    string | null
+  >(null);
 
   // Quick New Person Dialog
   const [newPersonOpen, setNewPersonOpen] = useState(false);
@@ -320,6 +325,11 @@ export const DashboardPage = () => {
   const handleOpenDetails = (clientId: string) => {
     setSelectedClientId(clientId);
     setDetailsModalOpen(true);
+  };
+
+  const handleOpenAddDog = (clientId: string) => {
+    setSelectedAddDogClientId(clientId);
+    setAddDogModalOpen(true);
   };
 
   const getPerson = (personId: string) => {
@@ -1312,6 +1322,38 @@ export const DashboardPage = () => {
                                 gap: 1,
                               }}
                             >
+                              <Tooltip
+                                title={
+                                  isWriteBlocked
+                                    ? getWriteBlockedReason()
+                                    : t("dashboard.actions.addDog")
+                                }
+                              >
+                                <span>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenAddDog(client.id);
+                                    }}
+                                    disabled={isWriteBlocked}
+                                    aria-label={t("dashboard.actions.addDog")}
+                                    sx={{
+                                      borderRadius: 2,
+                                      textTransform: "none",
+                                      minWidth: "auto",
+                                      px: 1.25,
+                                      fontWeight: 700,
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: 0.5,
+                                    }}
+                                  >
+                                    + <PetsRoundedIcon sx={{ fontSize: 18 }} />
+                                  </Button>
+                                </span>
+                              </Tooltip>
                               <Button
                                 variant="contained"
                                 size="small"
@@ -1595,6 +1637,26 @@ export const DashboardPage = () => {
                         }}
                       >
                         <Button
+                          variant="outlined"
+                          fullWidth
+                          size="medium"
+                          startIcon={<PetsRoundedIcon />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenAddDog(client.id);
+                          }}
+                          disabled={isWriteBlocked}
+                          aria-label={t("dashboard.actions.addDog")}
+                          sx={{
+                            borderRadius: 2,
+                            textTransform: "none",
+                            fontWeight: 600,
+                            minHeight: 42,
+                          }}
+                        >
+                          + {t("dashboard.actions.addDog")}
+                        </Button>
+                        <Button
                           variant="contained"
                           fullWidth
                           size="medium"
@@ -1692,6 +1754,23 @@ export const DashboardPage = () => {
           setSelectedClientId(null);
         }}
         onSuccess={loadData}
+      />
+
+      <AddDogModal
+        clientId={selectedAddDogClientId}
+        open={addDogModalOpen}
+        onClose={() => {
+          setAddDogModalOpen(false);
+          setSelectedAddDogClientId(null);
+        }}
+        onSuccess={() => {
+          setSnackbar({
+            open: true,
+            message: t("clientDetails.addDogModal.success"),
+            severity: "success",
+          });
+          loadData();
+        }}
       />
 
       {/* Modal: Quick Create Person */}

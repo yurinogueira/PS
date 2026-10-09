@@ -562,4 +562,60 @@ describe("DashboardPage", () => {
     // Check that internal database client IDs are not rendered
     expect(screen.queryByText(/ID: client-1/i)).not.toBeInTheDocument();
   });
+
+  it("renders compact + 🐾 action button for each client and opens AddDogModal on click", async () => {
+    useSeasonStore.setState({
+      activeSeason: { id: "season-1", name: "Temporada 2026" },
+    });
+
+    vi.spyOn(clientService, "list").mockResolvedValue({
+      data: [
+        {
+          id: "client-1",
+          person_id: "person-1",
+          season_id: "season-1",
+          dogs: [],
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    });
+
+    vi.spyOn(personService, "list").mockResolvedValue([
+      {
+        id: "person-1",
+        name: "Carlos Ferreira",
+        email: "carlos@example.com",
+        alternative_email: "",
+        phone: "1199999999",
+      },
+    ]);
+
+    render(
+      <BrowserRouter>
+        <DashboardPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getAllByText("Carlos Ferreira").length,
+      ).toBeGreaterThanOrEqual(1);
+    });
+
+    // Check compact buttons with aria-label "Adicionar Cachorro" (desktop & mobile)
+    const addDogButtons = screen.getAllByRole("button", {
+      name: "Adicionar Cachorro",
+    });
+    expect(addDogButtons.length).toBeGreaterThanOrEqual(1);
+
+    // Click compact button
+    fireEvent.click(addDogButtons[0]);
+
+    // AddDogModal should open and fetch client details
+    await waitFor(() => {
+      expect(clientService.getById).toHaveBeenCalledWith("client-1");
+    });
+  });
 });

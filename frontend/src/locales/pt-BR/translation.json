@@ -171,6 +171,7 @@
       "topPhotographers": "Top Fotógrafos"
     },
     "actions": {
+      "addDog": "Adicionar Cachorro",
       "addClient": "Vincular Cliente",
       "addPerson": "Nova Pessoa",
       "linkFirstClient": "Vincular Primeiro Cliente",
@@ -460,9 +461,11 @@
     "addDogModal": {
       "title": "Adicionar Cachorro",
       "addPhoto": "Adicionar Foto",
-      "save": "Salvar Cadastro",
+      "save": "Adicionar Cachorro",
       "saving": "Salvando...",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "success": "Cachorro adicionado com sucesso!",
+      "errorSave": "Erro ao adicionar cachorro."
     },
     "addPhotoModal": {
       "title": "Adicionar Fotos",
