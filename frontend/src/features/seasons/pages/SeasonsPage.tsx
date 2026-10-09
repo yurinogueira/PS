@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -47,6 +48,7 @@ import { useTenantStore } from "../../../store/tenantStore";
 
 export const SeasonsPage = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { activeSeason, setActiveSeason } = useSeasonStore();
   const { tenantStatus } = useTenantStore();
 
@@ -227,6 +229,11 @@ export const SeasonsPage = () => {
     }
   };
 
+  const handleSelectAndNavigate = (s: Season) => {
+    setActiveSeason(s);
+    navigate("/dashboard");
+  };
+
   return (
     <Box sx={{ width: "100%" }}>
       <Box
@@ -350,12 +357,13 @@ export const SeasonsPage = () => {
                   <TableRow
                     key={s.id}
                     hover
+                    title={t("seasons.rowClickTooltip")}
                     sx={{
                       bgcolor: isActive ? "rgba(2, 132, 199, 0.04)" : "inherit",
                       cursor: "pointer",
                       transition: "background-color 0.15s ease",
                     }}
-                    onClick={() => handleOpenEdit(s)}
+                    onClick={() => handleSelectAndNavigate(s)}
                   >
                     <TableCell>
                       <Box
@@ -399,7 +407,7 @@ export const SeasonsPage = () => {
                           color="inherit"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setActiveSeason(s);
+                            handleSelectAndNavigate(s);
                           }}
                           sx={{
                             textTransform: "none",

@@ -47,8 +47,14 @@ describe("Sidebar Layout and User Profile Footer (Issue #95)", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getAllByText("Visão Geral")[0]).toBeInTheDocument();
-    expect(screen.getAllByText("Eventos")[0]).toBeInTheDocument();
+    const eventItem = screen.getAllByText("Eventos")[0];
+    const overviewItem = screen.getAllByText("Visão Geral")[0];
+    expect(eventItem).toBeInTheDocument();
+    expect(overviewItem).toBeInTheDocument();
+    expect(
+      eventItem.compareDocumentPosition(overviewItem) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(screen.getAllByText("Fotógrafos")[0]).toBeInTheDocument();
     expect(screen.getAllByText("Clientes e Fotos")[0]).toBeInTheDocument();
     expect(screen.getAllByText("Organizações")[0]).toBeInTheDocument();
