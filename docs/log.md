@@ -18,6 +18,19 @@ Para acessar o índice completo da base de conhecimento, consulte o [Catálogo C
 
 ---
 
+## 📅 2026-10-09 — Remoção de Scripts Legados de Migração e Saneamento da Raiz do Projeto
+
+### 🎯 Resumo da Intervenção
+- **Contexto**: Limpeza estrutural da raiz do repositório através da exclusão de 15 scripts Python temporários (`fix_*.py`, `wipe_*.py`, `generate_crud.py`) que foram utilizados pontualmente durante a migração/bootstrap inicial e não pertencem ao Photo Storage (PS).
+- **Saneamento de Resíduos**:
+  - Exclusão dos 15 scripts pontuais (`fix_all.py`, `fix_emails.py`, `fix_front_routes.py`, `fix_handler.py`, `fix_infra.py`, `fix_names.py`, `fix_profile.py`, `fix_router.py`, `fix_skills.py`, `fix_test.py`, `fix_yaml.py`, `fix_yaml2.py`, `generate_crud.py`, `wipe_repos.py`, `wipe_vehicles.py`).
+  - Remoção de comentário residual com menção à FIPE em `.github/workflows/backend.yml`.
+  - Atualização dos exemplos conceituais de títulos e KPIs em `.agents/rules/design-system.md` para o domínio de fotografia canina e eventos.
+- **Documentos Canônicos Atualizados**:
+  - [docs/log.md](log.md)
+
+---
+
 ## 📅 2026-10-09 — Política de Governança de Documentação Contínua OKF & Trilha Histórica
 
 ### 🎯 Resumo da Intervenção

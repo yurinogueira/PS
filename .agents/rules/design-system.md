@@ -52,11 +52,11 @@ Os cabeçalhos devem ser organizados de forma sequencial e descendente, sem pula
 
 1. **`h1` (Título Principal da Página)**:
    - Toda página deve possuir **exatamente um** elemento semântico `h1`.
-   - Use `component="h1"` com `variant="h4"` ou `variant="h5"` (ex.: *"Olá, [Nome] 👋"*, *"Meus Veículos"*, *"Bem-vindo de volta"*).
+   - Use `component="h1"` com `variant="h4"` ou `variant="h5"` (ex.: *"Olá, [Nome] 👋"*, *"Painel Geral"*, *"Bem-vindo de volta"*).
 2. **`h2` (Seções e Banners Principais)**:
-   - Use `component="h2"` para banners de ação rápida (CTA), títulos de seções (ex.: *"Meus Veículos"*) e cartões de status da frota.
+   - Use `component="h2"` para banners de ação rápida (CTA), títulos de seções (ex.: *"Eventos Recentes"*) e cartões de status do plano.
 3. **`h3` (Itens de Grade, KPIs e Estados)**:
-   - Use `component="h3"` para títulos de KPI cards (*"Veículos Cadastrados"*), títulos de cartões de itens individuais (`VehicleCard`), títulos de modais e títulos de Empty States.
+   - Use `component="h3"` para títulos de KPI cards (*"Clientes Cadastrados"*), títulos de cartões de itens individuais (`ClientCard`), títulos de modais e títulos de Empty States.
 4. **Banners Decorativos / Ilustrativos**:
    - Elementos em colunas puramente visuais (como `AuthHeroBanner`) devem utilizar `component="div"` ou `component="p"` para não poluir a árvore semântica do leitor de tela nem colidir com o `h1` do formulário.
 

@@ -206,7 +206,7 @@ jobs:
             sudo chown root:ubuntu /etc/ps/backend.env
             sudo chmod 640 /etc/ps/backend.env
 
-            # Injetar ou atualizar FIPE e configurações de e-mail / SMTP
+            # Injetar ou atualizar configurações de e-mail / SMTP
             for VAR in SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS EMAIL_FROM APP_BASE_URL; do
               VAL="${!VAR:-}"
               if [ -n "$VAL" ]; then
