@@ -9,7 +9,7 @@ tags:
   - theme
   - a11y
   - responsive
-timestamp: 2026-10-02
+timestamp: 2026-10-09
 ---
 
 # 🎨 Componentes UI e Design System — PS
@@ -41,6 +41,11 @@ A identidade cromática utiliza uma harmonia análoga focada em clareza operacio
 1. **Rótulos e Nomes Acessíveis**: Todos os botões que utilizam apenas ícones (`IconButton`) devem conter a propriedade `aria-label` descritiva em conformidade com as diretrizes do WCAG.
 2. **Gerenciamento de Foco em Modais**: Modais (`Dialog`, `Modal`) devem confinar o foco do teclado e restaurá-lo para o elemento disparador ao fechar, evitando problemas de acessibilidade em leitores de tela.
 3. **Design Responsivo Mobile-First**: O layout do shell SaaS (`AppLayout`) adapta a navegação lateral para uma gaveta deslizante (`Drawer` temporário) em telas de largura `< 900px` (breakpoint `md`), mantendo ações críticas acessíveis por toque.
+4. **Ergonomia e Responsividade em Resoluções Intermediárias (Breakpoint `md` 900px – 1199px)**:
+   - Com a barra lateral fixa (`Sidebar` de 280px) ativa a partir de `md`, a área útil líquida de conteúdo varia entre ~572px e ~872px (ex.: ~744px em 1072x819).
+   - **Cabeçalho (`Topbar`)**: O título da aplicação (`layout.adminPanel`) possui `whiteSpace: "nowrap"` e `flexShrink: 0`, enquanto os controles à direita (`activeSeason` e perfil de usuário) usam `minWidth`/`maxWidth` flexíveis para evitar truncamento prematuro do título.
+   - **Tabelas Densas (`DashboardPage`)**: Tabelas complexas utilizam `<Table sx={{ minWidth: 880 }}>` encapsuladas por `<TableContainer sx={{ overflowX: "auto" }}>`, assegurando rolagem horizontal fluida e preservando botões de ação e dados sem cortes ou colisões.
+   - **Layout Master-Detail (`PersonDetailsPage`)**: Divisões de colunas empilham verticalmente em tela inteira (`xs: 12`) até atingir o breakpoint `lg` (`1200px`), momento em que se tornam lado a lado (`lg: 3.5` e `lg: 8.5`). O cabeçalho da lista de cães utiliza `flexWrap: "wrap"` para tolerar larguras estreitas sem colisão entre badges e botões de ação.
 
 ---
 

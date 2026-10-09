@@ -733,7 +733,7 @@ export const PersonDetailsPage = () => {
       {/* Master-Detail Layout */}
       <Grid container spacing={3}>
         {/* Left Column: Master List of Dogs */}
-        <Grid size={{ xs: 12, md: 4, lg: 3.5 }}>
+        <Grid size={{ xs: 12, lg: 3.5 }}>
           <Paper
             elevation={0}
             sx={{
@@ -741,7 +741,7 @@ export const PersonDetailsPage = () => {
               borderRadius: 3,
               border: "1px solid",
               borderColor: "divider",
-              minHeight: 520,
+              minHeight: { xs: "auto", lg: 520 },
               display: "flex",
               flexDirection: "column",
             }}
@@ -751,12 +751,25 @@ export const PersonDetailsPage = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 1,
                 mb: 2,
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  minWidth: 0,
+                  flexShrink: 1,
+                }}
+              >
                 <PetsIcon color="primary" />
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 700, whiteSpace: "nowrap" }}
+                >
                   {t("personDetails.dogs")}
                 </Typography>
                 <Chip
@@ -776,6 +789,8 @@ export const PersonDetailsPage = () => {
                   borderRadius: 2,
                   textTransform: "none",
                   fontWeight: 600,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
                 }}
               >
                 {t("shared.add")}
@@ -948,7 +963,7 @@ export const PersonDetailsPage = () => {
         </Grid>
 
         {/* Right Column: Detail View of Selected Dog & Photos */}
-        <Grid size={{ xs: 12, md: 8, lg: 8.5 }}>
+        <Grid size={{ xs: 12, lg: 8.5 }}>
           {selectedDog ? (
             <Paper
               elevation={0}
