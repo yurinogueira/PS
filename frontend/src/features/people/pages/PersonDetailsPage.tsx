@@ -558,36 +558,35 @@ export const PersonDetailsPage = () => {
     return map;
   }, [photographers]);
 
-  const dogStats = useMemo(() => {
-    if (!selectedDog)
-      return {
-        totalPhotos: 0,
-        totalPaidBRL: 0,
-        totalPaidUSD: 0,
-        totalPaidOther: 0,
-      };
-    const photos = selectedDog.photos || [];
+  const clientRevenueStats = useMemo(() => {
     let totalPaidBRL = 0;
     let totalPaidUSD = 0;
     let totalPaidOther = 0;
-    photos.forEach((p) => {
-      if (p.payment_method !== "Não pago" && p.amount_paid) {
-        if (p.currency === "USD") {
-          totalPaidUSD += p.amount_paid;
-        } else if (p.currency === "OTHER") {
-          totalPaidOther += p.amount_paid;
-        } else {
-          totalPaidBRL += p.amount_paid;
+
+    (client?.dogs || []).forEach((dog) => {
+      (dog.photos || []).forEach((p) => {
+        if (
+          p.payment_method !== "Não pago" &&
+          p.amount_paid &&
+          p.amount_paid > 0
+        ) {
+          if (p.currency === "USD") {
+            totalPaidUSD += p.amount_paid;
+          } else if (p.currency === "OTHER") {
+            totalPaidOther += p.amount_paid;
+          } else {
+            totalPaidBRL += p.amount_paid;
+          }
         }
-      }
+      });
     });
+
     return {
-      totalPhotos: photos.length,
       totalPaidBRL,
       totalPaidUSD,
       totalPaidOther,
     };
-  }, [selectedDog]);
+  }, [client]);
 
   if (loading) {
     return (
@@ -702,15 +701,74 @@ export const PersonDetailsPage = () => {
             </Box>
           </Box>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              flexWrap: "wrap",
+            }}
+          >
             {activeSeason ? (
-              <Chip
-                icon={<EventNoteIcon />}
-                label={t("dashboard.eventLabel", { name: activeSeason.name })}
-                color="primary"
-                variant="outlined"
-                sx={{ fontWeight: 600, px: 1, py: 2.2, borderRadius: 2 }}
-              />
+              <>
+                <Chip
+                  icon={<EventNoteIcon />}
+                  label={t("dashboard.eventLabel", { name: activeSeason.name })}
+                  color="primary"
+                  variant="outlined"
+                  sx={{ fontWeight: 600, px: 1, py: 2.2, borderRadius: 2 }}
+                />
+                {clientRevenueStats.totalPaidUSD > 0 && (
+                  <Chip
+                    icon={<AttachMoneyIcon />}
+                    label={t("personDetails.totalCollected", {
+                      currency: "$",
+                      amount: clientRevenueStats.totalPaidUSD.toFixed(2),
+                    })}
+                    color="success"
+                    variant="outlined"
+                    sx={{ fontWeight: 700 }}
+                  />
+                )}
+                {clientRevenueStats.totalPaidBRL > 0 && (
+                  <Chip
+                    icon={<AttachMoneyIcon />}
+                    label={t("personDetails.totalCollected", {
+                      currency: "R$",
+                      amount: clientRevenueStats.totalPaidBRL.toFixed(2),
+                    })}
+                    color="success"
+                    variant="outlined"
+                    sx={{ fontWeight: 700 }}
+                  />
+                )}
+                {clientRevenueStats.totalPaidOther > 0 && (
+                  <Chip
+                    icon={<AttachMoneyIcon />}
+                    label={t("personDetails.totalCollected", {
+                      currency: "Outro",
+                      amount: clientRevenueStats.totalPaidOther.toFixed(2),
+                    })}
+                    color="success"
+                    variant="outlined"
+                    sx={{ fontWeight: 700 }}
+                  />
+                )}
+                {clientRevenueStats.totalPaidBRL === 0 &&
+                  clientRevenueStats.totalPaidUSD === 0 &&
+                  clientRevenueStats.totalPaidOther === 0 && (
+                    <Chip
+                      icon={<AttachMoneyIcon />}
+                      label={t("personDetails.totalCollected", {
+                        currency: "R$",
+                        amount: "0.00",
+                      })}
+                      color="success"
+                      variant="outlined"
+                      sx={{ fontWeight: 700 }}
+                    />
+                  )}
+              </>
             ) : (
               <Chip
                 label={t("personDetails.noEventSelected")}
@@ -1112,7 +1170,7 @@ export const PersonDetailsPage = () => {
                 </Box>
               </Box>
 
-              {/* Photos Header & Statistics */}
+              {/* Photos Header */}
               <Box
                 sx={{
                   display: "flex",
@@ -1127,61 +1185,9 @@ export const PersonDetailsPage = () => {
                   <PhotoCameraIcon color="primary" />
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>
                     {t("personDetails.photosRegistered", {
-                      count: dogStats.totalPhotos,
+                      count: selectedDog?.photos?.length || 0,
                     })}
                   </Typography>
-                </Box>
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  {dogStats.totalPaidUSD > 0 && (
-                    <Chip
-                      icon={<AttachMoneyIcon />}
-                      label={t("personDetails.totalCollected", {
-                        currency: "$",
-                        amount: dogStats.totalPaidUSD.toFixed(2),
-                      })}
-                      color="success"
-                      variant="outlined"
-                      sx={{ fontWeight: 700 }}
-                    />
-                  )}
-                  {dogStats.totalPaidBRL > 0 && (
-                    <Chip
-                      icon={<AttachMoneyIcon />}
-                      label={t("personDetails.totalCollected", {
-                        currency: "R$",
-                        amount: dogStats.totalPaidBRL.toFixed(2),
-                      })}
-                      color="success"
-                      variant="outlined"
-                      sx={{ fontWeight: 700 }}
-                    />
-                  )}
-                  {dogStats.totalPaidOther > 0 && (
-                    <Chip
-                      icon={<AttachMoneyIcon />}
-                      label={t("personDetails.totalCollected", {
-                        currency: "Outro",
-                        amount: dogStats.totalPaidOther.toFixed(2),
-                      })}
-                      color="success"
-                      variant="outlined"
-                      sx={{ fontWeight: 700 }}
-                    />
-                  )}
-                  {dogStats.totalPaidBRL === 0 &&
-                    dogStats.totalPaidUSD === 0 &&
-                    dogStats.totalPaidOther === 0 && (
-                      <Chip
-                        icon={<AttachMoneyIcon />}
-                        label={t("personDetails.totalCollected", {
-                          currency: "R$",
-                          amount: "0.00",
-                        })}
-                        color="success"
-                        variant="outlined"
-                        sx={{ fontWeight: 700 }}
-                      />
-                    )}
                 </Box>
               </Box>
 
@@ -1271,16 +1277,17 @@ export const PersonDetailsPage = () => {
                               sx={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 1,
+                                gap: 1.5,
                               }}
                             >
                               <Avatar
                                 sx={{
-                                  width: 36,
-                                  height: 36,
+                                  width: 44,
+                                  height: 44,
                                   bgcolor: "primary.main",
-                                  fontSize: "0.85rem",
+                                  fontSize: "0.8rem",
                                   fontWeight: 700,
+                                  flexShrink: 0,
                                 }}
                               >
                                 #{photo.file_number || "?"}

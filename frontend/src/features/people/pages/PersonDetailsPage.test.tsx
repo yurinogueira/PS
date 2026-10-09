@@ -423,4 +423,171 @@ describe("PersonDetailsPage", () => {
       whiteSpace: "nowrap",
     });
   });
+
+  it("consolidates total collected revenue across all dogs for the client in active season in top header (Issue #110)", async () => {
+    vi.mocked(clientService.list).mockResolvedValue({
+      data: [
+        {
+          id: "client-1",
+          person_id: "p123",
+          season_id: "s1",
+          dogs: [
+            {
+              breed: "Golden Retriever",
+              is_owner: true,
+              competitions_won: 0,
+              photos: [
+                {
+                  file_number: "DSC_001",
+                  photographer_id: "ph1",
+                  payment_method: "Pix",
+                  currency: "BRL",
+                  amount_paid: 150,
+                },
+                {
+                  file_number: "DSC_002",
+                  photographer_id: "ph1",
+                  payment_method: "Não pago",
+                  amount_paid: 0,
+                },
+              ],
+            },
+            {
+              breed: "Border Collie",
+              is_owner: true,
+              competitions_won: 0,
+              photos: [
+                {
+                  file_number: "DSC_003",
+                  photographer_id: "ph1",
+                  payment_method: "Cartão de Crédito",
+                  currency: "BRL",
+                  amount_paid: 80,
+                },
+                {
+                  file_number: "DSC_004",
+                  photographer_id: "ph1",
+                  payment_method: "Dinheiro",
+                  currency: "USD",
+                  amount_paid: 50,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/people/p123"]}>
+        <Routes>
+          <Route path="/people/:id" element={<PersonDetailsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    // BRL: 150 + 80 = 230; USD: 50
+    expect(
+      await screen.findByText("Total Arrecadado: R$ 230.00"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Total Arrecadado: $ 50.00")).toBeInTheDocument();
+
+    // Verify chips are placed alongside the event chip in the top header
+    const eventChip = screen.getByText("Evento: 2026 - Dog Nikity");
+    expect(eventChip).toBeInTheDocument();
+
+    // Verify photos header has photo count and NOT the revenue chips
+    expect(screen.getByText("Fotos Cadastradas (2)")).toBeInTheDocument();
+  });
+
+  it("renders expanded 44x44 avatar badge for photo file number including long numbers (Issue #110)", async () => {
+    vi.mocked(clientService.list).mockResolvedValue({
+      data: [
+        {
+          id: "client-1",
+          person_id: "p123",
+          season_id: "s1",
+          dogs: [
+            {
+              breed: "Beagle",
+              is_owner: true,
+              competitions_won: 0,
+              photos: [
+                {
+                  file_number: "10450",
+                  photographer_id: "ph1",
+                  payment_method: "Pix",
+                  currency: "BRL",
+                  amount_paid: 100,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/people/p123"]}>
+        <Routes>
+          <Route path="/people/:id" element={<PersonDetailsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const badge = await screen.findByText("#10450");
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveStyle({
+      width: "44px",
+      height: "44px",
+    });
+  });
+
+  it("renders default R$ 0.00 total collected chip when no photos are paid in active season (Issue #110)", async () => {
+    vi.mocked(clientService.list).mockResolvedValue({
+      data: [
+        {
+          id: "client-1",
+          person_id: "p123",
+          season_id: "s1",
+          dogs: [
+            {
+              breed: "Poodle",
+              is_owner: true,
+              competitions_won: 0,
+              photos: [
+                {
+                  file_number: "DSC_999",
+                  photographer_id: "ph1",
+                  payment_method: "Não pago",
+                  amount_paid: 0,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/people/p123"]}>
+        <Routes>
+          <Route path="/people/:id" element={<PersonDetailsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByText("Total Arrecadado: R$ 0.00"),
+    ).toBeInTheDocument();
+  });
 });

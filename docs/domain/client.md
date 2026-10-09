@@ -77,6 +77,7 @@ type Photo struct {
 - **Competições por Foto**: Cada foto pode ser associada a uma ou mais competições (`Competitions`), permitindo ao operador selecionar competições já ganhas pelo cão ou cadastrar novas livremente (*freeSolo*). O backend higieniza espaços e remove duplicatas. Nos relatórios, as competições da foto têm prioridade, utilizando as do cão como fallback retroativo.
 - **Métodos de Pagamento Suportados**: `Pix`, `Cartão de Crédito`, `Cartão de Débito`, `Dinheiro`, `Outro` ou `Não pago`.
 - **Valores e Moedas Suportadas**: Suporta moedas `BRL` (Real brasileiro), `USD` (Dólar americano) e `OTHER` (Outra moeda estrangeira/genérica) através do campo `Currency`, com valor monetário explícito (`AmountPaid`). Os dashboards e extratos agregam e exibem a arrecadação total separada por cada moeda.
+- **Consolidação de Arrecadação por Cliente na Temporada**: Na interface de detalhes da pessoa (`PersonDetailsPage`), o total arrecadado exibido no cabeçalho superior consolida a soma de todas as fotos pagas (`payment_method !== "Não pago"`) de **todos os cães** do cliente no evento ativo (`activeSeason`), exibindo chips segregados por moeda (`BRL`, `USD`, `OTHER`) ou `R$ 0.00` por padrão caso não haja pagamentos registrados.
 
 ---
 

@@ -46,6 +46,7 @@ A identidade cromática utiliza uma harmonia análoga focada em clareza operacio
    - **Cabeçalho (`Topbar`)**: O título da aplicação (`layout.adminPanel`) possui `whiteSpace: "nowrap"` e `flexShrink: 0`, enquanto os controles à direita (`activeSeason` e perfil de usuário) usam `minWidth`/`maxWidth` flexíveis para evitar truncamento prematuro do título.
    - **Tabelas Densas (`DashboardPage`)**: Tabelas complexas utilizam `<Table sx={{ minWidth: 880 }}>` encapsuladas por `<TableContainer sx={{ overflowX: "auto" }}>`, assegurando rolagem horizontal fluida e preservando botões de ação e dados sem cortes ou colisões.
    - **Layout Master-Detail (`PersonDetailsPage`)**: Divisões de colunas empilham verticalmente em tela inteira (`xs: 12`) até atingir o breakpoint `lg` (`1200px`), momento em que se tornam lado a lado (`lg: 3.5` e `lg: 8.5`). O cabeçalho da lista de cães utiliza `flexWrap: "wrap"` para tolerar larguras estreitas sem colisão entre badges e botões de ação.
+   - **Consolidação de Arrecadação e Badges de Foto (`PersonDetailsPage`)**: Os chips de faturamento acumulado por moeda (`BRL`, `USD`, `OTHER` ou fallback `R$ 0.00`) ficam posicionados no cabeçalho superior (`Paper`), alinhados ao lado do chip do evento ativo, consolidando a soma de todos os cães do cliente no evento. Nos cards individuais de fotos, o `Avatar` de numeração do arquivo possui dimensão de `44x44px` com tipografia `0.8rem` e `flexShrink: 0`, garantindo acomodação confortável de identificadores com 4 ou 5 dígitos sem truncamento ou corte lateral.
 
 ---
 
