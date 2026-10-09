@@ -100,8 +100,9 @@ while IFS= read -r file; do
 
 done < <(find "$DOCS_DIR" -type f -name "*.md" | sort)
 
-# 3. Validar se todos os documentos de docs/ estão indexados em docs/index.md
+# 3. Validar se todos os documentos de docs/ estão indexados em docs/index.md ou docs/log.md
 INDEX_FILE="$DOCS_DIR/index.md"
+LOG_FILE="$DOCS_DIR/log.md"
 if [ ! -f "$INDEX_FILE" ]; then
   log_error "$DOCS_DIR" "Catálogo central 'docs/index.md' não encontrado"
 else
@@ -112,13 +113,19 @@ else
       continue
     fi
 
-    if ! grep -Fq "$rel_path" "$INDEX_FILE"; then
-      log_error "$file" "Documento não está referenciado no catálogo central 'docs/index.md'"
+    if echo "$rel_path" | grep -q "^logs/"; then
+      if ! grep -Fq "$rel_path" "$LOG_FILE"; then
+        log_error "$file" "Arquivo diário de log não está referenciado no catálogo 'docs/log.md'"
+      fi
+    else
+      if ! grep -Fq "$rel_path" "$INDEX_FILE"; then
+        log_error "$file" "Documento não está referenciado no catálogo central 'docs/index.md'"
+      fi
     fi
   done < <(find "$DOCS_DIR" -type f -name "*.md" | sort)
 fi
 
-# 4. Validar integridade e estrutura cronológica de docs/log.md
+# 4. Validar integridade e estrutura cronológica de docs/log.md e docs/logs/
 LOG_FILE="$DOCS_DIR/log.md"
 if [ ! -f "$LOG_FILE" ]; then
   log_error "$DOCS_DIR" "Arquivo de histórico 'docs/log.md' não encontrado"
@@ -130,12 +137,23 @@ else
   fi
 
   # Validar presença de seções datadas
-  first_entry_date=$(grep -E '^## 📅 [0-9]{4}-[0-9]{2}-[0-9]{2}' "$LOG_FILE" | head -n 1 | sed -E 's/^## 📅 ([0-9]{4}-[0-9]{2}-[0-9]{2}).*/\1/' || true)
+  first_entry_date=$(grep -E '^## 📅 \[?[0-9]{4}-[0-9]{2}-[0-9]{2}' "$LOG_FILE" | head -n 1 | sed -E 's/^## 📅 \[?([0-9]{4}-[0-9]{2}-[0-9]{2}).*/\1/' || true)
   if [ -z "$first_entry_date" ]; then
-    log_error "$LOG_FILE" "docs/log.md não contém nenhuma seção no formato obrigatório '## 📅 AAAA-MM-DD — <Título>'"
+    log_error "$LOG_FILE" "docs/log.md não contém nenhuma seção no formato obrigatório '## 📅 [AAAA-MM-DD](logs/AAAA-MM-DD.md) — <Título>' ou '## 📅 AAAA-MM-DD — <Título>'"
   elif [ -n "$log_fm_ts" ] && [ "$log_fm_ts" != "$first_entry_date" ]; then
     log_error "$LOG_FILE" "Divergência em docs/log.md: o frontmatter timestamp ('$log_fm_ts') não coincide com a data da entrada mais recente ('$first_entry_date')"
   fi
+fi
+
+# Validar arquivos diários sob docs/logs/
+if [ -d "$DOCS_DIR/logs" ]; then
+  for daily_log in "$DOCS_DIR/logs"/*.md; do
+    [ -e "$daily_log" ] || continue
+    daily_base=$(basename "$daily_log")
+    if ! echo "$daily_base" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}\.md$'; then
+      log_error "$daily_log" "Nome de arquivo diário de log inválido. Padrão obrigatório: AAAA-MM-DD.md (ex: 2026-10-09.md)"
+    fi
+  done
 fi
 
 # 5. Se --verify-sync ativo, validar se mudanças em código/infra possuem correspondente em docs/
@@ -158,12 +176,12 @@ if [ "$VERIFY_SYNC" = true ]; then
 
       if [ -n "$code_changed" ]; then
         docs_changed=$(echo "$changed_files" | grep -E "^docs/" || true)
-        log_changed=$(echo "$changed_files" | grep -E "^docs/log\.md$" || true)
+        log_changed=$(echo "$changed_files" | grep -E "^docs/(log\.md|logs/)" || true)
 
         if [ -z "$docs_changed" ]; then
           log_error "$DOCS_DIR" "Zero-Divergence Violation: Arquivos de código/infraestrutura foram alterados, mas nenhum documento sob 'docs/' foi atualizado."
         elif [ -z "$log_changed" ]; then
-          log_error "$DOCS_DIR/log.md" "Zero-Divergence Violation: Modificações de código e docs/ detectadas, mas 'docs/log.md' não foi atualizado com o registro da intervenção."
+          log_error "$DOCS_DIR/log.md" "Zero-Divergence Violation: Modificações de código e docs/ detectadas, mas nem 'docs/log.md' nem arquivos em 'docs/logs/' foram atualizados com o registro da intervenção."
         fi
       fi
     fi

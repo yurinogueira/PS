@@ -91,5 +91,5 @@ Estas diretrizes são **inegociáveis** e devem ser seguidas em qualquer altera�
 ## 📝 6. Sincronização Mandatória com a Documentação Canônica (OKF)
 
 - **Atualização Obrigatória em `docs/`**: Toda e qualquer alteração de segurança, mitigação de vulnerabilidade (ex: dessincronização de roles em sessão, DoS em bcrypt, bypass de autorização) ou ajuste em autenticação/autorização deve atualizar obrigatoriamente `docs/architecture/auth-and-security.md`.
-- **Registro Datado no Log**: Cada intervenção deve ser documentada no topo de `docs/log.md` com data (`AAAA-MM-DD`), severidade, causa raiz e mitigação de regressão.
+- **Registro Datado no Log Diário**: Cada intervenção deve ser documentada no arquivo diário `docs/logs/AAAA-MM-DD.md` (com sumário em `docs/log.md`) informando severidade, causa raiz, correção aplicada e arquivos alterados.
 - **Validação Pré-Commit**: Execute `./scripts/check.sh docs` e `./scripts/check.sh all` antes de submeter alterações.

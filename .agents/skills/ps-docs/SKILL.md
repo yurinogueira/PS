@@ -67,7 +67,7 @@ timestamp: 2026-10-02
 
 #### Tipos Permitidos (`type`):
 - `index`: Reservado para `docs/index.md`.
-- `log`: Reservado para `docs/log.md`.
+- `log`: Reservado para `docs/log.md` e arquivos diários sob `docs/logs/*.md`.
 - `architecture`: Visão sistêmica, camadas, segurança e storage.
 - `domain`: Regras de negócio, entidades e contratos DDD.
 - `frontend`: Diretrizes de estado, componentes UI e rotas SPA.
@@ -79,17 +79,19 @@ timestamp: 2026-10-02
 - Todas as referências cruzadas devem utilizar caminhos relativos válidos do Markdown (ex: `[Visão Geral](../architecture/overview.md)` ou `[ADR 0001](../adrs/0001-clean-architecture-go.md)`).
 - Todo documento criado deve conter um link de retorno para o catálogo mestre: `[Catálogo Canônico](../index.md)`.
 
-### 4. Indexação Mandatória em `docs/index.md`
-- **Obrigatório**: Todo novo documento adicionado deve ter seu link e breve descrição inseridos na respectiva seção de `docs/index.md`. O validador rejeitará documentos órfãos.
+### 4. Indexação Mandatória em `docs/index.md` e `docs/log.md`
+- **Documentos conceituais e arquiteturais**: Todo novo documento sob `docs/` deve ter seu link e descrição inseridos em `docs/index.md`.
+- **Arquivos diários de log (`docs/logs/AAAA-MM-DD.md`)**: Devem ser referenciados e indexados no catálogo central `docs/log.md`.
 
-### 5. Registro Cronológico Obrigatório em `docs/log.md`
-- Toda adição, evolução, correção ou atualização de dependência **DEVE** ser registrada no arquivo `docs/log.md` na data em que for executada (`AAAA-MM-DD`).
-- Atualize sempre o campo `timestamp:` no frontmatter do próprio `docs/log.md`.
-- Formato obrigatório da seção no log:
+### 5. Registro Cronológico Particionado em `docs/logs/` e `docs/log.md`
+- Toda adição, evolução, correção ou atualização de dependência **DEVE** ser registrada no arquivo diário correspondente à data atual (`docs/logs/AAAA-MM-DD.md`).
+- **Se o arquivo do dia já existir**: Adicione uma nova seção de nível 2 (`## 🎯 <Título> (#PR/Issue)`) e insira um novo bullet no dia correspondente em `docs/log.md`.
+- **Se for o primeiro registro do dia**: Crie `docs/logs/AAAA-MM-DD.md` com YAML frontmatter (`type: log`, `timestamp: AAAA-MM-DD`, etc.) e registre o novo dia no índice central `docs/log.md`.
+- Formato obrigatório da seção no log diário:
   ```markdown
-  ## 📅 AAAA-MM-DD — <Título Semântico da Mudança> (#<issue_ou_pr>)
+  ## 🎯 <Título Semântico da Mudança> (#<issue_ou_pr>)
 
-  ### 🎯 Resumo da Modificação
+  ### 📋 Resumo da Intervenção
   [Descrição sucinta da motivação, contexto de negócio/técnico e impacto gerado]
 
   ### 🛠️ Modificações por Camada
@@ -97,8 +99,8 @@ timestamp: 2026-10-02
   - **Frontend / UI**: [Detalhamento de telas, modais, componentes ou stores Zustand]
   - **Operações / Infra / CI**: [Detalhamento de dependências, Docker, workflows ou terraform]
   - **Documentos Canônicos Atualizados**:
-    - [docs/domain/cliente.md](domain/cliente.md)
-    - [docs/architecture/auth-and-security.md](architecture/auth-and-security.md)
+    - [docs/domain/cliente.md](../domain/cliente.md)
+    - [docs/architecture/auth-and-security.md](../architecture/auth-and-security.md)
   ```
 
 ---
@@ -106,8 +108,8 @@ timestamp: 2026-10-02
 ## 🔄 3. Protocolo Universal de Manutenção Contínua ("Zero-Divergence OKF")
 
 > [!CAUTION]
-> **Regra Universal Inegociável**: **QUALQUER TAREFA** executada por um desenvolvedor ou agente autônomo — seja criar novas telas/regras, corrigir um bug sutil, alterar uma biblioteca, atualizar uma versão de runtime ou refatorar código — **EXIGE A ATUALIZAÇÃO DA DOCUMENTAÇÃO CANÔNICA E DO LOG HISTÓRICO NO MESMO PR**.
-> Nunca encerre uma tarefa sem atualizar `docs/` e `docs/log.md`.
+> **Regra Universal Inegociável**: **QUALQUER TAREFA** executada por um desenvolvedor ou agente autônomo — seja criar novas telas/regras, corrigir um bug sutil, alterar uma biblioteca, atualizar uma versão de runtime ou refatorar código — **EXIGE A ATUALIZAÇÃO DA DOCUMENTAÇÃO CANÔNICA E DO LOG DIÁRIO NO MESMO PR**.
+> Nunca encerre uma tarefa sem atualizar `docs/` e `docs/logs/AAAA-MM-DD.md` (indexado em `docs/log.md`).
 
 ### Guia de Correspondência de Alterações:
 
@@ -115,25 +117,25 @@ timestamp: 2026-10-02
    - Novas rotas, telas ou componentes: `docs/frontend/ui-components.md` e `docs/frontend/routing-and-rbac.md`.
    - Novas regras de negócio ou entidades: `docs/domain/<subdominio>.md`.
    - Novos fluxos de dados ou permissões: `docs/architecture/auth-and-security.md` ou `multitenancy-and-data.md`.
-   - Registro datado: `docs/log.md`.
+   - Registro datado: `docs/logs/AAAA-MM-DD.md` e sumário em `docs/log.md`.
 
 2. **Correções de Defeitos e Segurança (`fix`)**:
    - Correção em autenticação, cookies, sessões ou roles: `docs/architecture/auth-and-security.md` e `docs/domain/auth.md`.
    - Correção em cálculos, regras ou relatórios: `docs/domain/<subdominio>.md` (ex: `docs/domain/report.md`, `client.md`).
    - Correção de layout, responsividade ou acessibilidade: `docs/frontend/ui-components.md`.
-   - Registro datado: `docs/log.md` (descrever a causa raiz e a correção aplicada).
+   - Registro datado: `docs/logs/AAAA-MM-DD.md` e sumário em `docs/log.md` (descrever a causa raiz e a correção aplicada).
 
 3. **Atualização de Versões e Dependências (`chore`/`deps`/`ci`)**:
    - Bumps de runtime (Go, Node): `docs/operations/docker-and-local-dev.md`, `docs/operations/ci-cd-pipelines.md`, `docs/index.md` e `.agents/skills/ps-dev/SKILL.md`.
    - Bumps de banco de dados (MongoDB): `docs/operations/docker-and-local-dev.md` e `docs/index.md`.
    - Bumps de bibliotecas frontend (React, Vite, MUI): `docs/frontend/ui-components.md` e `docs/operations/docker-and-local-dev.md`.
    - Bumps de Terraform ou nuvem: `docs/operations/deploy-and-infrastructure.md`.
-   - Registro datado: `docs/log.md` (especificar quais pacotes foram atualizados e motivação).
+   - Registro datado: `docs/logs/AAAA-MM-DD.md` e sumário em `docs/log.md` (especificar quais pacotes foram atualizados e motivação).
 
 4. **Decisões Arquiteturais e Refatorações (`refactor`/`adr`)**:
    - Nova decisão técnica estrutural: novo arquivo em `docs/adrs/XXXX-<nome>.md`, indexado em `docs/index.md`.
    - Mudança estrutural de serviços ou storage: `docs/architecture/overview.md` ou `storage-and-media.md`.
-   - Registro datado: `docs/log.md`.
+   - Registro datado: `docs/logs/AAAA-MM-DD.md` e sumário em `docs/log.md`.
 
 
 ---

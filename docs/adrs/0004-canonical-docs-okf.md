@@ -57,8 +57,18 @@ Em auditoria após os primeiros ciclos de desenvolvimento (PRs #122 a #130), con
    - `fix` (correções de bugs/segurança)
    - `chore`/`deps`/`ci` (atualização de versões de Go, Node, MongoDB, libs e terraform)
    - `refactor`/`perf` (reestruturações e otimizações)
-2. **Registro Datado em `docs/log.md`**: Cada PR ou commit de entrega deve conter uma nova seção datada (`YYYY-MM-DD`) descrevendo a intervenção técnica e os arquivos de documentação alterados.
-3. **Quality Gate Restritivo**: PRs sem a devida atualização e registro em `docs/log.md` são bloqueados na revisão e nos checklists de agentes.
+2. **Registro Datado em `docs/logs/AAAA-MM-DD.md` e Catálogo Central `docs/log.md`**: Cada PR ou commit de entrega deve registrar o detalhamento técnico no arquivo diário correspondente e incluir sumário em `docs/log.md`.
+3. **Quality Gate Restritivo**: PRs sem a devida atualização e registro são bloqueados no CI (`--verify-sync`) e nos checklists de agentes.
+
+---
+
+## 📜 Adendo de Arquitetura (2026-10-09): Particionamento Diário de Logs
+
+Para resolver o inchaço acumulado de um arquivo de log monolítico (`docs/log.md`), reduzir drasticamente o consumo de tokens na janela de contexto dos agentes de IA e eliminar conflitos frequentes de merge no Git no topo de um único arquivo:
+
+1. **Catálogo Central (`docs/log.md`)**: Mantido como índice enxuto das datas e resumos de alto nível com links diretos para cada registro diário.
+2. **Arquivos Diários Dedicados (`docs/logs/AAAA-MM-DD.md`)**: Cada dia com intervenções de desenvolvimento ganha um arquivo autocontido com as especificações detalhadas das mudanças ocorridas por camada e links para os documentos canônicos atualizados.
+3. **Validação Automatizada**: `scripts/check-docs.sh` valida que todo arquivo diário respeita a nomenclatura ISO `AAAA-MM-DD.md`, contém frontmatter válido e está devidamente indexado em `docs/log.md`.
 
 ---
 

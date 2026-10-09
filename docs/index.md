@@ -103,7 +103,12 @@ Histórico imutável de decisões de engenharia:
 - [ADR 0004: Sistema de Documentação Canônica Baseado em OKF](adrs/0004-canonical-docs-okf.md)
 
 ### 6. 📜 Trilha de Auditoria & Histórico de Modificações
-- [Log de Modificações da Base de Conhecimento](log.md): Registro cronológico de evoluções conceituais e estruturais.
+- [Índice Cronológico Central de Logs](log.md): Catálogo geral com sumário das intervenções por data e links para os registros detalhados sob `docs/logs/`.
+- **Registros Diários Particionados (`logs/`)**:
+  - [2026-10-09](logs/2026-10-09.md): Intervenções em UI, Segurança, Limpeza e Governança Contínua.
+  - [2026-10-07](logs/2026-10-07.md): Atualização do MongoDB para versão 9 no Docker Compose.
+  - [2026-10-05](logs/2026-10-05.md): Atualizações de dependências (Vite) e provedores OCI no Terraform.
+  - [2026-10-02](logs/2026-10-02.md): Bootstrap da Base Canônica OKF (Issue #119).
 
 ---
 
