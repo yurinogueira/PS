@@ -16,6 +16,8 @@ import {
   Tooltip,
   Typography,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
@@ -75,6 +77,7 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
   const [limit, setLimit] = useState(10);
   const [loading, setLoading] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -147,8 +150,19 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Erro ao baixar relatório:", err);
+      const status = (err as { response?: { status?: number } })?.response
+        ?.status;
+      if (status === 410) {
+        setDownloadError(t("reports.errors.expired"));
+      } else if (status === 403) {
+        setDownloadError(t("reports.errors.forbidden"));
+      } else if (status === 404) {
+        setDownloadError(t("reports.errors.notFound"));
+      } else {
+        setDownloadError(t("reports.errors.default"));
+      }
     } finally {
       setDownloadingId(null);
     }
@@ -215,6 +229,18 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
               icon={<ErrorOutlineRoundedIcon fontSize="small" />}
               label={t("exports.table.statusLabels.failed")}
               sx={{ fontWeight: 600 }}
+            />
+          </Tooltip>
+        );
+      case "expired":
+        return (
+          <Tooltip title={t("exports.table.expiredTooltip")}>
+            <Chip
+              size="small"
+              color="default"
+              variant="outlined"
+              label={t("exports.table.statusLabels.expired")}
+              sx={{ fontWeight: 600, color: "text.secondary" }}
             />
           </Tooltip>
         );
@@ -354,6 +380,15 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
                             </IconButton>
                           </Tooltip>
                         )}
+                        {job.status === "expired" && (
+                          <Tooltip title={t("exports.table.expiredTooltip")}>
+                            <span>
+                              <IconButton size="small" disabled>
+                                <DownloadRoundedIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
@@ -376,6 +411,22 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
           }}
           labelRowsPerPage="Linhas por página:"
         />
+
+        <Snackbar
+          open={Boolean(downloadError)}
+          autoHideDuration={6000}
+          onClose={() => setDownloadError(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <Alert
+            onClose={() => setDownloadError(null)}
+            severity="error"
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {downloadError}
+          </Alert>
+        </Snackbar>
       </CardContent>
     </Card>
   );

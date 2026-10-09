@@ -2,8 +2,11 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	"ps/internal/application/ports/client"
 	emailport "ps/internal/application/ports/email"
@@ -13,6 +16,7 @@ import (
 	storageport "ps/internal/application/ports/storage"
 	tenantport "ps/internal/application/ports/tenant"
 	userport "ps/internal/application/ports/user"
+	reportusecase "ps/internal/application/usecase/report"
 	"ps/internal/config"
 	auditMongo "ps/internal/infrastructure/auditlog/mongo"
 	bcryptinfra "ps/internal/infrastructure/auth/bcrypt"
@@ -34,8 +38,10 @@ import (
 )
 
 type App struct {
-	handler     *rest.Router
-	mongoClient *mongo.Client
+	handler       *rest.Router
+	mongoClient   *mongo.Client
+	cleanupCancel context.CancelFunc
+	workerWg      sync.WaitGroup
 }
 
 func New(ctx context.Context, cfg config.Config) (*App, error) {
@@ -109,10 +115,19 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	clients = cMongo
 
 	handler := rest.NewRouter(cfg, users, tenants, hasher, tokens, emailSender, seasons, photographers, persons, clients, storageProvider, rMongo, alMongo)
-	return &App{
-		handler:     handler,
-		mongoClient: mongoClient,
-	}, nil
+
+	workerCtx, workerCancel := context.WithCancel(context.Background())
+	app := &App{
+		handler:       handler,
+		mongoClient:   mongoClient,
+		cleanupCancel: workerCancel,
+	}
+
+	if handler.ReportService() != nil {
+		StartReportCleanupWorker(workerCtx, handler.ReportService(), &app.workerWg)
+	}
+
+	return app, nil
 }
 
 func (a *App) Handler() *rest.Router {
@@ -120,8 +135,69 @@ func (a *App) Handler() *rest.Router {
 }
 
 func (a *App) Close(ctx context.Context) error {
+	if a.cleanupCancel != nil {
+		a.cleanupCancel()
+	}
+
+	// Graceful shutdown: wait for background worker to terminate before closing database connection
+	done := make(chan struct{})
+	go func() {
+		a.workerWg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-ctx.Done():
+	}
+
 	if a.mongoClient != nil {
 		return a.mongoClient.Disconnect(ctx)
 	}
 	return nil
+}
+
+// StartReportCleanupWorker starts a lightweight daily background routine that deletes expired reports (TTL 30 days)
+func StartReportCleanupWorker(ctx context.Context, reportService *reportusecase.Service, wg ...*sync.WaitGroup) {
+	if len(wg) > 0 && wg[0] != nil {
+		wg[0].Add(1)
+	}
+	go func() {
+		if len(wg) > 0 && wg[0] != nil {
+			defer wg[0].Done()
+		}
+
+		// Wait 5 minutes initially to not overload boot on low-memory VMs
+		initialTimer := time.NewTimer(5 * time.Minute)
+		select {
+		case <-ctx.Done():
+			initialTimer.Stop()
+			return
+		case <-initialTimer.C:
+			runReportCleanup(ctx, reportService)
+		}
+
+		ticker := time.NewTicker(24 * time.Hour)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				runReportCleanup(ctx, reportService)
+			}
+		}
+	}()
+}
+
+func runReportCleanup(ctx context.Context, reportService *reportusecase.Service) {
+	if reportService == nil {
+		return
+	}
+	purged, err := reportService.CleanupExpiredReports(ctx, 30*24*time.Hour, 50)
+	if err != nil && !errors.Is(err, context.Canceled) {
+		log.Printf("[REPORT-CLEANUP-WORKER] Error cleaning up expired reports: %v", err)
+	} else if purged > 0 {
+		log.Printf("[REPORT-CLEANUP-WORKER] Successfully cleaned up %d expired reports", purged)
+	}
 }

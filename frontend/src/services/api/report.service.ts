@@ -8,7 +8,8 @@ export type ReportType =
   | "clients_pdf"
   | "dynamic_payment";
 
-export type ReportStatus = "pending" | "processing" | "completed" | "failed";
+export type ReportStatus =
+  "pending" | "processing" | "completed" | "failed" | "expired";
 
 export interface ReportJobUser {
   user_id?: string;
@@ -36,6 +37,8 @@ export interface ReportJob {
   error?: string;
   created_at: string;
   completed_at?: string;
+  expires_at?: string;
+  expired_at?: string;
   duration_ms?: number;
 }
 

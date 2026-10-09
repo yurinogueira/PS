@@ -1914,6 +1914,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/httpx.ErrorEnvelope"
                         }
                     },
+                    "410": {
+                        "description": "Relatório expirado",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorEnvelope"
+                        }
+                    },
                     "500": {
                         "description": "Erro interno",
                         "schema": {

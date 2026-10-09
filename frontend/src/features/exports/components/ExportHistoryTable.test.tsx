@@ -44,6 +44,15 @@ describe("ExportHistoryTable", () => {
       error: "Falha de conexão com provedor de armazenamento",
       created_at: "2026-09-03T12:00:00Z",
     },
+    {
+      id: "job-4",
+      tenant_id: "tenant-1",
+      type: "unpaid_clients_csv",
+      status: "expired",
+      file_path: "reports/tenant_1/clientes_nao_pagos_old.csv",
+      created_at: "2026-08-01T10:00:00Z",
+      expired_at: "2026-09-01T10:00:00Z",
+    },
   ];
 
   beforeEach(async () => {
@@ -51,7 +60,7 @@ describe("ExportHistoryTable", () => {
     await i18n.changeLanguage("pt-BR");
     vi.spyOn(reportService, "listHistory").mockResolvedValue({
       jobs: mockJobs,
-      total: 3,
+      total: 4,
       page: 1,
       limit: 10,
     });
@@ -89,7 +98,24 @@ describe("ExportHistoryTable", () => {
       expect(screen.getByText("Concluído")).toBeInTheDocument();
       expect(screen.getByText("Processando")).toBeInTheDocument();
       expect(screen.getByText("Falha")).toBeInTheDocument();
+      expect(screen.getByText("Expirado")).toBeInTheDocument();
     });
+  });
+
+  it("renders disabled download action button for expired jobs", async () => {
+    render(<ExportHistoryTable />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Expirado")).toBeInTheDocument();
+    });
+
+    const downloadButtons = screen.getAllByTestId("DownloadRoundedIcon");
+    // The expired job button should be disabled
+    const disabledButtons = downloadButtons
+      .map((icon) => icon.closest("button"))
+      .filter((btn) => btn?.hasAttribute("disabled"));
+
+    expect(disabledButtons.length).toBeGreaterThanOrEqual(1);
   });
 
   it("triggers file download on clicking download button", async () => {
@@ -109,16 +135,49 @@ describe("ExportHistoryTable", () => {
       expect(screen.getByText("Clientes Geral (CSV)")).toBeInTheDocument();
     });
 
-    const downloadButton = screen
-      .getByTestId("DownloadRoundedIcon")
-      .closest("button");
-    if (downloadButton) {
-      fireEvent.click(downloadButton);
+    // Find the active (enabled) download button for job-1
+    const downloadIcons = screen.getAllByTestId("DownloadRoundedIcon");
+    const enabledButton = downloadIcons
+      .map((icon) => icon.closest("button"))
+      .find((btn) => btn && !btn.hasAttribute("disabled"));
+
+    expect(enabledButton).toBeDefined();
+    if (enabledButton) {
+      fireEvent.click(enabledButton);
       await waitFor(() => {
         expect(downloadMock).toHaveBeenCalledWith(
           "reports/tenant_1/clientes_123.csv",
         );
         expect(createObjectURLMock).toHaveBeenCalled();
+      });
+    }
+  });
+
+  it("displays expired error message in snackbar if download returns 410 Gone", async () => {
+    vi.spyOn(reportService, "downloadReport").mockRejectedValue({
+      response: { status: 410 },
+    });
+
+    render(<ExportHistoryTable />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Clientes Geral (CSV)")).toBeInTheDocument();
+    });
+
+    const downloadIcons = screen.getAllByTestId("DownloadRoundedIcon");
+    const enabledButton = downloadIcons
+      .map((icon) => icon.closest("button"))
+      .find((btn) => btn && !btn.hasAttribute("disabled"));
+
+    expect(enabledButton).toBeDefined();
+    if (enabledButton) {
+      fireEvent.click(enabledButton);
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            "Este relatório expirou e não está mais disponível para download.",
+          ),
+        ).toBeInTheDocument();
       });
     }
   });

@@ -36,6 +36,18 @@ func (r *repository) EnsureIndexes(ctx context.Context) error {
 				{Key: "created_at", Value: -1},
 			},
 		},
+		{
+			Keys: bson.D{
+				{Key: "tenant_id", Value: 1},
+				{Key: "file_path", Value: 1},
+			},
+		},
+		{
+			Keys: bson.D{
+				{Key: "status", Value: 1},
+				{Key: "created_at", Value: 1},
+			},
+		},
 	}
 	_, err := r.collection.Indexes().CreateMany(ctx, models)
 	return err
@@ -94,6 +106,8 @@ func (r *repository) Update(ctx context.Context, job *domain.ReportJob) error {
 			{Key: "file_path", Value: job.FilePath},
 			{Key: "error", Value: job.Error},
 			{Key: "completed_at", Value: job.CompletedAt},
+			{Key: "expires_at", Value: job.ExpiresAt},
+			{Key: "expired_at", Value: job.ExpiredAt},
 			{Key: "duration_ms", Value: job.DurationMS},
 			{Key: "season_name", Value: job.SeasonName},
 		}},
@@ -183,4 +197,74 @@ func (r *repository) List(ctx context.Context, filter reportport.ListFilter) (*r
 		Page:  page,
 		Limit: limit,
 	}, nil
+}
+
+func (r *repository) FindByFilePath(ctx context.Context, tenantID, filePath string) (*domain.ReportJob, error) {
+	cleanTenantID, err := mongoinfra.SanitizeID(tenantID)
+	if err != nil {
+		return nil, err
+	}
+	filter := bson.D{
+		{Key: "tenant_id", Value: cleanTenantID},
+		{Key: "file_path", Value: filePath},
+	}
+	var job domain.ReportJob
+	if err := r.collection.FindOne(ctx, filter).Decode(&job); err != nil {
+		return nil, err
+	}
+	return &job, nil
+}
+
+func (r *repository) FindExpiredCompleted(ctx context.Context, cutoff time.Time, limit int) ([]*domain.ReportJob, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	filter := bson.D{
+		{Key: "status", Value: domain.StatusCompleted},
+		{Key: "created_at", Value: bson.D{{Key: "$lte", Value: cutoff}}},
+	}
+
+	findOpts := options.Find().
+		SetSort(bson.D{{Key: "created_at", Value: 1}}).
+		SetLimit(int64(limit)).
+		SetProjection(bson.D{
+			{Key: "_id", Value: 1},
+			{Key: "tenant_id", Value: 1},
+			{Key: "file_path", Value: 1},
+			{Key: "status", Value: 1},
+			{Key: "created_at", Value: 1},
+			{Key: "completed_at", Value: 1},
+			{Key: "expires_at", Value: 1},
+		})
+
+	cursor, err := r.collection.Find(ctx, filter, findOpts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var jobs []*domain.ReportJob
+	if err := cursor.All(ctx, &jobs); err != nil {
+		return nil, err
+	}
+	if jobs == nil {
+		jobs = make([]*domain.ReportJob, 0)
+	}
+	return jobs, nil
+}
+
+func (r *repository) MarkAsExpired(ctx context.Context, id string, expiredAt time.Time) error {
+	cleanID, err := mongoinfra.SanitizeID(id)
+	if err != nil {
+		return err
+	}
+	filter := bson.D{{Key: "_id", Value: cleanID}}
+	update := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "status", Value: domain.StatusExpired},
+			{Key: "expired_at", Value: expiredAt},
+		}},
+	}
+	_, err = r.collection.UpdateOne(ctx, filter, update)
+	return err
 }

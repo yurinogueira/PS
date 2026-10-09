@@ -33,7 +33,8 @@ import (
 )
 
 type Router struct {
-	handler http.Handler
+	handler       http.Handler
+	reportService *reportusecase.Service
 }
 
 func NewRouter(
@@ -191,7 +192,14 @@ func NewRouter(
 		),
 	)
 
-	return &Router{handler: handler}
+	return &Router{
+		handler:       handler,
+		reportService: reportSvc,
+	}
+}
+
+func (r *Router) ReportService() *reportusecase.Service {
+	return r.reportService
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {

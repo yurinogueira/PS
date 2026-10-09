@@ -20,6 +20,7 @@ Para acessar o índice estrutural completo de toda a documentação, consulte o 
 ---
 
 ## 📅 [2026-10-09](logs/2026-10-09.md) — Intervenções em UI, Segurança, Limpeza e Governança
+- **[Expiração e Limpeza de Relatórios TTL](logs/2026-10-09.md#🎯-expiração-e-rotina-leve-de-limpeza-de-exportações-após-30-dias-ttl-issue-117)** (Issue #117): Retenção de 30 dias para exportações com expurgo físico assíncrono em lotes, status expirado no MongoDB, HTTP 410 no download e feedback visual no frontend.
 - **[Consolidação de Arrecadação e Badge da Foto](logs/2026-10-09.md#🎯-consolidação-de-arrecadação-por-cliente-no-evento-e-ampliação-do-badge-da-foto-issue-110)** (Issue #110): Consolidação da receita de todos os cães no evento ativo no cabeçalho superior e expansão do avatar do número da foto para 44x44px.
 - **[Layout & Responsividade Intermediária](logs/2026-10-09.md#🎯-correção-de-layout-e-sobreposição-em-resolução-intermediária-1072x819-issue-131)** (Issue #131): Resolução de truncamento no Topbar, overflow e corte de ações no Dashboard e empilhamento responsivo no Master-Detail de pessoas.
 - **[Particionamento Diário de Logs](logs/2026-10-09.md#🎯-particionamento-diário-de-logs-da-base-de-conhecimento-docslogs-aaaa-mm-ddmd)**: Migração para arquitetura particionada por data (`docs/logs/AAAA-MM-DD.md`) com catálogo central (`docs/log.md`), reduzindo o consumo de tokens e eliminando conflitos de merge no Git.

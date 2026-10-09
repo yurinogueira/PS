@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -32,6 +33,7 @@ import (
 var (
 	ErrUnauthorizedTenant = errors.New("unauthorized tenant access to report")
 	ErrInvalidReportPath  = errors.New("invalid report path")
+	ErrReportExpired      = errors.New("report has expired")
 )
 
 type Service struct {
@@ -1136,7 +1138,7 @@ func (s *Service) GetReportFile(ctx context.Context, tenantID, relativePath stri
 		}
 	}
 
-	cleanPath := filepath.Clean(strings.TrimPrefix(relativePath, "/"))
+	cleanPath := filepath.ToSlash(filepath.Clean(strings.TrimPrefix(relativePath, "/")))
 	if strings.Contains(cleanPath, "..") {
 		return nil, ErrInvalidReportPath
 	}
@@ -1144,6 +1146,20 @@ func (s *Service) GetReportFile(ctx context.Context, tenantID, relativePath stri
 	expectedPrefix := fmt.Sprintf("reports/tenant_%s/", tenantID)
 	if !strings.HasPrefix(cleanPath, expectedPrefix) {
 		return nil, ErrUnauthorizedTenant
+	}
+
+	if s.reportRepo != nil {
+		if job, err := s.reportRepo.FindByFilePath(ctx, tenantID, cleanPath); err == nil && job != nil {
+			if job.Status == reportdomain.StatusExpired {
+				return nil, ErrReportExpired
+			}
+			if job.ExpiresAt != nil && time.Now().UTC().After(*job.ExpiresAt) {
+				return nil, ErrReportExpired
+			}
+			if job.ExpiresAt == nil && !job.CreatedAt.IsZero() && time.Now().UTC().After(job.CreatedAt.Add(30*24*time.Hour)) {
+				return nil, ErrReportExpired
+			}
+		}
 	}
 
 	return s.storageProvider.Get(ctx, cleanPath)
@@ -1412,10 +1428,13 @@ func (s *Service) StartJob(ctx context.Context, job *reportdomain.ReportJob) (*r
 		if genErr != nil {
 			j.Status = reportdomain.StatusFailed
 			j.Error = genErr.Error()
+			j.ExpiresAt = nil
 			log.Printf("[REPORT-JOB-ERROR] Job %s failed: %v", j.ID, genErr)
 		} else {
 			j.Status = reportdomain.StatusCompleted
 			j.FilePath = filePath
+			expires := completed.Add(30 * 24 * time.Hour)
+			j.ExpiresAt = &expires
 		}
 
 		if s.reportRepo != nil {
@@ -1438,4 +1457,90 @@ func (s *Service) GetJob(ctx context.Context, id, tenantID string) (*reportdomai
 		return nil, errors.New("report repository not configured")
 	}
 	return s.reportRepo.GetByID(ctx, id, tenantID)
+}
+
+func (s *Service) CleanupExpiredReports(ctx context.Context, retentionDuration time.Duration, batchSize int) (int, error) {
+	if s.reportRepo == nil {
+		return 0, nil
+	}
+	if retentionDuration <= 0 {
+		retentionDuration = 30 * 24 * time.Hour
+	}
+	if batchSize <= 0 {
+		batchSize = 50
+	}
+
+	cutoff := time.Now().UTC().Add(-retentionDuration)
+	totalPurged := 0
+
+	for {
+		select {
+		case <-ctx.Done():
+			return totalPurged, ctx.Err()
+		default:
+		}
+
+		jobs, err := s.reportRepo.FindExpiredCompleted(ctx, cutoff, batchSize)
+		if err != nil {
+			return totalPurged, fmt.Errorf("failed to query expired report jobs: %w", err)
+		}
+		if len(jobs) == 0 {
+			break
+		}
+
+		now := time.Now().UTC()
+		batchProcessed := 0
+		for _, job := range jobs {
+			select {
+			case <-ctx.Done():
+				return totalPurged, ctx.Err()
+			default:
+			}
+
+			// Validate multi-tenant directory boundary before physical storage deletion
+			if job.FilePath != "" && s.storageProvider != nil {
+				cleanPath := filepath.ToSlash(filepath.Clean(strings.TrimPrefix(job.FilePath, "/")))
+				if strings.Contains(cleanPath, "..") {
+					log.Printf("[REPORT-CLEANUP] Path traversal detected for job %s: %s", job.ID, job.FilePath)
+					continue
+				}
+
+				expectedPrefix := fmt.Sprintf("reports/tenant_%s/", job.TenantID)
+				if job.TenantID == "" || !strings.HasPrefix(cleanPath, expectedPrefix) {
+					log.Printf("[REPORT-CLEANUP] Tenant isolation violation or invalid tenant ID for job %s: path %s, tenant %s", job.ID, cleanPath, job.TenantID)
+					continue
+				}
+
+				if delErr := s.storageProvider.Delete(ctx, cleanPath); delErr != nil {
+					// Benign if the file is already gone/absent from storage
+					isAbsent := errors.Is(delErr, os.ErrNotExist) ||
+						strings.Contains(strings.ToLower(delErr.Error()), "not found") ||
+						strings.Contains(strings.ToLower(delErr.Error()), "does not exist")
+					if !isAbsent {
+						log.Printf("[REPORT-CLEANUP] Storage deletion failed with transient error for job %s: %v", job.ID, delErr)
+						continue // Retry on subsequent worker run
+					}
+					log.Printf("[REPORT-CLEANUP] Note: file %s already absent from storage: %v", cleanPath, delErr)
+				}
+			}
+
+			if err := s.reportRepo.MarkAsExpired(ctx, job.ID, now); err != nil {
+				log.Printf("[REPORT-CLEANUP] Failed to mark job %s as expired: %v", job.ID, err)
+				continue
+			}
+			totalPurged++
+			batchProcessed++
+		}
+
+		// Prevent infinite busy-looping if no job in the current batch could be successfully marked
+		if len(jobs) < batchSize || batchProcessed == 0 {
+			break
+		}
+	}
+
+	if totalPurged > 0 {
+		log.Printf("[REPORT-CLEANUP] Expired reports cleanup completed. Total purged: %d", totalPurged)
+	}
+
+	return totalPurged, nil
 }

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	reportport "ps/internal/application/ports/report"
 	storageport "ps/internal/application/ports/storage"
@@ -198,6 +199,36 @@ func (m *mockReportJobRepo) List(ctx context.Context, filter reportport.ListFilt
 		Limit: filter.Limit,
 	}, nil
 }
+func (m *mockReportJobRepo) FindByFilePath(ctx context.Context, tenantID, filePath string) (*reportdomain.ReportJob, error) {
+	for _, j := range m.jobs {
+		if j.TenantID == tenantID && j.FilePath == filePath {
+			return j, nil
+		}
+	}
+	return nil, errors.New("not found")
+}
+func (m *mockReportJobRepo) FindExpiredCompleted(ctx context.Context, cutoff time.Time, limit int) ([]*reportdomain.ReportJob, error) {
+	var matched []*reportdomain.ReportJob
+	for _, j := range m.jobs {
+		if j.Status == reportdomain.StatusCompleted && (j.CreatedAt.Before(cutoff) || j.CreatedAt.Equal(cutoff)) {
+			matched = append(matched, j)
+			if limit > 0 && len(matched) >= limit {
+				break
+			}
+		}
+	}
+	return matched, nil
+}
+func (m *mockReportJobRepo) MarkAsExpired(ctx context.Context, id string, expiredAt time.Time) error {
+	for _, j := range m.jobs {
+		if j.ID == id {
+			j.Status = reportdomain.StatusExpired
+			j.ExpiredAt = &expiredAt
+			return nil
+		}
+	}
+	return errors.New("not found")
+}
 
 func setupReportHandler() (*handlers.ReportHandler, *mockReportStorageProvider, *usermemory.Repository, *mockReportJobRepo) {
 	clientRepo := &mockReportClientRepo{}
@@ -371,7 +402,7 @@ func TestReportHandler_ExportEndpoints(t *testing.T) {
 }
 
 func TestReportHandler_DownloadReport(t *testing.T) {
-	handler, storage, _, _ := setupReportHandler()
+	handler, storage, _, jobRepo := setupReportHandler()
 
 	// Store dummy file
 	validPath := "reports/tenant_tenant-1/clientes_123.csv"
@@ -416,6 +447,35 @@ func TestReportHandler_DownloadReport(t *testing.T) {
 		}
 		if rec.Body.String() != "header1,header2\nval1,val2" {
 			t.Fatalf("expected file body, got %q", rec.Body.String())
+		}
+	})
+
+	t.Run("Expired file returns 410 Gone", func(t *testing.T) {
+		expiredPath := "reports/tenant_tenant-1/clientes_expired.csv"
+		storage.files[expiredPath] = []byte("old,data")
+
+		// Create expired job
+		now := time.Now().UTC()
+		past := now.Add(-31 * 24 * time.Hour)
+		expiredJob := &reportdomain.ReportJob{
+			ID:        "job-expired",
+			TenantID:  "tenant-1",
+			FilePath:  expiredPath,
+			Status:    reportdomain.StatusExpired,
+			CreatedAt: past,
+			ExpiredAt: &now,
+		}
+		_ = jobRepo.Create(context.Background(), expiredJob)
+
+		req := httptest.NewRequest("GET", "/api/v1/reports/download?file="+expiredPath, nil)
+		ctx := context.WithValue(req.Context(), middleware.TenantIDKey, "tenant-1")
+		req = req.WithContext(ctx)
+
+		rec := httptest.NewRecorder()
+		handler.DownloadReport(rec, req)
+
+		if rec.Code != http.StatusGone {
+			t.Fatalf("expected 410 StatusGone for expired file, got %d: %s", rec.Code, rec.Body.String())
 		}
 	})
 }

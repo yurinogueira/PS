@@ -61,7 +61,9 @@ export function ReportDownloadPage() {
       const errorObj = err as {
         response?: { status?: number; data?: { message?: string } };
       };
-      if (errorObj?.response?.status === 403) {
+      if (errorObj?.response?.status === 410) {
+        message = t("reports.errors.expired");
+      } else if (errorObj?.response?.status === 403) {
         message = t("reports.errors.forbidden");
       } else if (errorObj?.response?.status === 404) {
         message = t("reports.errors.notFound");
