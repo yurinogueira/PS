@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -14,6 +14,7 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
+  FormHelperText,
   Checkbox,
   FormControlLabel,
   Table,
@@ -74,6 +75,12 @@ export const ClientsPage = () => {
   const [clients, setClients] = useState<SeasonClient[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
+
+  const eventPhotographers = useMemo(() => {
+    if (!activeSeason?.photographer_ids?.length) return [];
+    const idSet = new Set(activeSeason.photographer_ids);
+    return photographers.filter((p) => idSet.has(p.id));
+  }, [photographers, activeSeason]);
 
   const [open, setOpen] = useState(false);
   const [personId, setPersonId] = useState("");
@@ -195,7 +202,7 @@ export const ClientsPage = () => {
       : [];
     photos.unshift({
       file_number: "",
-      photographer_id: "",
+      photographer_id: eventPhotographers[0]?.id || "",
       payment_method: "Pix",
       currency: "BRL",
       amount_paid: 0,
@@ -862,11 +869,11 @@ export const ClientsPage = () => {
                       minWidth: "180px",
                     }}
                   >
-                    <InputLabel required>
+                    <InputLabel>
                       {t("linkClient.fields.photographer")}
                     </InputLabel>
                     <Select
-                      value={photo.photographer_id}
+                      value={photo.photographer_id || ""}
                       label={t("linkClient.fields.photographer")}
                       onChange={(e) =>
                         updatePhoto(
@@ -877,12 +884,20 @@ export const ClientsPage = () => {
                         )
                       }
                     >
-                      {photographers.map((p) => (
+                      <MenuItem value="">
+                        <em>{t("linkClient.fields.noneInformed")}</em>
+                      </MenuItem>
+                      {eventPhotographers.map((p) => (
                         <MenuItem key={p.id} value={p.id}>
                           {p.name}
                         </MenuItem>
                       ))}
                     </Select>
+                    {eventPhotographers.length === 0 && (
+                      <FormHelperText>
+                        {t("linkClient.fields.noPhotographersEventHelper")}
+                      </FormHelperText>
+                    )}
                   </FormControl>
                   <Autocomplete
                     multiple

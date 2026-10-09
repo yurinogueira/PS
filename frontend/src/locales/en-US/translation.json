@@ -363,9 +363,11 @@
     "successSave": "Changes saved successfully!",
     "failSave": "Failed to save changes.",
     "fields": {
+      "breed": "Breed",
       "dogName": "Dog Name",
       "fileNumber": "Photo File Number",
       "photographer": "Photographer",
+      "noPhotographersEventHelper": "No photographers linked to this event.",
       "judges": "Photo Judges",
       "judgesPlaceholder": "Select judges",
       "noJudges": "No judges registered in the event",
@@ -427,7 +429,10 @@
     "successUnlink": "Client unlinked successfully.",
     "errorLink": "Unable to link client.",
     "errorUnlink": "Unable to unlink client.",
-    "errorLoad": "Unable to load clients."
+    "errorLoad": "Unable to load clients.",
+    "fields": {
+      "breed": "Breed"
+    }
   },
   "clientDetails": {
     "title": "Client Details",
@@ -451,9 +456,11 @@
     "errorDelete": "Error deleting client.",
     "errorLoad": "Unable to load client data.",
     "fields": {
+      "breed": "Breed",
       "dogName": "Dog Breed",
       "fileNumber": "File Number",
       "photographer": "Photographer",
+      "noPhotographersEventHelper": "No photographers linked to this event.",
       "paymentMethod": "Payment Method",
       "amountPaid": "Amount Paid",
       "judges": "Judges",
@@ -518,10 +525,12 @@
     "linking": "Saving...",
     "cancel": "Cancel",
     "fields": {
+      "breed": "Breed",
       "person": "Select Person",
       "dogName": "Breed",
       "fileNumber": "File Number",
       "photographer": "Photographer",
+      "noPhotographersEventHelper": "No photographers linked to this event.",
       "paymentMethod": "Payment",
       "amountPaid": "Amount Paid",
       "judges": "Judges",

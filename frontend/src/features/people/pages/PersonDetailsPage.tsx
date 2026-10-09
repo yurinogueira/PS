@@ -30,6 +30,7 @@ import {
   CircularProgress,
   Avatar,
   Autocomplete,
+  FormHelperText,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddIcon from "@mui/icons-material/Add";
@@ -99,6 +100,12 @@ export const PersonDetailsPage = () => {
   const [person, setPerson] = useState<Person | null>(null);
   const [client, setClient] = useState<SeasonClient | null>(null);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
+
+  const eventPhotographers = useMemo(() => {
+    if (!activeSeason?.photographer_ids?.length) return [];
+    const idSet = new Set(activeSeason.photographer_ids);
+    return photographers.filter((p) => idSet.has(p.id));
+  }, [photographers, activeSeason]);
 
   // Selected Dog index for Master-Detail view
   const [selectedDogIndex, setSelectedDogIndex] = useState<number>(0);
@@ -378,7 +385,7 @@ export const PersonDetailsPage = () => {
       showNotification(t("personDetails.selectDogFirstWarning"), "warning");
       return;
     }
-    const defaultPhotog = photographers[0]?.id || "";
+    const defaultPhotog = eventPhotographers[0]?.id || "";
 
     setBatchPhotoForm({
       fileNumbersText: "",
@@ -1492,7 +1499,7 @@ export const PersonDetailsPage = () => {
           sx={{ display: "flex", flexDirection: "column", gap: 2.5, pt: 2 }}
         >
           <TextField
-            label={t("clients.fields.breed")}
+            label={t("personDetails.fields.breed")}
             placeholder={t("personDetails.breedPlaceholder")}
             fullWidth
             required
@@ -1685,10 +1692,11 @@ export const PersonDetailsPage = () => {
                 helperText={t("personDetails.batchHelper")}
               />
               <FormControl fullWidth size="small">
-                <InputLabel>
+                <InputLabel id="batch-photographer-label">
                   {t("personDetails.fields.photographer")}
                 </InputLabel>
                 <Select
+                  labelId="batch-photographer-label"
                   value={batchPhotoForm.photographer_id}
                   label={t("personDetails.fields.photographer")}
                   onChange={(e) =>
@@ -1701,12 +1709,17 @@ export const PersonDetailsPage = () => {
                   <MenuItem value="">
                     <em>{t("personDetails.fields.noneInformed")}</em>
                   </MenuItem>
-                  {photographers.map((p) => (
+                  {eventPhotographers.map((p) => (
                     <MenuItem key={p.id} value={p.id}>
                       {p.name}
                     </MenuItem>
                   ))}
                 </Select>
+                {eventPhotographers.length === 0 && (
+                  <FormHelperText>
+                    {t("personDetails.fields.noPhotographersEventHelper")}
+                  </FormHelperText>
+                )}
               </FormControl>
               <Autocomplete
                 multiple
@@ -1864,10 +1877,11 @@ export const PersonDetailsPage = () => {
                 }
               />
               <FormControl fullWidth size="small">
-                <InputLabel>
+                <InputLabel id="single-photographer-label">
                   {t("personDetails.fields.photographer")}
                 </InputLabel>
                 <Select
+                  labelId="single-photographer-label"
                   value={singlePhotoForm.photographer_id}
                   label={t("personDetails.fields.photographer")}
                   onChange={(e) =>
@@ -1880,12 +1894,17 @@ export const PersonDetailsPage = () => {
                   <MenuItem value="">
                     <em>{t("personDetails.fields.noneInformed")}</em>
                   </MenuItem>
-                  {photographers.map((p) => (
+                  {eventPhotographers.map((p) => (
                     <MenuItem key={p.id} value={p.id}>
                       {p.name}
                     </MenuItem>
                   ))}
                 </Select>
+                {eventPhotographers.length === 0 && (
+                  <FormHelperText>
+                    {t("personDetails.fields.noPhotographersEventHelper")}
+                  </FormHelperText>
+                )}
               </FormControl>
               <Autocomplete
                 multiple
@@ -2072,8 +2091,11 @@ export const PersonDetailsPage = () => {
             }
           />
           <FormControl fullWidth size="small">
-            <InputLabel>{t("personDetails.fields.photographer")}</InputLabel>
+            <InputLabel id="edit-photographer-label">
+              {t("personDetails.fields.photographer")}
+            </InputLabel>
             <Select
+              labelId="edit-photographer-label"
               value={editPhotoForm.photographer_id}
               label={t("personDetails.fields.photographer")}
               onChange={(e) =>
@@ -2086,12 +2108,27 @@ export const PersonDetailsPage = () => {
               <MenuItem value="">
                 <em>{t("personDetails.fields.noneInformed")}</em>
               </MenuItem>
-              {photographers.map((p) => (
+              {editPhotoForm.photographer_id &&
+                !eventPhotographers.some(
+                  (p) => p.id === editPhotoForm.photographer_id,
+                ) && (
+                  <MenuItem value={editPhotoForm.photographer_id}>
+                    {photographers.find(
+                      (p) => p.id === editPhotoForm.photographer_id,
+                    )?.name || editPhotoForm.photographer_id}
+                  </MenuItem>
+                )}
+              {eventPhotographers.map((p) => (
                 <MenuItem key={p.id} value={p.id}>
                   {p.name}
                 </MenuItem>
               ))}
             </Select>
+            {eventPhotographers.length === 0 && (
+              <FormHelperText>
+                {t("personDetails.fields.noPhotographersEventHelper")}
+              </FormHelperText>
+            )}
           </FormControl>
           <Autocomplete
             multiple

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -9,6 +9,7 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
+  FormHelperText,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -69,6 +70,12 @@ export const ClientDetailsModal = ({
   const [client, setClient] = useState<SeasonClient | null>(null);
   const [person, setPerson] = useState<Person | null>(null);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
+
+  const eventPhotographers = useMemo(() => {
+    if (!activeSeason?.photographer_ids?.length) return [];
+    const idSet = new Set(activeSeason.photographer_ids);
+    return photographers.filter((p) => idSet.has(p.id));
+  }, [photographers, activeSeason]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -198,7 +205,7 @@ export const ClientDetailsModal = ({
       : [];
     photos.unshift({
       file_number: "",
-      photographer_id: "",
+      photographer_id: eventPhotographers[0]?.id || "",
       payment_method: "Pix",
       currency: "BRL",
       amount_paid: 0,
@@ -557,12 +564,32 @@ export const ClientDetailsModal = ({
                               )
                             }
                           >
-                            {photographers.map((p) => (
+                            <MenuItem value="">
+                              <em>{t("linkClient.fields.noneInformed")}</em>
+                            </MenuItem>
+                            {photo.photographer_id &&
+                              !eventPhotographers.some(
+                                (p) => p.id === photo.photographer_id,
+                              ) && (
+                                <MenuItem value={photo.photographer_id}>
+                                  {photographers.find(
+                                    (p) => p.id === photo.photographer_id,
+                                  )?.name || photo.photographer_id}
+                                </MenuItem>
+                              )}
+                            {eventPhotographers.map((p) => (
                               <MenuItem key={p.id} value={p.id}>
                                 {p.name}
                               </MenuItem>
                             ))}
                           </Select>
+                          {eventPhotographers.length === 0 && (
+                            <FormHelperText>
+                              {t(
+                                "linkClient.fields.noPhotographersEventHelper",
+                              )}
+                            </FormHelperText>
+                          )}
                         </FormControl>
                         <Autocomplete
                           multiple

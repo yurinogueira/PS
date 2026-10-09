@@ -10,7 +10,7 @@ tags:
   - payments
   - seasons
 resource: backend/internal/domain/client
-timestamp: 2026-10-02
+timestamp: 2026-10-09
 ---
 
 # 📸 Subdomínio: Clientes, Sessões Fotográficas e Faturamento (Client)
@@ -73,6 +73,7 @@ type Photo struct {
 
 ### 3. Registro e Faturamento de Fotos (`Photo`)
 - Cada foto contém o número do arquivo original (`FileNumber`) e a vinculação com o fotógrafo que realizou o disparo (`PhotographerID`).
+- **Validação de Fotógrafos pelo Evento**: Na criação ou atualização de clientes (`validateReferences`), quando um `PhotographerID` é informado, o backend valida se o fotógrafo pertence ao tenant (`ErrPhotographerNotFound`) e se está devidamente associado à temporada correspondente via `season.PhotographerIDs` (`ErrPhotographerNotInSeason`). Caso contrário, a requisição é rejeitada com HTTP 400 Bad Request. Na interface web, a seleção de fotógrafos é filtrada pelos fotógrafos do evento ativo, exibindo texto de auxílio caso nenhum esteja associado.
 - **Competições por Foto**: Cada foto pode ser associada a uma ou mais competições (`Competitions`), permitindo ao operador selecionar competições já ganhas pelo cão ou cadastrar novas livremente (*freeSolo*). O backend higieniza espaços e remove duplicatas. Nos relatórios, as competições da foto têm prioridade, utilizando as do cão como fallback retroativo.
 - **Métodos de Pagamento Suportados**: `Pix`, `Cartão de Crédito`, `Cartão de Débito`, `Dinheiro`, `Outro` ou `Não pago`.
 - **Valores e Moedas Suportadas**: Suporta moedas `BRL` (Real brasileiro), `USD` (Dólar americano) e `OTHER` (Outra moeda estrangeira/genérica) através do campo `Currency`, com valor monetário explícito (`AmountPaid`). Os dashboards e extratos agregam e exibem a arrecadação total separada por cada moeda.

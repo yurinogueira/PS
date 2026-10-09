@@ -13,14 +13,16 @@ import (
 	auditusecase "ps/internal/application/usecase/auditlog"
 	domainaudit "ps/internal/domain/auditlog"
 	domain "ps/internal/domain/client"
+	domainseason "ps/internal/domain/season"
 )
 
 var (
-	ErrPersonNotFound       = errors.New("person not found or does not belong to tenant")
-	ErrSeasonNotFound       = errors.New("season not found or does not belong to tenant")
-	ErrPhotographerNotFound = errors.New("photographer not found or does not belong to tenant")
-	ErrClientNotFound       = errors.New("client not found or does not belong to tenant")
-	ErrInvalidAmountPaid    = errors.New("amount_paid cannot be negative")
+	ErrPersonNotFound          = errors.New("person not found or does not belong to tenant")
+	ErrSeasonNotFound          = errors.New("season not found or does not belong to tenant")
+	ErrPhotographerNotFound    = errors.New("photographer not found or does not belong to tenant")
+	ErrPhotographerNotInSeason = errors.New("photographer does not belong to season")
+	ErrClientNotFound          = errors.New("client not found or does not belong to tenant")
+	ErrInvalidAmountPaid       = errors.New("amount_paid cannot be negative")
 )
 
 type Service struct {
@@ -68,17 +70,25 @@ func (s *Service) validateReferences(ctx context.Context, c *domain.SeasonClient
 		}
 	}
 
+	var curSeason *domainseason.Season
 	if s.seasonRepo != nil {
 		if c.SeasonID == "" {
 			return ErrSeasonNotFound
 		}
-		season, err := s.seasonRepo.GetByID(ctx, c.SeasonID, tenantID)
-		if err != nil || season == nil {
+		var err error
+		curSeason, err = s.seasonRepo.GetByID(ctx, c.SeasonID, tenantID)
+		if err != nil || curSeason == nil {
 			return ErrSeasonNotFound
 		}
 	}
 
 	if s.photographerRepo != nil {
+		seasonPhotogSet := make(map[string]bool)
+		if curSeason != nil {
+			for _, pid := range curSeason.PhotographerIDs {
+				seasonPhotogSet[pid] = true
+			}
+		}
 		validatedPhotographers := make(map[string]bool)
 		for _, dog := range c.Dogs {
 			for _, photo := range dog.Photos {
@@ -89,6 +99,9 @@ func (s *Service) validateReferences(ctx context.Context, c *domain.SeasonClient
 					photog, err := s.photographerRepo.GetByID(ctx, photo.PhotographerID, tenantID)
 					if err != nil || photog == nil {
 						return ErrPhotographerNotFound
+					}
+					if curSeason != nil && !seasonPhotogSet[photo.PhotographerID] {
+						return ErrPhotographerNotInSeason
 					}
 					validatedPhotographers[photo.PhotographerID] = true
 				}
