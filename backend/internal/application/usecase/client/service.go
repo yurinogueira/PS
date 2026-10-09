@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+	"strings"
 
 	clientport "ps/internal/application/ports/client"
 	personport "ps/internal/application/ports/person"
@@ -98,6 +99,22 @@ func (s *Service) validateReferences(ctx context.Context, c *domain.SeasonClient
 	return nil
 }
 
+func cleanStrings(items []string) []string {
+	if len(items) == 0 {
+		return make([]string, 0)
+	}
+	seen := make(map[string]bool)
+	clean := make([]string, 0, len(items))
+	for _, it := range items {
+		trimmed := strings.TrimSpace(it)
+		if trimmed != "" && !seen[trimmed] {
+			seen[trimmed] = true
+			clean = append(clean, trimmed)
+		}
+	}
+	return clean
+}
+
 func (s *Service) validateAndNormalizePhotos(c *domain.SeasonClient) error {
 	for i := range c.Dogs {
 		for j := range c.Dogs[i].Photos {
@@ -112,6 +129,7 @@ func (s *Service) validateAndNormalizePhotos(c *domain.SeasonClient) error {
 					photo.Currency = "BRL"
 				}
 			}
+			photo.Competitions = cleanStrings(photo.Competitions)
 		}
 	}
 	return nil

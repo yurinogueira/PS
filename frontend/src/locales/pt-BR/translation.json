@@ -374,7 +374,11 @@
       "amountPaid": "Valor Pago (R$)",
       "noneInformed": "Nenhum / Não informado",
       "competitions": "Competições Ganhas",
-      "addCompetition": "Adicionar competição..."
+      "addCompetition": "Adicionar competição...",
+      "photoCompetitions": "Competições da Foto",
+      "photoCompetitionsPlaceholder": "Selecione ou digite competições",
+      "noCompetitionsDog": "Nenhuma competição no cão (digite para adicionar)",
+      "competitionsHelper": "Selecione as competições vencidas vinculadas a esta foto."
     },
     "save": "Salvar Foto",
     "saving": "Salvando...",
@@ -456,7 +460,10 @@
       "noJudgesEvent": "Nenhum juiz no evento",
       "noneInformed": "Nenhum / Não informado",
       "competitions": "Competições",
-      "addCompetition": "Adicionar"
+      "addCompetition": "Adicionar",
+      "photoCompetitions": "Competições da Foto",
+      "photoCompetitionsPlaceholder": "Selecione ou digite competições",
+      "noCompetitionsDog": "Nenhuma competição no cão"
     },
     "addDogModal": {
       "title": "Adicionar Cachorro",
@@ -521,6 +528,9 @@
       "noJudgesEvent": "Nenhum juiz no evento",
       "noneInformed": "Nenhum / Não informado",
       "competitions": "Competições Vencidas",
+      "photoCompetitions": "Competições da Foto",
+      "competitionsPlaceholder": "Selecione ou digite competições",
+      "noCompetitionsDog": "Nenhuma competição no cão (digite para adicionar)",
       "addPhoto": "Adicionar Foto",
       "addCompetition": "Nome da competição vencida...",
       "currency": "Moeda",

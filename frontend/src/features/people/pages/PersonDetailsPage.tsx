@@ -129,6 +129,7 @@ export const PersonDetailsPage = () => {
     currency: string;
     amount_paid: number;
     judges: string[];
+    competitions: string[];
   }>({
     fileNumbersText: "",
     photographer_id: "",
@@ -136,6 +137,7 @@ export const PersonDetailsPage = () => {
     currency: "BRL",
     amount_paid: 0,
     judges: [],
+    competitions: [],
   });
   const [singlePhotoForm, setSinglePhotoForm] = useState<Omit<Photo, "id">>({
     file_number: "",
@@ -144,6 +146,7 @@ export const PersonDetailsPage = () => {
     currency: "BRL",
     amount_paid: 0,
     judges: [],
+    competitions: [],
   });
 
   // Edit Photo Dialog
@@ -158,6 +161,7 @@ export const PersonDetailsPage = () => {
     currency: "BRL",
     amount_paid: 0,
     judges: [],
+    competitions: [],
   });
 
   // Delete Confirm Dialogs
@@ -383,6 +387,7 @@ export const PersonDetailsPage = () => {
       currency: "BRL",
       amount_paid: 0,
       judges: [],
+      competitions: [],
     });
     setSinglePhotoForm({
       file_number: "",
@@ -391,6 +396,7 @@ export const PersonDetailsPage = () => {
       currency: "BRL",
       amount_paid: 0,
       judges: [],
+      competitions: [],
     });
     setAddPhotoDialogOpen(true);
   };
@@ -427,6 +433,10 @@ export const PersonDetailsPage = () => {
           batchPhotoForm.judges && batchPhotoForm.judges.length > 0
             ? batchPhotoForm.judges
             : undefined,
+        competitions:
+          batchPhotoForm.competitions && batchPhotoForm.competitions.length > 0
+            ? batchPhotoForm.competitions
+            : undefined,
         created_at: nowIso,
       }));
       currentPhotos.unshift(...newPhotos);
@@ -448,6 +458,11 @@ export const PersonDetailsPage = () => {
         judges:
           singlePhotoForm.judges && singlePhotoForm.judges.length > 0
             ? singlePhotoForm.judges
+            : undefined,
+        competitions:
+          singlePhotoForm.competitions &&
+          singlePhotoForm.competitions.length > 0
+            ? singlePhotoForm.competitions
             : undefined,
         created_at: nowIso,
       });
@@ -471,6 +486,7 @@ export const PersonDetailsPage = () => {
       currency: photo.currency || "BRL",
       amount_paid: photo.amount_paid || 0,
       judges: photo.judges || [],
+      competitions: photo.competitions || [],
     });
     setEditPhotoDialogOpen(true);
   };
@@ -500,6 +516,10 @@ export const PersonDetailsPage = () => {
       judges:
         editPhotoForm.judges && editPhotoForm.judges.length > 0
           ? editPhotoForm.judges
+          : undefined,
+      competitions:
+        editPhotoForm.competitions && editPhotoForm.competitions.length > 0
+          ? editPhotoForm.competitions
           : undefined,
       created_at: existingPhoto.created_at || new Date().toISOString(),
     };
@@ -1310,6 +1330,34 @@ export const PersonDetailsPage = () => {
                             </Box>
                           )}
 
+                          {photo.competitions &&
+                            photo.competitions.length > 0 && (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: 0.5,
+                                  mb: 1,
+                                }}
+                              >
+                                {photo.competitions.map((comp) => (
+                                  <Chip
+                                    key={comp}
+                                    icon={
+                                      <EmojiEventsIcon
+                                        sx={{ fontSize: "0.85rem !important" }}
+                                      />
+                                    }
+                                    label={comp}
+                                    size="small"
+                                    color="warning"
+                                    variant="outlined"
+                                    sx={{ fontSize: "0.7rem", height: 20 }}
+                                  />
+                                ))}
+                              </Box>
+                            )}
+
                           <Box
                             sx={{
                               display: "flex",
@@ -1690,6 +1738,35 @@ export const PersonDetailsPage = () => {
                   />
                 )}
               />
+              <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={selectedDog?.won_competitions || []}
+                value={batchPhotoForm.competitions || []}
+                onChange={(_, val) => {
+                  setBatchPhotoForm({
+                    ...batchPhotoForm,
+                    competitions: val as string[],
+                  });
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={t("personDetails.fields.photoCompetitions")}
+                    placeholder={
+                      batchPhotoForm.competitions?.length
+                        ? ""
+                        : selectedDog?.won_competitions?.length
+                          ? t(
+                              "personDetails.fields.photoCompetitionsPlaceholder",
+                            )
+                          : t("personDetails.fields.noCompetitionsDog")
+                    }
+                    helperText={t("personDetails.fields.competitionsHelper")}
+                  />
+                )}
+              />
               <Grid container spacing={2}>
                 <Grid
                   size={{
@@ -1837,6 +1914,35 @@ export const PersonDetailsPage = () => {
                         ? t("personDetails.fields.judgesHelper")
                         : t("personDetails.fields.judgesNoEventHelper")
                     }
+                  />
+                )}
+              />
+              <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={selectedDog?.won_competitions || []}
+                value={singlePhotoForm.competitions || []}
+                onChange={(_, val) => {
+                  setSinglePhotoForm({
+                    ...singlePhotoForm,
+                    competitions: val as string[],
+                  });
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={t("personDetails.fields.photoCompetitions")}
+                    placeholder={
+                      singlePhotoForm.competitions?.length
+                        ? ""
+                        : selectedDog?.won_competitions?.length
+                          ? t(
+                              "personDetails.fields.photoCompetitionsPlaceholder",
+                            )
+                          : t("personDetails.fields.noCompetitionsDog")
+                    }
+                    helperText={t("personDetails.fields.competitionsHelper")}
                   />
                 )}
               />
@@ -2014,6 +2120,33 @@ export const PersonDetailsPage = () => {
                     ? t("personDetails.fields.judgesHelper")
                     : t("personDetails.fields.judgesNoEventHelper")
                 }
+              />
+            )}
+          />
+          <Autocomplete
+            multiple
+            freeSolo
+            size="small"
+            options={selectedDog?.won_competitions || []}
+            value={editPhotoForm.competitions || []}
+            onChange={(_, val) => {
+              setEditPhotoForm({
+                ...editPhotoForm,
+                competitions: val as string[],
+              });
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label={t("personDetails.fields.photoCompetitions")}
+                placeholder={
+                  editPhotoForm.competitions?.length
+                    ? ""
+                    : selectedDog?.won_competitions?.length
+                      ? t("personDetails.fields.photoCompetitionsPlaceholder")
+                      : t("personDetails.fields.noCompetitionsDog")
+                }
+                helperText={t("personDetails.fields.competitionsHelper")}
               />
             )}
           />

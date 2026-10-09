@@ -342,7 +342,9 @@ func (s *Service) GenerateClientsCSV(ctx context.Context, tenantID, seasonID, us
 				}
 
 				var competitionWon string
-				if len(wonCompsList) > 0 {
+				if i < numPhotos && len(dog.Photos[i].Competitions) > 0 {
+					competitionWon = strings.Join(dog.Photos[i].Competitions, ", ")
+				} else if len(wonCompsList) > 0 {
 					if i < len(wonCompsList) {
 						competitionWon = wonCompsList[i]
 					} else {
@@ -649,6 +651,11 @@ func (s *Service) GeneratePaidClientsCSV(ctx context.Context, tenantID, seasonID
 				photoDate := formatPhotoDate(&photo, c.CreatedAt)
 				judgeStr := formatJudges(&photo)
 
+				photoCompStr := wonCompStr
+				if len(photo.Competitions) > 0 {
+					photoCompStr = strings.Join(photo.Competitions, ", ")
+				}
+
 				row := []string{
 					personObj.Name,
 					personObj.Email,
@@ -657,7 +664,7 @@ func (s *Service) GeneratePaidClientsCSV(ctx context.Context, tenantID, seasonID
 					isOwnerStr,
 					dog.Breed,
 					judgeStr,
-					wonCompStr,
+					photoCompStr,
 					photo.FileNumber,
 					photographerName,
 					normPay,
@@ -1015,6 +1022,9 @@ func (s *Service) buildClientsPDF(ctx context.Context, tenantID, seasonID string
 						colAmount = FormatPaidAmount(photo.AmountPaid, photo.Currency)
 						colDate = formatPhotoDate(&photo, client.CreatedAt)
 						colJudge = formatJudgesPDF(&photo)
+						if len(photo.Competitions) > 0 {
+							colComp = strings.Join(photo.Competitions, ", ")
+						}
 					}
 
 					rowVals := []string{
@@ -1257,6 +1267,11 @@ func (s *Service) GenerateDynamicPaymentCSV(ctx context.Context, tenantID, seaso
 				photoDate := formatPhotoDate(&photo, c.CreatedAt)
 				judgeStr := formatJudges(&photo)
 
+				photoCompStr := wonCompStr
+				if len(photo.Competitions) > 0 {
+					photoCompStr = strings.Join(photo.Competitions, ", ")
+				}
+
 				row := []string{
 					personObj.Name,
 					personObj.Email,
@@ -1265,7 +1280,7 @@ func (s *Service) GenerateDynamicPaymentCSV(ctx context.Context, tenantID, seaso
 					isOwnerStr,
 					dog.Breed,
 					judgeStr,
-					wonCompStr,
+					photoCompStr,
 					photo.FileNumber,
 					photographerName,
 					normPay,

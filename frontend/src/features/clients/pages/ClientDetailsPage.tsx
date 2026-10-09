@@ -563,6 +563,33 @@ export const ClientDetailsPage = () => {
                     minWidth: "180px",
                   }}
                 />
+                <Autocomplete
+                  multiple
+                  freeSolo
+                  size="small"
+                  options={dog.won_competitions || []}
+                  value={photo.competitions || []}
+                  onChange={(_, val) => {
+                    updatePhoto(dIdx, pIdx, "competitions", val as string[]);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={t("linkClient.fields.photoCompetitions")}
+                      placeholder={
+                        photo.competitions?.length
+                          ? ""
+                          : dog.won_competitions?.length
+                            ? t("linkClient.fields.competitionsPlaceholder")
+                            : t("linkClient.fields.noCompetitionsDog")
+                      }
+                    />
+                  )}
+                  sx={{
+                    flex: { xs: "1 1 100%", sm: "1 1 200px" },
+                    minWidth: "180px",
+                  }}
+                />
                 <FormControl
                   size="small"
                   required

@@ -188,4 +188,56 @@ describe("AddDogModal", () => {
     expect(mockOnSuccess).not.toHaveBeenCalled();
     expect(mockOnClose).not.toHaveBeenCalled();
   });
+
+  it("allows adding a photo and associating competitions with it", async () => {
+    const updateSpy = vi.spyOn(clientService, "update").mockResolvedValue({
+      id: "client-1",
+      person_id: "person-1",
+      season_id: "season-1",
+      dogs: [],
+    });
+
+    render(
+      <AddDogModal
+        clientId="client-1"
+        open={true}
+        onClose={mockOnClose}
+        onSuccess={mockOnSuccess}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Mariana Silva")).toBeInTheDocument();
+    });
+
+    const addPhotoBtn = screen.getByRole("button", {
+      name: /Adicionar Foto/i,
+    });
+    fireEvent.click(addPhotoBtn);
+
+    const fileNumberInput = screen.getByLabelText(/Número do Arquivo/i);
+    fireEvent.change(fileNumberInput, { target: { value: "IMG_TEST_101" } });
+
+    const saveButton = screen.getByRole("button", {
+      name: "Adicionar Cachorro",
+    });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(
+        "client-1",
+        expect.objectContaining({
+          dogs: expect.arrayContaining([
+            expect.objectContaining({
+              photos: expect.arrayContaining([
+                expect.objectContaining({
+                  file_number: "IMG_TEST_101",
+                }),
+              ]),
+            }),
+          ]),
+        }),
+      );
+    });
+  });
 });

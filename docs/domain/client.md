@@ -53,6 +53,7 @@ type Photo struct {
     Currency       string     `json:"currency,omitempty" bson:"currency,omitempty"`
     AmountPaid     *float64   `json:"amount_paid" bson:"amount_paid"`
     Judges         []string   `json:"judges,omitempty" bson:"judges,omitempty"`
+    Competitions   []string   `json:"competitions,omitempty" bson:"competitions,omitempty"`
     CreatedAt      *time.Time `json:"created_at,omitempty" bson:"created_at,omitempty"`
 }
 ```
@@ -71,6 +72,7 @@ type Photo struct {
 
 ### 3. Registro e Faturamento de Fotos (`Photo`)
 - Cada foto contém o número do arquivo original (`FileNumber`) e a vinculação com o fotógrafo que realizou o disparo (`PhotographerID`).
+- **Competições por Foto**: Cada foto pode ser associada a uma ou mais competições (`Competitions`), permitindo rastrear o contexto exato do registro fotográfico e priorizar essa informação nos relatórios analíticos (com fallback para as competições do cão).
 - **Métodos de Pagamento Suportados**: `Pix`, `Cartão de Crédito`, `Cartão de Débito`, `Dinheiro` ou `Não pago`.
 - **Valores e Moeda**: Suporta moedas internacionais (ex: `BRL`, `USD`, `EUR`) através do campo `Currency`, com valor monetário explícito (`AmountPaid`).
 
