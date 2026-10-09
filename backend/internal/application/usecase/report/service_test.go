@@ -1352,3 +1352,87 @@ func TestStartJobLifecycle(t *testing.T) {
 		}
 	}
 }
+
+func TestGenerateClientsCSV_PhotoCompetitionsPriorityAndFallback(t *testing.T) {
+	tenantID := "tenant-123"
+	amount := 50.0
+
+	clientRepo := &mockClientRepo{
+		clients: []*clientdomain.SeasonClient{
+			{
+				ID:       "client-1",
+				TenantID: tenantID,
+				PersonID: "person-1",
+				Dogs: []clientdomain.Dog{
+					{
+						Breed:           "Pastor Alemão",
+						WonCompetitions: []string{"Campeão Adulto Cão"},
+						Photos: []clientdomain.Photo{
+							{
+								FileNumber:     "PHOTO_1",
+								PhotographerID: "photog-1",
+								PaymentMethod:  "Pix",
+								AmountPaid:     &amount,
+								Competitions:   []string{"Melhor da Raça Foto", "Destaque Pista"},
+							},
+							{
+								FileNumber:     "PHOTO_2",
+								PhotographerID: "photog-1",
+								PaymentMethod:  "Pix",
+								AmountPaid:     &amount,
+								Competitions:   nil, // Fallback to dog.WonCompetitions
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	personRepo := &mockPersonRepo{
+		people: map[string]*persondomain.Person{
+			"person-1": {
+				ID:    "person-1",
+				Name:  "Ana Clara",
+				Email: "ana@exemplo.com",
+				Phone: "11999998888",
+			},
+		},
+	}
+
+	photogRepo := &mockPhotographerRepo{
+		photographers: []*photographerdomain.Photographer{
+			{
+				ID:   "photog-1",
+				Name: "Fotógrafo João",
+			},
+		},
+	}
+
+	storage := &mockStorageProvider{files: make(map[string][]byte)}
+	emailSender := &mockEmailSender{}
+
+	svc := NewService(clientRepo, personRepo, photogRepo, storage, emailSender, "http://localhost:8080")
+
+	filePath, err := svc.GenerateClientsCSV(context.Background(), tenantID, "", "admin@tenant.com", "Admin")
+	if err != nil {
+		t.Fatalf("failed to generate clients csv: %v", err)
+	}
+
+	content := string(storage.files[filePath])
+	lines := strings.Split(strings.TrimSpace(content), "\n")
+	if len(lines) < 3 {
+		t.Fatalf("expected at least 3 lines (header + 2 rows), got %d lines:\n%s", len(lines), content)
+	}
+
+	// Line 1: Header
+	// Line 2: PHOTO_1 with photo competitions "Melhor da Raça Foto, Destaque Pista"
+	if !strings.Contains(lines[1], "Melhor da Raça Foto, Destaque Pista") {
+		t.Errorf("line 2 should contain photo specific competitions, got: %s", lines[1])
+	}
+
+	// Line 3: PHOTO_2 without photo competitions, should fallback to dog's "Campeão Adulto Cão"
+	if !strings.Contains(lines[2], "Campeão Adulto Cão") {
+		t.Errorf("line 3 should fallback to dog's won competitions, got: %s", lines[2])
+	}
+}

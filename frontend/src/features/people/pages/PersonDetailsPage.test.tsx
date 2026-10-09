@@ -223,4 +223,49 @@ describe("PersonDetailsPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Outro 60.00")).toBeInTheDocument();
   });
+
+  it("renders photo-level competitions chips on registered photo cards", async () => {
+    vi.mocked(clientService.list).mockResolvedValue({
+      data: [
+        {
+          id: "client-1",
+          person_id: "p123",
+          season_id: "s1",
+          dogs: [
+            {
+              breed: "Doberman",
+              is_owner: true,
+              competitions_won: 1,
+              won_competitions: ["Best in Breed 2026"],
+              photos: [
+                {
+                  file_number: "DOB_001",
+                  photographer_id: "ph1",
+                  payment_method: "Pix",
+                  currency: "BRL",
+                  amount_paid: 150,
+                  competitions: ["Campeão Jovem Especial", "Melhor Cabeça"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/people/p123"]}>
+        <Routes>
+          <Route path="/people/:id" element={<PersonDetailsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Arquivo: DOB_001")).toBeInTheDocument();
+    expect(screen.getByText("Campeão Jovem Especial")).toBeInTheDocument();
+    expect(screen.getByText("Melhor Cabeça")).toBeInTheDocument();
+  });
 });

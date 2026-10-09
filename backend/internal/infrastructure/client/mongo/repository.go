@@ -45,6 +45,31 @@ func (r *repository) Create(ctx context.Context, client *domain.SeasonClient) er
 	return err
 }
 
+func sanitizeClient(c *domain.SeasonClient) {
+	if c == nil {
+		return
+	}
+	if c.Dogs == nil {
+		c.Dogs = make([]domain.Dog, 0)
+	}
+	for i := range c.Dogs {
+		if c.Dogs[i].WonCompetitions == nil {
+			c.Dogs[i].WonCompetitions = make([]string, 0)
+		}
+		if c.Dogs[i].Photos == nil {
+			c.Dogs[i].Photos = make([]domain.Photo, 0)
+		}
+		for j := range c.Dogs[i].Photos {
+			if c.Dogs[i].Photos[j].Competitions == nil {
+				c.Dogs[i].Photos[j].Competitions = make([]string, 0)
+			}
+			if c.Dogs[i].Photos[j].Judges == nil {
+				c.Dogs[i].Photos[j].Judges = make([]string, 0)
+			}
+		}
+	}
+}
+
 func (r *repository) GetByID(ctx context.Context, id, tenantID string) (*domain.SeasonClient, error) {
 	cleanID, err := mongoinfra.SanitizeID(id)
 	if err != nil {
@@ -61,17 +86,7 @@ func (r *repository) GetByID(ctx context.Context, id, tenantID string) (*domain.
 	if err != nil {
 		return nil, err
 	}
-	if client.Dogs == nil {
-		client.Dogs = make([]domain.Dog, 0)
-	}
-	for i := range client.Dogs {
-		if client.Dogs[i].WonCompetitions == nil {
-			client.Dogs[i].WonCompetitions = make([]string, 0)
-		}
-		if client.Dogs[i].Photos == nil {
-			client.Dogs[i].Photos = make([]domain.Photo, 0)
-		}
-	}
+	sanitizeClient(&client)
 	return &client, nil
 }
 
@@ -137,6 +152,7 @@ func (r *repository) List(ctx context.Context, tenantID string, filter domain.Li
 			bson.D{{Key: "dogs.judges", Value: regexDoc}},
 			bson.D{{Key: "dogs.photos.judges", Value: regexDoc}},
 			bson.D{{Key: "dogs.won_competitions", Value: regexDoc}},
+			bson.D{{Key: "dogs.photos.competitions", Value: regexDoc}},
 			bson.D{{Key: "dogs.photos.file_number", Value: regexDoc}},
 		}
 		pipeline = append(pipeline, bson.D{{Key: "$match", Value: bson.D{{Key: "$or", Value: orConditions}}}})
@@ -191,17 +207,7 @@ func (r *repository) List(ctx context.Context, tenantID string, filter domain.Li
 		data = make([]*domain.SeasonClient, 0)
 	}
 	for _, c := range data {
-		if c.Dogs == nil {
-			c.Dogs = make([]domain.Dog, 0)
-		}
-		for i := range c.Dogs {
-			if c.Dogs[i].WonCompetitions == nil {
-				c.Dogs[i].WonCompetitions = make([]string, 0)
-			}
-			if c.Dogs[i].Photos == nil {
-				c.Dogs[i].Photos = make([]domain.Photo, 0)
-			}
-		}
+		sanitizeClient(c)
 	}
 
 	return &domain.PaginatedClients{
@@ -238,17 +244,7 @@ func (r *repository) StreamByTenant(ctx context.Context, tenantID, seasonID stri
 		if err := cursor.Decode(&item); err != nil {
 			return err
 		}
-		if item.Dogs == nil {
-			item.Dogs = make([]domain.Dog, 0)
-		}
-		for i := range item.Dogs {
-			if item.Dogs[i].WonCompetitions == nil {
-				item.Dogs[i].WonCompetitions = make([]string, 0)
-			}
-			if item.Dogs[i].Photos == nil {
-				item.Dogs[i].Photos = make([]domain.Photo, 0)
-			}
-		}
+		sanitizeClient(&item)
 		if err := fn(&item); err != nil {
 			return err
 		}

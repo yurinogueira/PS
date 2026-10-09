@@ -465,6 +465,30 @@ export const AddDogModal = ({
                     )}
                     sx={{ minWidth: 180, flex: 1 }}
                   />
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    size="small"
+                    options={dog.won_competitions || []}
+                    value={photo.competitions || []}
+                    onChange={(_, val) => {
+                      updatePhoto(pIdx, "competitions", val as string[]);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={t("linkClient.fields.photoCompetitions")}
+                        placeholder={
+                          photo.competitions?.length
+                            ? ""
+                            : dog.won_competitions?.length
+                              ? t("linkClient.fields.competitionsPlaceholder")
+                              : t("linkClient.fields.noCompetitionsDog")
+                        }
+                      />
+                    )}
+                    sx={{ minWidth: 180, flex: 1 }}
+                  />
                   <FormControl size="small" sx={{ minWidth: 140, flex: 1 }}>
                     <InputLabel id={`adddog-payment-label-${pIdx}`}>
                       {t("linkClient.fields.paymentMethod")}

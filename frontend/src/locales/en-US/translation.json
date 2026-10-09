@@ -374,7 +374,11 @@
       "amountPaid": "Amount Paid",
       "noneInformed": "None / Not specified",
       "competitions": "Competitions Won",
-      "addCompetition": "Add competition..."
+      "addCompetition": "Add competition...",
+      "photoCompetitions": "Photo Competitions",
+      "photoCompetitionsPlaceholder": "Select or type competitions",
+      "noCompetitionsDog": "No competitions for dog (type to add)",
+      "competitionsHelper": "Select the won competitions linked to this photo."
     },
     "save": "Save Photo",
     "saving": "Saving...",
@@ -456,7 +460,10 @@
       "noJudgesEvent": "No judges in event",
       "noneInformed": "None / Not specified",
       "competitions": "Competitions",
-      "addCompetition": "Add"
+      "addCompetition": "Add",
+      "photoCompetitions": "Photo Competitions",
+      "photoCompetitionsPlaceholder": "Select or type competitions",
+      "noCompetitionsDog": "No competitions for dog"
     },
     "addDogModal": {
       "title": "Add Dog",
@@ -521,6 +528,9 @@
       "noJudgesEvent": "No judges in event",
       "noneInformed": "None / Not specified",
       "competitions": "Competitions Won",
+      "photoCompetitions": "Photo Competitions",
+      "competitionsPlaceholder": "Select or type competitions",
+      "noCompetitionsDog": "No competitions for dog (type to add)",
       "addPhoto": "Add Photo",
       "addCompetition": "Won competition name...",
       "currency": "Currency",

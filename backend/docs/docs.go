@@ -2605,6 +2605,12 @@ const docTemplate = `{
                 "amount_paid": {
                     "type": "number"
                 },
+                "competitions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "created_at": {
                     "type": "string"
                 },

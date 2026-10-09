@@ -13,6 +13,7 @@ export interface Photo {
   currency?: "BRL" | "USD" | "OTHER" | string;
   amount_paid?: number;
   judges?: string[];
+  competitions?: string[];
   created_at?: string;
 }
 

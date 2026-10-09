@@ -31,6 +31,7 @@ type Photo struct {
 	Currency       string     `json:"currency,omitempty" bson:"currency,omitempty"`
 	AmountPaid     *float64   `json:"amount_paid" bson:"amount_paid"`
 	Judges         []string   `json:"judges,omitempty" bson:"judges,omitempty"`
+	Competitions   []string   `json:"competitions,omitempty" bson:"competitions,omitempty"`
 	CreatedAt      *time.Time `json:"created_at,omitempty" bson:"created_at,omitempty"`
 }
 

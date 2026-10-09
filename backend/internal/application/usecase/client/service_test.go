@@ -639,4 +639,40 @@ func TestClientService_PhotoCurrencyAndAmountValidation(t *testing.T) {
 			t.Fatalf("expected AmountPaid to be nil for 'Não pago', got %v", *c.Dogs[0].Photos[0].AmountPaid)
 		}
 	})
+
+	t.Run("Create & Update - sanitizes and deduplicates photo competitions", func(t *testing.T) {
+		c := &domain.SeasonClient{
+			ID:       "client-photo-comps",
+			PersonID: "person-1",
+			SeasonID: "season-1",
+			Dogs: []domain.Dog{
+				{
+					Breed: "Golden Retriever",
+					Photos: []domain.Photo{
+						{
+							FileNumber:     "PHOTO_COMP_01",
+							PhotographerID: "photo-1",
+							PaymentMethod:  "Pix",
+							Competitions:   []string{"  Melhor da Raça  ", "", "Melhor da Raça", "Campeão Jovem", "   "},
+						},
+					},
+				},
+			},
+		}
+		if err := svc.Create(ctx, c, tenantID); err != nil {
+			t.Fatalf("unexpected error creating client with photo competitions: %v", err)
+		}
+
+		created, err := svc.GetByID(ctx, "client-photo-comps", tenantID)
+		if err != nil {
+			t.Fatalf("unexpected error getting client: %v", err)
+		}
+		comps := created.Dogs[0].Photos[0].Competitions
+		if len(comps) != 2 {
+			t.Fatalf("expected 2 competitions after sanitization and deduplication, got %d: %v", len(comps), comps)
+		}
+		if comps[0] != "Melhor da Raça" || comps[1] != "Campeão Jovem" {
+			t.Fatalf("expected ['Melhor da Raça', 'Campeão Jovem'], got %v", comps)
+		}
+	})
 }

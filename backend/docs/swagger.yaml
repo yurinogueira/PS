@@ -40,6 +40,10 @@ definitions:
     properties:
       amount_paid:
         type: number
+      competitions:
+        items:
+          type: string
+        type: array
       created_at:
         type: string
       currency:
