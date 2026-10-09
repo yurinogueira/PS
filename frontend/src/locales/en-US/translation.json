@@ -171,6 +171,7 @@
       "topPhotographers": "Top Photographers"
     },
     "actions": {
+      "addDog": "Add Dog",
       "addClient": "Link Client",
       "addPerson": "New Person",
       "linkFirstClient": "Link First Client",
@@ -460,9 +461,11 @@
     "addDogModal": {
       "title": "Add Dog",
       "addPhoto": "Add Photo",
-      "save": "Save Registry",
+      "save": "Add Dog",
       "saving": "Saving...",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "success": "Dog added successfully!",
+      "errorSave": "Error adding dog."
     },
     "addPhotoModal": {
       "title": "Add Photos",
