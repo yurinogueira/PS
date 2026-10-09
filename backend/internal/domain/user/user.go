@@ -24,6 +24,7 @@ type User struct {
 	TenantID                   string     `json:"tenantId"`
 	SuperAdmin                 bool       `json:"superAdmin"`
 	Role                       Role       `json:"role"`
+	TokenVersion               int        `json:"tokenVersion"`
 	CreatedAt                  time.Time  `json:"createdAt"`
 	UpdatedAt                  time.Time  `json:"updatedAt,omitempty"`
 }

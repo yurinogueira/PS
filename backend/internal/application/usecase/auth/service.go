@@ -208,6 +208,9 @@ func (s *Service) Refresh(ctx context.Context, refreshToken string) (AuthOutput,
 	if err != nil {
 		return AuthOutput{}, ErrUserNotFound
 	}
+	if claims.TokenVersion < user.TokenVersion {
+		return AuthOutput{}, ErrInvalidToken
+	}
 	pair, err := s.tokens.GeneratePair(user)
 	if err != nil {
 		return AuthOutput{}, err
@@ -223,6 +226,9 @@ func (s *Service) Me(ctx context.Context, accessToken string) (domainuser.User, 
 	user, err := s.users.FindByID(ctx, claims.UserID)
 	if err != nil {
 		return domainuser.User{}, ErrUserNotFound
+	}
+	if claims.TokenVersion < user.TokenVersion {
+		return domainuser.User{}, ErrInvalidToken
 	}
 	return user, nil
 }
@@ -348,6 +354,7 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 	user.PasswordHash = newHash
 	user.PasswordResetTokenHash = ""
 	user.PasswordResetExpiresAt = nil
+	user.TokenVersion++
 	user.UpdatedAt = now
 
 	_, err = s.users.Update(ctx, user)

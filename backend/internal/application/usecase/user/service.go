@@ -127,6 +127,7 @@ func (s *Service) UpdatePassword(ctx context.Context, userID, currentPassword, n
 	}
 
 	user.PasswordHash = newHash
+	user.TokenVersion++
 	user.UpdatedAt = s.now().UTC()
 
 	updated, err := s.users.Update(ctx, user)

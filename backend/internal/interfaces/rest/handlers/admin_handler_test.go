@@ -15,6 +15,7 @@ import (
 	domainuser "ps/internal/domain/user"
 	usermemory "ps/internal/infrastructure/user/memory"
 	"ps/internal/interfaces/rest/handlers"
+	"ps/internal/shared/middleware"
 )
 
 type mockTenantRepo struct {
@@ -142,5 +143,32 @@ func TestAdminHandler_Users(t *testing.T) {
 
 	if recAssign.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d: %s", recAssign.Code, recAssign.Body.String())
+	}
+
+	// 3. Update User Role - Attempt to change own role should return 400
+	roleBody, _ := json.Marshal(map[string]string{"role": "manager"})
+	reqSelfRole := httptest.NewRequest("PUT", "/api/v1/admin/users/"+u.ID+"/role", bytes.NewReader(roleBody))
+	reqSelfRole.SetPathValue("id", u.ID)
+	// Inject u.ID as current user ID into request context
+	ctxSelf := context.WithValue(reqSelfRole.Context(), middleware.UserIDKey, u.ID)
+	reqSelfRole = reqSelfRole.WithContext(ctxSelf)
+	recSelfRole := httptest.NewRecorder()
+	handler.UpdateUserRole(recSelfRole, reqSelfRole)
+
+	if recSelfRole.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 Bad Request for changing own role, got %d: %s", recSelfRole.Code, recSelfRole.Body.String())
+	}
+
+	// 4. Update User Role - Admin changes another user's role
+	adminUser, _ := userRepo.Create(context.Background(), domainuser.User{Name: "Admin User", Email: "admin@test.com", Role: domainuser.RoleAdmin, SuperAdmin: true})
+	reqOtherRole := httptest.NewRequest("PUT", "/api/v1/admin/users/"+u.ID+"/role", bytes.NewReader(roleBody))
+	reqOtherRole.SetPathValue("id", u.ID)
+	ctxOther := context.WithValue(reqOtherRole.Context(), middleware.UserIDKey, adminUser.ID)
+	reqOtherRole = reqOtherRole.WithContext(ctxOther)
+	recOtherRole := httptest.NewRecorder()
+	handler.UpdateUserRole(recOtherRole, reqOtherRole)
+
+	if recOtherRole.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK when admin updates other user's role, got %d: %s", recOtherRole.Code, recOtherRole.Body.String())
 	}
 }

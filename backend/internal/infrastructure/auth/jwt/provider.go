@@ -23,15 +23,16 @@ type Provider struct {
 }
 
 type jwtClaims struct {
-	Subject    string `json:"sub"`
-	Email      string `json:"email,omitempty"`
-	TenantID   string `json:"tenantId,omitempty"`
-	SuperAdmin bool   `json:"superAdmin,omitempty"`
-	Role       string `json:"role,omitempty"`
-	Type       string `json:"type"`
-	IssuedAt   int64  `json:"iat"`
-	ExpiresAt  int64  `json:"exp"`
-	JTI        string `json:"jti"`
+	Subject      string `json:"sub"`
+	Email        string `json:"email,omitempty"`
+	TenantID     string `json:"tenantId,omitempty"`
+	SuperAdmin   bool   `json:"superAdmin,omitempty"`
+	Role         string `json:"role,omitempty"`
+	TokenVersion int    `json:"tver,omitempty"`
+	Type         string `json:"type"`
+	IssuedAt     int64  `json:"iat"`
+	ExpiresAt    int64  `json:"exp"`
+	JTI          string `json:"jti"`
 }
 
 func NewProvider(accessSecret, refreshSecret string) *Provider {
@@ -52,7 +53,7 @@ func (p *Provider) GeneratePair(user domainuser.User) (portauth.TokenPair, error
 	if err != nil {
 		return portauth.TokenPair{}, err
 	}
-	refreshToken, err := p.GenerateRefreshToken(user.ID)
+	refreshToken, err := p.GenerateRefreshToken(user.ID, user.TokenVersion)
 	if err != nil {
 		return portauth.TokenPair{}, err
 	}
@@ -62,25 +63,31 @@ func (p *Provider) GeneratePair(user domainuser.User) (portauth.TokenPair, error
 func (p *Provider) GenerateAccessToken(user domainuser.User) (string, error) {
 	role := user.GetRole()
 	return p.signJWT(p.accessSecret, jwtClaims{
-		Subject:    user.ID,
-		Email:      user.Email,
-		TenantID:   user.TenantID,
-		SuperAdmin: role == domainuser.RoleAdmin,
-		Role:       string(role),
-		Type:       "access",
-		IssuedAt:   time.Now().UTC().Unix(),
-		ExpiresAt:  time.Now().UTC().Add(p.accessTTL).Unix(),
-		JTI:        randomID(),
+		Subject:      user.ID,
+		Email:        user.Email,
+		TenantID:     user.TenantID,
+		SuperAdmin:   role == domainuser.RoleAdmin,
+		Role:         string(role),
+		TokenVersion: user.TokenVersion,
+		Type:         "access",
+		IssuedAt:     time.Now().UTC().Unix(),
+		ExpiresAt:    time.Now().UTC().Add(p.accessTTL).Unix(),
+		JTI:          randomID(),
 	})
 }
 
-func (p *Provider) GenerateRefreshToken(userID string) (string, error) {
+func (p *Provider) GenerateRefreshToken(userID string, tokenVersion ...int) (string, error) {
+	var tver int
+	if len(tokenVersion) > 0 {
+		tver = tokenVersion[0]
+	}
 	return p.signJWT(p.refreshSecret, jwtClaims{
-		Subject:   userID,
-		Type:      "refresh",
-		IssuedAt:  time.Now().UTC().Unix(),
-		ExpiresAt: time.Now().UTC().Add(p.refreshTTL).Unix(),
-		JTI:       randomID(),
+		Subject:      userID,
+		TokenVersion: tver,
+		Type:         "refresh",
+		IssuedAt:     time.Now().UTC().Unix(),
+		ExpiresAt:    time.Now().UTC().Add(p.refreshTTL).Unix(),
+		JTI:          randomID(),
 	})
 }
 
@@ -99,11 +106,12 @@ func (p *Provider) ParseAccessToken(token string) (portauth.TokenClaims, error) 
 	}
 	isAdmin := role == "admin" || claims.SuperAdmin
 	return portauth.TokenClaims{
-		UserID:     claims.Subject,
-		Email:      claims.Email,
-		TenantID:   claims.TenantID,
-		SuperAdmin: isAdmin,
-		Role:       role,
+		UserID:       claims.Subject,
+		Email:        claims.Email,
+		TenantID:     claims.TenantID,
+		SuperAdmin:   isAdmin,
+		Role:         role,
+		TokenVersion: claims.TokenVersion,
 	}, nil
 }
 
@@ -112,7 +120,10 @@ func (p *Provider) ParseRefreshToken(token string) (portauth.TokenClaims, error)
 	if err != nil {
 		return portauth.TokenClaims{}, err
 	}
-	return portauth.TokenClaims{UserID: claims.Subject}, nil
+	return portauth.TokenClaims{
+		UserID:       claims.Subject,
+		TokenVersion: claims.TokenVersion,
+	}, nil
 }
 
 func (p *Provider) signJWT(secret []byte, claims jwtClaims) (string, error) {

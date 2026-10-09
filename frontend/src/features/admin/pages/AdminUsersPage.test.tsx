@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { AdminUsersPage } from "./AdminUsersPage";
 import { adminService } from "../services/admin.service";
+import { useAuthStore } from "../../auth/state/auth.store";
 
 vi.mock("../services/admin.service", () => ({
   adminService: {
@@ -16,6 +17,7 @@ vi.mock("../services/admin.service", () => ({
 describe("AdminUsersPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useAuthStore.getState().clear();
   });
 
   it("renders users list and KPI counts", async () => {
@@ -130,5 +132,42 @@ describe("AdminUsersPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Alterar Função do Usuário")).toBeInTheDocument();
     });
+  });
+
+  it("disables edit role button for the current logged-in user", async () => {
+    useAuthStore.getState().setUser({
+      id: "u1",
+      name: "Alice Super",
+      email: "alice@test.com",
+      role: "admin",
+      superAdmin: true,
+    });
+
+    vi.mocked(adminService.getUsers).mockResolvedValue([
+      {
+        id: "u1",
+        name: "Alice Super",
+        email: "alice@test.com",
+        role: "admin",
+        superAdmin: true,
+        tenantId: "org-alpha",
+        createdAt: "2026-08-28T00:00:00Z",
+      },
+    ]);
+    vi.mocked(adminService.getTenants).mockResolvedValue([]);
+
+    render(
+      <BrowserRouter>
+        <AdminUsersPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Alice Super")).toBeInTheDocument();
+    });
+
+    const editRoleBtn = screen.getByRole("button", { name: /Alterar Função/i });
+    expect(editRoleBtn).toBeInTheDocument();
+    expect(editRoleBtn).toBeDisabled();
   });
 });

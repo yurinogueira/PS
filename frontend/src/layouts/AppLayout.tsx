@@ -4,6 +4,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { useAuthStore } from "../features/auth/state/auth.store";
+import { authService } from "../features/auth/services/auth.service";
 import { useTenantStore } from "../store/tenantStore";
 import { useMenuStore } from "../store/menuStore";
 import { TenantStatusBanner } from "../features/shared";
@@ -15,6 +16,23 @@ export function AppLayout() {
 
   const { user } = useAuthStore();
   const { fetchTenantStatus } = useTenantStore();
+
+  useEffect(() => {
+    let isMounted = true;
+    authService
+      .getMe()
+      .then((me) => {
+        if (isMounted && me) {
+          useAuthStore.getState().setUser(me);
+        }
+      })
+      .catch(() => {
+        // Silently handled by apiClient interceptor if 401
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     useMenuStore.getState().closeAll();

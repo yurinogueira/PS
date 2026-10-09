@@ -41,12 +41,14 @@ import { useTranslation } from "react-i18next";
 import { adminService } from "../services/admin.service";
 import { AdminUser, Tenant } from "../types/admin.types";
 import { getUserRole, UserRole } from "../../auth/types/auth.types";
+import { useAuthStore } from "../../auth/state/auth.store";
 import { useDocumentTitle } from "../../shared/hooks/useDocumentTitle";
 
 export const AdminUsersPage = () => {
   const { t } = useTranslation();
   useDocumentTitle(t("admin.users.docTitle"));
 
+  const currentUser = useAuthStore((state) => state.user);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,6 +135,7 @@ export const AdminUsersPage = () => {
   const [roleErrorMessage, setRoleErrorMessage] = useState<string | null>(null);
 
   const handleOpenRole = (user: AdminUser) => {
+    if (currentUser?.id === user.id) return;
     setSelectedRoleUser(user);
     setSelectedRole(getUserRole(user));
     setRoleErrorMessage(null);
@@ -663,16 +666,31 @@ export const AdminUsersPage = () => {
                           ? t("admin.users.changeTenant")
                           : t("admin.users.assignTenant")}
                       </Button>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        color="secondary"
-                        startIcon={<ManageAccountsRoundedIcon />}
-                        onClick={() => handleOpenRole(u)}
-                        sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+                      <Tooltip
+                        title={
+                          currentUser?.id === u.id
+                            ? t(
+                                "admin.users.cannotChangeOwnRole",
+                                "Não é permitido alterar sua própria função",
+                              )
+                            : ""
+                        }
+                        arrow
                       >
-                        {t("admin.users.editRole", "Alterar Função")}
-                      </Button>
+                        <span>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            color="secondary"
+                            startIcon={<ManageAccountsRoundedIcon />}
+                            disabled={currentUser?.id === u.id}
+                            onClick={() => handleOpenRole(u)}
+                            sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+                          >
+                            {t("admin.users.editRole", "Alterar Função")}
+                          </Button>
+                        </span>
+                      </Tooltip>
                     </Box>
                   </TableCell>
                 </TableRow>

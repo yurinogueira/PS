@@ -8,17 +8,18 @@ type TokenPair struct {
 }
 
 type TokenClaims struct {
-	UserID     string
-	Email      string
-	TenantID   string
-	SuperAdmin bool
-	Role       string
+	UserID       string
+	Email        string
+	TenantID     string
+	SuperAdmin   bool
+	Role         string
+	TokenVersion int
 }
 
 type TokenService interface {
 	GeneratePair(user user.User) (TokenPair, error)
 	GenerateAccessToken(user user.User) (string, error)
-	GenerateRefreshToken(userID string) (string, error)
+	GenerateRefreshToken(userID string, tokenVersion ...int) (string, error)
 	ParseAccessToken(token string) (TokenClaims, error)
 	ParseRefreshToken(token string) (TokenClaims, error)
 }

@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	portauth "ps/internal/application/ports/auth"
+	userport "ps/internal/application/ports/user"
+	domainuser "ps/internal/domain/user"
 	"ps/internal/shared/authctx"
 	"ps/internal/shared/httpx"
 )
@@ -13,11 +15,12 @@ import (
 type contextKey string
 
 const (
-	UserIDKey     contextKey = "user_id"
-	TenantIDKey   contextKey = "tenant_id"
-	SuperAdminKey contextKey = "super_admin"
-	UserEmailKey  contextKey = "user_email"
-	UserRoleKey   contextKey = "user_role"
+	UserIDKey       contextKey = "user_id"
+	TenantIDKey     contextKey = "tenant_id"
+	SuperAdminKey   contextKey = "super_admin"
+	UserEmailKey    contextKey = "user_email"
+	UserRoleKey     contextKey = "user_role"
+	TokenVersionKey contextKey = "token_version"
 )
 
 func GetTenantID(ctx context.Context) string {
@@ -70,6 +73,13 @@ func IsManager(ctx context.Context) bool {
 	return GetUserRole(ctx) == "manager"
 }
 
+func GetTokenVersion(ctx context.Context) int {
+	if val, ok := ctx.Value(TokenVersionKey).(int); ok {
+		return val
+	}
+	return 0
+}
+
 func Auth(tokenService portauth.TokenService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -106,6 +116,7 @@ func Auth(tokenService portauth.TokenService) func(http.Handler) http.Handler {
 			ctx = context.WithValue(ctx, SuperAdminKey, isAdmin)
 			ctx = context.WithValue(ctx, UserEmailKey, claims.Email)
 			ctx = context.WithValue(ctx, UserRoleKey, role)
+			ctx = context.WithValue(ctx, TokenVersionKey, claims.TokenVersion)
 
 			// Also populate shared authctx
 			ctx = authctx.WithUser(ctx, claims.UserID, claims.Email, claims.TenantID, role)
@@ -128,28 +139,54 @@ func RequireTenant() func(http.Handler) http.Handler {
 	}
 }
 
-func RequireSuperAdmin() func(http.Handler) http.Handler {
-	return RequireAdmin()
+func RequireSuperAdmin(userRepo ...userport.Repository) func(http.Handler) http.Handler {
+	return RequireAdmin(userRepo...)
 }
 
-func RequireAdmin() func(http.Handler) http.Handler {
+func RequireAdmin(userRepo ...userport.Repository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !IsAdmin(r.Context()) {
 				httpx.Error(w, http.StatusForbidden, "Forbidden: administrator access required", nil)
 				return
 			}
+			if len(userRepo) > 0 && userRepo[0] != nil {
+				userID := GetUserID(r.Context())
+				u, err := userRepo[0].FindByID(r.Context(), userID)
+				if err != nil || (!u.SuperAdmin && u.GetRole() != domainuser.RoleAdmin) {
+					httpx.Error(w, http.StatusForbidden, "Forbidden: administrator access required", nil)
+					return
+				}
+				tokenVersion := GetTokenVersion(r.Context())
+				if tokenVersion < u.TokenVersion {
+					httpx.Error(w, http.StatusUnauthorized, "Session invalidated. Please log in again.", nil)
+					return
+				}
+			}
 			next.ServeHTTP(w, r)
 		})
 	}
 }
 
-func RequireAdminOrManager() func(http.Handler) http.Handler {
+func RequireAdminOrManager(userRepo ...userport.Repository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !IsAdmin(r.Context()) && !IsManager(r.Context()) {
 				httpx.Error(w, http.StatusForbidden, "Forbidden: administrator or manager access required", nil)
 				return
+			}
+			if len(userRepo) > 0 && userRepo[0] != nil {
+				userID := GetUserID(r.Context())
+				u, err := userRepo[0].FindByID(r.Context(), userID)
+				if err != nil || (!u.SuperAdmin && u.GetRole() != domainuser.RoleAdmin && u.GetRole() != domainuser.RoleManager) {
+					httpx.Error(w, http.StatusForbidden, "Forbidden: administrator or manager access required", nil)
+					return
+				}
+				tokenVersion := GetTokenVersion(r.Context())
+				if tokenVersion < u.TokenVersion {
+					httpx.Error(w, http.StatusUnauthorized, "Session invalidated. Please log in again.", nil)
+					return
+				}
 			}
 			next.ServeHTTP(w, r)
 		})

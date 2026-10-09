@@ -799,6 +799,7 @@
       "assignTenant": "Atribuir Tenant",
       "changeTenant": "Alterar Tenant",
       "editRole": "Alterar Função",
+      "cannotChangeOwnRole": "Não é permitido alterar sua própria função",
       "assignModal": {
         "title": "Atribuir Organização (Tenant)",
         "organization": "Organização",

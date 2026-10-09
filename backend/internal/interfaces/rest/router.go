@@ -115,12 +115,12 @@ func NewRouter(
 
 	// Admin routes wrapper (requires authentication + admin)
 	adminChain := func(h http.HandlerFunc) http.Handler {
-		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequireAdmin(), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
+		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequireAdmin(users), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
 	}
 
 	// Admin or Manager routes wrapper (requires authentication + admin or manager)
 	adminOrManagerChain := func(h http.HandlerFunc) http.Handler {
-		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequireAdminOrManager(), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
+		return middleware.Chain(h, middleware.Auth(tokens), middleware.RequireAdminOrManager(users), middleware.RequestID, middleware.StructuredLogging(cfg.LogLevel))
 	}
 
 	// Business routes wrapper (requires authentication + tenant)
