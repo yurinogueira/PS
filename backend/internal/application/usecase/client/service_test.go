@@ -263,7 +263,7 @@ func TestClientService(t *testing.T) {
 
 	// Seed valid foreign records for tenantID
 	personRepo.items["person-123"] = &persondomain.Person{ID: "person-123", TenantID: tenantID, Name: "John Doe"}
-	seasonRepo.items["season-123"] = &seasondomain.Season{ID: "season-123", TenantID: tenantID, Name: "Season 2026"}
+	seasonRepo.items["season-123"] = &seasondomain.Season{ID: "season-123", TenantID: tenantID, Name: "Season 2026", PhotographerIDs: []string{"photo-1"}}
 	photogRepo.items["photo-1"] = &photographerdomain.Photographer{ID: "photo-1", TenantID: tenantID, Name: "Photographer 1"}
 
 	// 1. Create with valid references
@@ -361,12 +361,13 @@ func TestClientService_CrossTenantValidation(t *testing.T) {
 
 	// Populate tenantA entities
 	personRepo.items["person-A"] = &persondomain.Person{ID: "person-A", TenantID: tenantA, Name: "Person A"}
-	seasonRepo.items["season-A"] = &seasondomain.Season{ID: "season-A", TenantID: tenantA, Name: "Season A"}
+	seasonRepo.items["season-A"] = &seasondomain.Season{ID: "season-A", TenantID: tenantA, Name: "Season A", PhotographerIDs: []string{"photo-A"}}
 	photogRepo.items["photo-A"] = &photographerdomain.Photographer{ID: "photo-A", TenantID: tenantA, Name: "Photo A"}
+	photogRepo.items["photo-A-unlinked"] = &photographerdomain.Photographer{ID: "photo-A-unlinked", TenantID: tenantA, Name: "Photo A Unlinked"}
 
 	// Populate tenantB entities
 	personRepo.items["person-B"] = &persondomain.Person{ID: "person-B", TenantID: tenantB, Name: "Person B"}
-	seasonRepo.items["season-B"] = &seasondomain.Season{ID: "season-B", TenantID: tenantB, Name: "Season B"}
+	seasonRepo.items["season-B"] = &seasondomain.Season{ID: "season-B", TenantID: tenantB, Name: "Season B", PhotographerIDs: []string{"photo-B"}}
 	photogRepo.items["photo-B"] = &photographerdomain.Photographer{ID: "photo-B", TenantID: tenantB, Name: "Photo B"}
 
 	// 1. Create with alien PersonID
@@ -422,6 +423,26 @@ func TestClientService_CrossTenantValidation(t *testing.T) {
 		err := svc.Create(ctx, c, tenantA)
 		if !errors.Is(err, client.ErrPhotographerNotFound) {
 			t.Fatalf("expected ErrPhotographerNotFound, got %v", err)
+		}
+	})
+
+	// 4b. Create with photographer not linked to season
+	t.Run("Create - photographer not linked to season", func(t *testing.T) {
+		c := &domain.SeasonClient{
+			PersonID: "person-A",
+			SeasonID: "season-A",
+			Dogs: []domain.Dog{
+				{
+					Breed: "Poodle",
+					Photos: []domain.Photo{
+						{FileNumber: "IMG_001", PhotographerID: "photo-A-unlinked"},
+					},
+				},
+			},
+		}
+		err := svc.Create(ctx, c, tenantA)
+		if !errors.Is(err, client.ErrPhotographerNotInSeason) {
+			t.Fatalf("expected ErrPhotographerNotInSeason, got %v", err)
 		}
 	})
 
@@ -500,6 +521,25 @@ func TestClientService_CrossTenantValidation(t *testing.T) {
 			t.Fatalf("expected ErrPhotographerNotFound, got %v", err)
 		}
 	})
+
+	t.Run("Update - photographer not linked to season", func(t *testing.T) {
+		updateAttempt := &domain.SeasonClient{
+			ID:       "client-A-1",
+			PersonID: "person-A",
+			SeasonID: "season-A",
+			Dogs: []domain.Dog{
+				{
+					Photos: []domain.Photo{
+						{FileNumber: "IMG_003", PhotographerID: "photo-A-unlinked"},
+					},
+				},
+			},
+		}
+		err := svc.Update(ctx, updateAttempt, tenantA)
+		if !errors.Is(err, client.ErrPhotographerNotInSeason) {
+			t.Fatalf("expected ErrPhotographerNotInSeason, got %v", err)
+		}
+	})
 }
 
 func TestClientService_PhotoCurrencyAndAmountValidation(t *testing.T) {
@@ -513,7 +553,7 @@ func TestClientService_PhotoCurrencyAndAmountValidation(t *testing.T) {
 	tenantID := "tenant-test"
 
 	personRepo.items["person-1"] = &persondomain.Person{ID: "person-1", TenantID: tenantID, Name: "Owner 1"}
-	seasonRepo.items["season-1"] = &seasondomain.Season{ID: "season-1", TenantID: tenantID, Name: "Season 1"}
+	seasonRepo.items["season-1"] = &seasondomain.Season{ID: "season-1", TenantID: tenantID, Name: "Season 1", PhotographerIDs: []string{"photo-1"}}
 	photogRepo.items["photo-1"] = &photographerdomain.Photographer{ID: "photo-1", TenantID: tenantID, Name: "Photo 1"}
 
 	t.Run("Create - negative amount paid rejected", func(t *testing.T) {

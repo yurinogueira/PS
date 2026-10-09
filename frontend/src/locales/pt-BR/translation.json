@@ -363,9 +363,11 @@
     "successSave": "Alterações salvas com sucesso!",
     "failSave": "Falha ao salvar as alterações.",
     "fields": {
+      "breed": "Raça",
       "dogName": "Nome do Cachorro",
       "fileNumber": "Número do Arquivo da Foto",
       "photographer": "Fotógrafo",
+      "noPhotographersEventHelper": "Nenhum fotógrafo vinculado a este evento.",
       "judges": "Juízes da Foto",
       "judgesPlaceholder": "Selecione os juízes",
       "noJudges": "Nenhum juiz cadastrado no evento",
@@ -427,7 +429,10 @@
     "successUnlink": "Cliente desvinculado com sucesso.",
     "errorLink": "Não foi possível vincular o cliente.",
     "errorUnlink": "Não foi possível desvincular o cliente.",
-    "errorLoad": "Não foi possível carregar os clientes."
+    "errorLoad": "Não foi possível carregar os clientes.",
+    "fields": {
+      "breed": "Raça"
+    }
   },
   "clientDetails": {
     "title": "Detalhes do Cliente",
@@ -451,9 +456,11 @@
     "errorDelete": "Erro ao excluir cliente.",
     "errorLoad": "Não foi possível carregar os dados do cliente.",
     "fields": {
+      "breed": "Raça",
       "dogName": "Nome do Cachorro",
       "fileNumber": "Número do Arquivo",
       "photographer": "Fotógrafo",
+      "noPhotographersEventHelper": "Nenhum fotógrafo vinculado a este evento.",
       "paymentMethod": "Forma de Pagamento",
       "amountPaid": "Valor Pago (R$)",
       "judges": "Juízes",
@@ -518,10 +525,12 @@
     "linking": "Salvando...",
     "cancel": "Cancelar",
     "fields": {
+      "breed": "Raça",
       "person": "Selecione a Pessoa",
       "dogName": "Raça",
       "fileNumber": "Número do Arquivo",
       "photographer": "Fotógrafo",
+      "noPhotographersEventHelper": "Nenhum fotógrafo vinculado a este evento.",
       "paymentMethod": "Pagamento",
       "amountPaid": "Valor Pago",
       "judges": "Juízes",

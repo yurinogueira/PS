@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { PersonDetailsPage } from "./PersonDetailsPage";
 import { personService } from "../../../services/api/person.service";
@@ -39,6 +39,7 @@ describe("PersonDetailsPage", () => {
       activeSeason: {
         id: "s1",
         name: "2026 - Dog Nikity",
+        photographer_ids: ["ph1"],
       },
     });
     vi.mocked(personService.getById).mockResolvedValue({
@@ -267,5 +268,137 @@ describe("PersonDetailsPage", () => {
     expect(await screen.findByText("Arquivo: DOB_001")).toBeInTheDocument();
     expect(screen.getByText("Campeão Jovem Especial")).toBeInTheDocument();
     expect(screen.getByText("Melhor Cabeça")).toBeInTheDocument();
+  });
+
+  it("renders translated breed label in new dog modal", async () => {
+    render(
+      <MemoryRouter initialEntries={["/people/p123"]}>
+        <Routes>
+          <Route path="/people/:id" element={<PersonDetailsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Mariana Souza")).toBeInTheDocument();
+    const addDogButtons = await screen.findAllByRole("button", {
+      name: /cadastrar cachorro/i,
+    });
+    fireEvent.click(addDogButtons[0]);
+
+    expect(screen.getByText("Cadastrar Novo Cachorro")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Raça/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/clients\.fields\.breed/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("filters photographer select by active season photographer_ids in add photo dialog", async () => {
+    vi.mocked(photographerService.list).mockResolvedValue([
+      { id: "ph1", name: "Ronaldo Rufino" },
+      { id: "ph2", name: "Edmilson Reis" },
+    ]);
+    useSeasonStore.setState({
+      activeSeason: {
+        id: "s1",
+        name: "tgeste teste",
+        photographer_ids: ["ph1"],
+      },
+    });
+    vi.mocked(clientService.list).mockResolvedValue({
+      data: [
+        {
+          id: "client-1",
+          person_id: "p123",
+          season_id: "s1",
+          dogs: [
+            {
+              breed: "Poodle",
+              is_owner: true,
+              competitions_won: 0,
+              photos: [],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/people/p123"]}>
+        <Routes>
+          <Route path="/people/:id" element={<PersonDetailsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Mariana Souza")).toBeInTheDocument();
+    const addPhotosBtn = await screen.findByRole("button", {
+      name: /^adicionar fotos$/i,
+    });
+    fireEvent.click(addPhotosBtn);
+
+    expect(screen.getByText("Adicionar Fotos para Poodle")).toBeInTheDocument();
+
+    const photogSelect = screen.getByLabelText("Fotógrafo");
+    fireEvent.mouseDown(photogSelect);
+
+    const listbox = screen.getByRole("listbox");
+    expect(within(listbox).getByText("Ronaldo Rufino")).toBeInTheDocument();
+    expect(
+      within(listbox).queryByText("Edmilson Reis"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows none informed and helper text when active season has no photographers", async () => {
+    vi.mocked(photographerService.list).mockResolvedValue([
+      { id: "ph1", name: "Ronaldo Rufino" },
+    ]);
+    useSeasonStore.setState({
+      activeSeason: {
+        id: "s1",
+        name: "Empty Event",
+        photographer_ids: [],
+      },
+    });
+    vi.mocked(clientService.list).mockResolvedValue({
+      data: [
+        {
+          id: "client-1",
+          person_id: "p123",
+          season_id: "s1",
+          dogs: [
+            {
+              breed: "Beagle",
+              is_owner: true,
+              competitions_won: 0,
+              photos: [],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/people/p123"]}>
+        <Routes>
+          <Route path="/people/:id" element={<PersonDetailsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Mariana Souza")).toBeInTheDocument();
+    const addPhotosBtn = await screen.findByRole("button", {
+      name: /^adicionar fotos$/i,
+    });
+    fireEvent.click(addPhotosBtn);
+
+    expect(
+      screen.getAllByText("Nenhum fotógrafo vinculado a este evento.").length,
+    ).toBeGreaterThan(0);
   });
 });

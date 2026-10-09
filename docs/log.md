@@ -18,6 +18,25 @@ Para acessar o índice completo da base de conhecimento, consulte o [Catálogo C
 
 ---
 
+## 📅 2026-10-09 — Correção de Chave i18n na Raça e Filtragem de Fotógrafos pelo Evento Ativo (Issue #132)
+
+### 🎯 Resumo da Intervenção
+- **Contexto**: Resolução do bug de chave de internacionalização não traduzida (`clients.fields.breed *`) na tela de detalhes da pessoa e correção da listagem de fotógrafos nos diálogos de foto para exibir apenas profissionais associados ao evento ativo, prevenindo inconsistências e vinculações indevidas.
+- **Modificações por Camada**:
+  - **Backend**:
+    - Definido erro de domínio `client.ErrPhotographerNotInSeason` para rejeitar fotos atribuídas a fotógrafos fora do escopo da temporada (`season.PhotographerIDs`).
+    - Atualizado `validateReferences` em `client.Service` para validar se o fotógrafo pertence ao tenant (`ErrPhotographerNotFound`) e se está associado à temporada (`ErrPhotographerNotInSeason`), retornando HTTP 400 Bad Request nos endpoints de criação e atualização de clientes.
+    - Testes unitários com fixtures atualizadas cobrindo rejeição de fotógrafos fora do evento.
+  - **Frontend / UI**:
+    - Adicionadas chaves de tradução `breed` e `noPhotographersEventHelper` em `pt-BR` e `en-US` nos escopos de `personDetails`, `clients`, `clientDetails` e `linkClient`.
+    - `PersonDetailsPage.tsx`: Corrigida chave para `t("personDetails.fields.breed")`. Seletores de fotógrafo agora filtram por `activeSeason.photographer_ids`, exibem mensagem de auxílio quando vazio, pré-selecionam o primeiro fotógrafo disponível ou opção "Nenhum / Não informado".
+    - `LinkClientModal`, `ClientDetailsModal`, `ClientsPage`, `ClientDetailsPage` e `AddDogModal`: Padronizada a filtragem de fotógrafos pelo evento ativo, preservando fotógrafos pré-atribuídos em edição retroativa e permitindo "Nenhum / Não informado".
+- **Documentos Canônicos Atualizados**:
+  - [docs/domain/client.md](domain/client.md)
+  - [docs/log.md](log.md)
+
+---
+
 ## 📅 2026-10-09 — Remoção de Scripts Legados de Migração e Saneamento da Raiz do Projeto
 
 ### 🎯 Resumo da Intervenção

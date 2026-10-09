@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -9,6 +9,7 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
+  FormHelperText,
   Checkbox,
   FormControlLabel,
   IconButton,
@@ -76,6 +77,12 @@ export const AddDogModal = ({
   const [client, setClient] = useState<SeasonClient | null>(null);
   const [person, setPerson] = useState<Person | null>(null);
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
+
+  const eventPhotographers = useMemo(() => {
+    if (!activeSeason?.photographer_ids?.length) return [];
+    const idSet = new Set(activeSeason.photographer_ids);
+    return photographers.filter((p) => idSet.has(p.id));
+  }, [photographers, activeSeason]);
   const [dog, setDog] = useState<Dog>(createEmptyDog());
   const [compInput, setCompInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -139,7 +146,7 @@ export const AddDogModal = ({
     const photos = dog.photos ? [...dog.photos] : [];
     photos.unshift({
       file_number: "",
-      photographer_id: "",
+      photographer_id: eventPhotographers[0]?.id || "",
       payment_method: "Pix",
       currency: "BRL",
       amount_paid: 0,
@@ -435,12 +442,20 @@ export const AddDogModal = ({
                         updatePhoto(pIdx, "photographer_id", e.target.value)
                       }
                     >
-                      {photographers.map((p) => (
+                      <MenuItem value="">
+                        <em>{t("linkClient.fields.noneInformed")}</em>
+                      </MenuItem>
+                      {eventPhotographers.map((p) => (
                         <MenuItem key={p.id} value={p.id}>
                           {p.name}
                         </MenuItem>
                       ))}
                     </Select>
+                    {eventPhotographers.length === 0 && (
+                      <FormHelperText>
+                        {t("linkClient.fields.noPhotographersEventHelper")}
+                      </FormHelperText>
+                    )}
                   </FormControl>
                   <Autocomplete
                     multiple
