@@ -3,8 +3,8 @@ name: ps-workflow
 description: >-
   Fluxo padronizado de ciclo de vida de desenvolvimento e entrega de tarefas no PS:
   sincronização obrigatória da branch main, preparação de branch, commits semânticos
-  (Conventional Commits), validação via scripts, abertura de Pull Request para a branch 'main'
-  e fechamento de issue com comentários vinculados utilizando o GitHub MCP.
+  (Conventional Commits), atualização mandatória de documentação canônica (OKF) e docs/log.md,
+  validação unificada via scripts, abertura de Pull Request para a branch 'main' e fechamento de issue.
 ---
 
 # Skill: Fluxo de Trabalho, Versionamento e Entrega — PS
@@ -19,11 +19,13 @@ Esta skill estabelece o fluxo de trabalho obrigatório de ponta a ponta para qua
 flowchart LR
     A[1. Ler/Mapear Issue] --> B[2. Sincronizar Main Remota]
     B --> C[3. Criar Branch Dedicada]
-    C --> D[4. Desenvolver & Validar]
-    D --> E[5. Commit Semântico]
-    E --> F[6. Re-sincronizar com Main]
-    F --> G[7. Subir PR para Main]
-    G --> H[8. Comentar e Fechar Issue]
+    C --> D[4. Desenvolver & Testar]
+    D --> E[5. Atualizar Docs OKF & docs/log.md]
+    E --> F[6. Validar check.sh all]
+    F --> G[7. Commit Semântico]
+    G --> H[8. Re-sincronizar com Main]
+    H --> I[9. Subir PR para Main]
+    I --> J[10. Comentar e Fechar Issue]
 ```
 
 ---
@@ -59,20 +61,58 @@ git checkout -b <tipo>/<nome-da-branch>
 
 ---
 
-### 2. Desenvolvimento & Validação Mandatória
+### 2. Desenvolvimento & Testes Locais
 - Execute as modificações necessárias seguindo as diretrizes da arquitetura (`ps-dev`) e segurança (`ps-security`).
 - Se houver alteração em rotas ou handlers HTTP da API Go, execute obrigatoriamente:
   ```bash
   ./scripts/swagger.sh
   ```
-- Execute a checagem completa e assegure 100% de aprovação antes de qualquer commit:
-  ```bash
-  ./scripts/check.sh all
-  ```
 
 ---
 
-### 3. Commits Semânticos (Conventional Commits)
+### 3. Atualização Mandatória da Documentação Canônica (OKF) & Log Histórico
+
+> [!CAUTION]
+> **Zero-Divergence & Trilha de Auditoria Obrigatória**: Todo trabalho — seja nova funcionalidade (`feat`), correção de bug (`fix`), atualização de versões/dependências (`chore`/`deps`/`ci`) ou refatoração (`refactor`) — **DEVE** incluir no mesmo commit/PR:
+> 1. A atualização dos documentos canônicos correspondentes sob `docs/`.
+> 2. Uma nova entrada datada no histórico cronológico em `docs/log.md`.
+>
+> **Nenhum PR é considerado completo sem essa etapa.**
+
+#### Matriz de Ação Documental por Tipo de Tarefa:
+| Tipo de Tarefa | Documento Canônico a Atualizar | Ação em `docs/log.md` |
+| :--- | :--- | :--- |
+| **Nova Feature (`feat`)** | `docs/domain/`, `docs/frontend/` e/ou `docs/architecture/` | Registrar nova entrada datada com escopo e endpoints/telas adicionados |
+| **Correção de Bug (`fix`)** | Documento do componente afetado (`docs/architecture/auth-and-security.md`, `docs/domain/...`) | Registrar causa raiz, correção aplicada e mitigação de regressão |
+| **Atualização de Versão / Deps (`chore`/`deps`/`ci`)** | `docs/operations/docker-and-local-dev.md`, `docs/operations/ci-cd-pipelines.md`, `docs/index.md` | Registrar bumps de runtimes (Go, Node), banco (MongoDB), libs ou providers |
+| **Decisão Estrutural (`refactor`/`arch`)** | Novo ADR em `docs/adrs/` e indexação em `docs/index.md` | Registrar motivação arquitetural e consequências da decisão |
+
+#### Como Registrar em `docs/log.md`:
+Adicione uma seção no topo do histórico (abaixo do cabeçalho):
+```markdown
+## 📅 AAAA-MM-DD — <Título Semântico> (#<id_da_issue_ou_pr>)
+
+### 🎯 Resumo da Alteração
+[Contexto, motivação e impacto das alterações]
+
+### 🛠️ Modificações Realizadas
+- **Camada/Módulo**: [Detalhamento técnico das mudanças]
+- **Documentos Canônicos Atualizados**: [docs/caminho/arquivo.md](caminho/arquivo.md)
+```
+Atualize também o campo `timestamp: AAAA-MM-DD` no frontmatter de `docs/log.md`.
+
+---
+
+### 4. Validação Mandatória de Qualidade
+
+Execute a checagem completa e assegure 100% de aprovação antes de qualquer commit:
+```bash
+./scripts/check.sh all
+```
+
+---
+
+### 5. Commits Semânticos (Conventional Commits)
 - Organize os commits de forma atômica seguindo o padrão Conventional Commits:
   - **Com Issue**: `<tipo>(<escopo>): <descrição clara no imperativo> (#<id_da_issue>)`
     - `feat(reports): extração assíncrona de relatório csv com baixo consumo de memória (#27)`
@@ -82,7 +122,7 @@ git checkout -b <tipo>/<nome-da-branch>
 
 ---
 
-### 4. Re-sincronização com `main` e Envio do Pull Request (GitHub MCP)
+### 6. Re-sincronização com `main` e Envio do Pull Request (GitHub MCP)
 - Antes de subir a branch ou abrir o PR, garanta que sua branch de trabalho incorpora as atualizações mais recentes da `main`:
   ```bash
   git fetch origin main
@@ -96,11 +136,16 @@ git checkout -b <tipo>/<nome-da-branch>
   - **Body**: Deve conter:
     - Resumo detalhado das alterações realizadas.
     - Referência de fechamento se aplicável: `Closes #<id_da_issue>` ou `Resolves #<id_da_issue>`.
-    - Checklist de validações executadas (`./scripts/check.sh all`, `./scripts/swagger.sh`).
+    - Checklist de validações executadas:
+      - `[✓] Documentação canônica atualizada sob docs/`
+      - `[✓] Registro cronológico datado adicionado em docs/log.md`
+      - `[✓] ./scripts/check.sh docs (validação OKF aprovada)`
+      - `[✓] ./scripts/check.sh all (100% de testes e checagens aprovados)`
+      - `[✓] ./scripts/swagger.sh (Swagger atualizado, se aplicável)`
 
 ---
 
-### 5. Atualização e Fechamento da Issue (GitHub MCP)
+### 7. Atualização e Fechamento da Issue (GitHub MCP)
 - Se a tarefa estiver vinculada a uma issue:
   - Adicione um comentário na issue utilizando `add_issue_comment` informando a entrega com o link do PR criado.
   - Atualize o status da issue para fechada utilizando `update_issue(state: "closed")` quando o trabalho for entregue.

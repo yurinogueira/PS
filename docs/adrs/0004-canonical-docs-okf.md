@@ -48,6 +48,20 @@ Adotamos o **Open Knowledge Format (OKF)** do Google Cloud como padrão para tod
 
 ---
 
+## 📜 Adendo de Governança (2026-10-09): Documentação Contínua & Trilha Histórica Mandatória
+
+Em auditoria após os primeiros ciclos de desenvolvimento (PRs #122 a #130), constatou-se que alterações pontuais de dependências, novas telas, rotas e correções de bugs foram integradas sem atualizar os documentos correspondentes ou o registro cronológico em `docs/log.md`. Para mitigar qualquer risco de desatualização (*doc rot*), estabelece-se a regra inegociável:
+
+1. **Escopo Universal**: A sincronização documental e o registro datado em `docs/log.md` aplicam-se a **100% das tarefas**:
+   - `feat` (novas funcionalidades/rotas/telas)
+   - `fix` (correções de bugs/segurança)
+   - `chore`/`deps`/`ci` (atualização de versões de Go, Node, MongoDB, libs e terraform)
+   - `refactor`/`perf` (reestruturações e otimizações)
+2. **Registro Datado em `docs/log.md`**: Cada PR ou commit de entrega deve conter uma nova seção datada (`YYYY-MM-DD`) descrevendo a intervenção técnica e os arquivos de documentação alterados.
+3. **Quality Gate Restritivo**: PRs sem a devida atualização e registro em `docs/log.md` são bloqueados na revisão e nos checklists de agentes.
+
+---
+
 ## 🔗 Referências Cruzadas
 - [Catálogo Canônico](../index.md)
 - [Log de Modificações](../log.md)

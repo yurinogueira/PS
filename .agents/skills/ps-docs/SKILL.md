@@ -82,20 +82,59 @@ timestamp: 2026-10-02
 ### 4. Indexação Mandatória em `docs/index.md`
 - **Obrigatório**: Todo novo documento adicionado deve ter seu link e breve descrição inseridos na respectiva seção de `docs/index.md`. O validador rejeitará documentos órfãos.
 
-### 5. Registro Cronológico em `docs/log.md`
-- Registre a adição ou evolução no arquivo `docs/log.md` com a data atual e resumo das motivações.
+### 5. Registro Cronológico Obrigatório em `docs/log.md`
+- Toda adição, evolução, correção ou atualização de dependência **DEVE** ser registrada no arquivo `docs/log.md` na data em que for executada (`AAAA-MM-DD`).
+- Atualize sempre o campo `timestamp:` no frontmatter do próprio `docs/log.md`.
+- Formato obrigatório da seção no log:
+  ```markdown
+  ## 📅 AAAA-MM-DD — <Título Semântico da Mudança> (#<issue_ou_pr>)
+
+  ### 🎯 Resumo da Modificação
+  [Descrição sucinta da motivação, contexto de negócio/técnico e impacto gerado]
+
+  ### 🛠️ Modificações por Camada
+  - **Backend / Domínio**: [Detalhamento de structs, endpoints, use cases ou contratos]
+  - **Frontend / UI**: [Detalhamento de telas, modais, componentes ou stores Zustand]
+  - **Operações / Infra / CI**: [Detalhamento de dependências, Docker, workflows ou terraform]
+  - **Documentos Canônicos Atualizados**:
+    - [docs/domain/cliente.md](domain/cliente.md)
+    - [docs/architecture/auth-and-security.md](architecture/auth-and-security.md)
+  ```
 
 ---
 
-## 🔄 3. Protocolo de Manutenção e Melhorias ("Código e Doc no Mesmo PR")
+## 🔄 3. Protocolo Universal de Manutenção Contínua ("Zero-Divergence OKF")
 
 > [!CAUTION]
-> **Divergência Zero**: Se uma alteração de código modificar entidades de domínio, endpoints REST, variáveis de ambiente, fluxos de segurança ou componentes de UI, a documentação canônica correspondente **DEVE** ser atualizada no mesmo commit ou pull request.
+> **Regra Universal Inegociável**: **QUALQUER TAREFA** executada por um desenvolvedor ou agente autônomo — seja criar novas telas/regras, corrigir um bug sutil, alterar uma biblioteca, atualizar uma versão de runtime ou refatorar código — **EXIGE A ATUALIZAÇÃO DA DOCUMENTAÇÃO CANÔNICA E DO LOG HISTÓRICO NO MESMO PR**.
+> Nunca encerre uma tarefa sem atualizar `docs/` e `docs/log.md`.
 
-- **Alteração em Entidades Go (`backend/internal/domain/`)**: Atualize o respectivo arquivo em `docs/domain/`.
-- **Alteração em Autenticação ou Headers HTTP**: Atualize `docs/architecture/auth-and-security.md`.
-- **Alteração em Stores Zustand ou Rotas**: Atualize `docs/frontend/state-management.md` ou `docs/frontend/routing-and-rbac.md`.
-- **Alteração em Infraestrutura ou Scripts**: Atualize `docs/operations/`.
+### Guia de Correspondência de Alterações:
+
+1. **Novas Funcionalidades (`feat`)**:
+   - Novas rotas, telas ou componentes: `docs/frontend/ui-components.md` e `docs/frontend/routing-and-rbac.md`.
+   - Novas regras de negócio ou entidades: `docs/domain/<subdominio>.md`.
+   - Novos fluxos de dados ou permissões: `docs/architecture/auth-and-security.md` ou `multitenancy-and-data.md`.
+   - Registro datado: `docs/log.md`.
+
+2. **Correções de Defeitos e Segurança (`fix`)**:
+   - Correção em autenticação, cookies, sessões ou roles: `docs/architecture/auth-and-security.md` e `docs/domain/auth.md`.
+   - Correção em cálculos, regras ou relatórios: `docs/domain/<subdominio>.md` (ex: `docs/domain/report.md`, `client.md`).
+   - Correção de layout, responsividade ou acessibilidade: `docs/frontend/ui-components.md`.
+   - Registro datado: `docs/log.md` (descrever a causa raiz e a correção aplicada).
+
+3. **Atualização de Versões e Dependências (`chore`/`deps`/`ci`)**:
+   - Bumps de runtime (Go, Node): `docs/operations/docker-and-local-dev.md`, `docs/operations/ci-cd-pipelines.md`, `docs/index.md` e `.agents/skills/ps-dev/SKILL.md`.
+   - Bumps de banco de dados (MongoDB): `docs/operations/docker-and-local-dev.md` e `docs/index.md`.
+   - Bumps de bibliotecas frontend (React, Vite, MUI): `docs/frontend/ui-components.md` e `docs/operations/docker-and-local-dev.md`.
+   - Bumps de Terraform ou nuvem: `docs/operations/deploy-and-infrastructure.md`.
+   - Registro datado: `docs/log.md` (especificar quais pacotes foram atualizados e motivação).
+
+4. **Decisões Arquiteturais e Refatorações (`refactor`/`adr`)**:
+   - Nova decisão técnica estrutural: novo arquivo em `docs/adrs/XXXX-<nome>.md`, indexado em `docs/index.md`.
+   - Mudança estrutural de serviços ou storage: `docs/architecture/overview.md` ou `storage-and-media.md`.
+   - Registro datado: `docs/log.md`.
+
 
 ---
 

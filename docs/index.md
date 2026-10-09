@@ -35,9 +35,9 @@ Para garantir máxima eficiência no consumo de tokens e prevenir alucinações 
 ```mermaid
 flowchart TD
     subgraph Core["Plataforma PS"]
-        API["Backend REST (Go 1.25)<br>Clean Architecture + DDD"]
+        API["Backend REST (Go 1.26)<br>Clean Architecture + DDD"]
         SPA["Frontend SPA (React 19)<br>Vite + MUI v6 + Zustand"]
-        DB[(MongoDB 8 / Atlas<br>Multi-tenant Isolado)]
+        DB[(MongoDB 9 / Atlas<br>Multi-tenant Isolado)]
         S3["Storage de Mídia<br>Local / OCI Object Storage"]
     end
 

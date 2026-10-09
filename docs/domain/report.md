@@ -59,6 +59,9 @@ type ReportFilters struct {
 1. **Execução Não-Bloqueante**: Grandes extrações de clientes não bloqueiam requisições HTTP REST. O cliente inicia a solicitação recebendo um `job_id` e monitora o status (`pending` -> `processing` -> `completed`).
 2. **Streaming com Baixo Consumo de Memória**: O gerador em Go lê os registros do MongoDB utilizando cursors iterativos (`mongo.Cursor`), formatando as linhas do CSV diretamente no buffer de saída sem carregar o dataset completo na memória RAM.
 3. **Expiração Automática (TTL)**: Arquivos gerados expiram em 24 horas, sendo purgados automaticamente do storage para controle de custos de armazenamento ([Armazenamento e Mídia](../architecture/storage-and-media.md)).
+4. **Formatação Multimoeda (`FormatPaidAmount`)**: A coluna de valor pago suporta `BRL` (`R$`), `USD` (`$`) e `OTHER` (`Outro`), exibindo os valores com formatação monetária padronizada sem distorções de decimais.
+5. **Priorização de Competições da Foto**: O relatório prioriza as competições específicas da foto (`photo.Competitions`); caso ausentes, adota as competições do cão (`dog.WonCompetitions`) como fallback retroativo.
+6. **Sanitização de CSV**: Células com caracteres de controle ou injeção de fórmulas CSV são higienizadas para leitura segura no Excel.
 
 ---
 

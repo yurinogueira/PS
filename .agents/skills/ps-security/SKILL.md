@@ -3,7 +3,8 @@ name: ps-security
 description: >-
   Auditoria contínua de segurança, prevenção de vulnerabilidades (OWASP Top 10),
   validação de autenticação por cookies HttpOnly, proteção contra enumeração,
-  hashing seguro de tokens, mitigação de SMTP injection, rate limiting e sanitização de infraestrutura para o PS.
+  hashing seguro de tokens, mitigação de SMTP injection, rate limiting, sanitização
+  de infraestrutura e atualização mandatória da documentação canônica de segurança (OKF) e docs/log.md.
 ---
 
 # Skill: Segurança, Defesa em Profundidade e Prevenção de Vulnerabilidades — PS
@@ -77,6 +78,11 @@ Antes de submeter qualquer modificação que envolva autenticação, usuários, 
 - [ ] Nenhum segredo ou chave privada RSA está em texto plano em `.tfvars` ou `.hcl`.
 - [ ] A regra de SSH no OCI utiliza `var.admin_cidr` em vez de `0.0.0.0/0`.
 
+### 7. Checklist de Documentação Canônica de Segurança (OKF) & Log de Auditoria
+- [ ] **Documentação Canônica Atualizada**: Qualquer correção de vulnerabilidade (ex: dessincronização de roles em sessão, DoS em bcrypt, timing attacks), ajuste em autenticação, roles, cookies, headers, rate limiting ou sanitização deve atualizar obrigatoriamente `docs/architecture/auth-and-security.md` (e `docs/domain/auth.md` se impactar entidades DDD de autenticação).
+- [ ] **Trilha de Auditoria em `docs/log.md`**: Adicionar entrada datada no topo de `docs/log.md` no formato padronizado `## 📅 AAAA-MM-DD — <Título> (#<issue_ou_pr>)` registrando a vulnerabilidade mitigada, causa raiz, correção aplicada e arquivos atualizados.
+- [ ] **Validação Automatizada de Documentação**: Executar `./scripts/check.sh docs` e `./scripts/check.sh all` garantindo 100% de conformidade antes de submeter commits ou Pull Requests.
+
 ---
 
 ## 🚨 Matriz de Padrões Inseguros vs. Padrões Seguros
@@ -94,12 +100,16 @@ Antes de submeter qualquer modificação que envolva autenticação, usuários, 
 | `w.Header().Set("Access-Control-Allow-Origin", "*")` com credenciais | Whitelist de origens via `ALLOWED_ORIGINS` | Vazamento de dados cross-origin |
 | `filepath.Join(base, path)` sem checagem de prefixo | `filepath.Abs()` + checagem de prefixo base | Arbitrary File Read / Path Traversal |
 | `ports: - "27017:27017"` no MongoDB em produção | Rede interna Docker (`mongodb://mongo:27017`) | Exposição pública do banco de dados |
+| Entregar PR de segurança sem atualizar docs | Atualizar `docs/architecture/auth-and-security.md` e `docs/log.md` | Desvio e dessincronização da base de conhecimento |
 
 ---
 
 ## ⚡ Comandos Rápidos de Validação de Segurança
 
 ```bash
+# Validação da documentação canônica (OKF) e integridade do histórico docs/log.md
+./scripts/check.sh docs
+
 # Validação geral de integridade, testes unitários, tipos e lints
 ./scripts/check.sh all
 

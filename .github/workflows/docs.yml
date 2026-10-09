@@ -4,11 +4,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'docs/**'
-      - 'scripts/check-docs.sh'
-      - 'scripts/check.sh'
-      - '.github/workflows/docs.yml'
   push:
     branches:
       - main
@@ -33,8 +28,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-      - name: Validate OKF Bundle Integrity
+      - name: Validate OKF Bundle Integrity & Zero-Divergence
         run: |
           chmod +x scripts/check-docs.sh
-          ./scripts/check-docs.sh
+          if [ "${{ github.actor }}" = "dependabot[bot]" ]; then
+            ./scripts/check-docs.sh
+          else
+            ./scripts/check-docs.sh --verify-sync
+          fi

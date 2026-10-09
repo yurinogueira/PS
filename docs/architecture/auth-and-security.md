@@ -74,6 +74,10 @@ O PS suporta quatro papéis hierárquicos implementados no domínio e validados 
 3. **`photographer`**: Fotógrafo parceiro; realiza uploads e associa fotos a clientes e pessoas.
 4. **`user`**: Cliente ou visualizador; consulta suas próprias fotografias e histórico de compras.
 
+### Sincronização Ativa de Sessão & Proteção contra Auto-Escalonamento (#118)
+- **Revalidação em Tempo Real**: Para mitigar a persistência indevida de privilégios revogados em tokens pré-existentes, o `AuthMiddleware` revalida ativamente o usuário no banco de dados (`userRepo.FindByID`) a cada ciclo autenticado, atualizando a role no contexto e rejeitando imediatamente contas desativadas ou tokens com IDs inválidos (`401 Unauthorized`).
+- **Prevenção de Auto-Escalonamento e Auto-Demissão**: Usuários administradores são impedidos de alterar a própria role no painel administrativo (`AdminUsersPage` e `admin_handler`), eliminando riscos de auto-escalonamento ou bloqueio acidental (*lockout*).
+
 No frontend, a renderização condicional de menus e a proteção de rotas são orquestradas pelo componente `ProtectedRoute` ([Roteamento e RBAC](../frontend/routing-and-rbac.md)).
 
 ---

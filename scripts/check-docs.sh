@@ -12,6 +12,13 @@ fi
 
 ALLOWED_TYPES="index|log|architecture|domain|frontend|operations|adr|runbook|concept"
 
+VERIFY_SYNC=false
+for arg in "$@"; do
+  if [ "$arg" = "--verify-sync" ]; then
+    VERIFY_SYNC=true
+  fi
+done
+
 ERRORS=0
 FILE_COUNT=0
 LINK_COUNT=0
@@ -111,10 +118,69 @@ else
   done < <(find "$DOCS_DIR" -type f -name "*.md" | sort)
 fi
 
+# 4. Validar integridade e estrutura cronológica de docs/log.md
+LOG_FILE="$DOCS_DIR/log.md"
+if [ ! -f "$LOG_FILE" ]; then
+  log_error "$DOCS_DIR" "Arquivo de histórico 'docs/log.md' não encontrado"
+else
+  # Validar formato ISO YYYY-MM-DD no frontmatter timestamp
+  log_fm_ts=$(grep -E '^timestamp:' "$LOG_FILE" | head -n 1 | awk '{print $2}' | tr -d '"' | tr -d "'" || true)
+  if [ -z "$log_fm_ts" ] || ! echo "$log_fm_ts" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+    log_error "$LOG_FILE" "Campo 'timestamp:' em docs/log.md deve estar no formato ISO AAAA-MM-DD (ex: 2026-10-09)"
+  fi
+
+  # Validar presença de seções datadas
+  first_entry_date=$(grep -E '^## 📅 [0-9]{4}-[0-9]{2}-[0-9]{2}' "$LOG_FILE" | head -n 1 | sed -E 's/^## 📅 ([0-9]{4}-[0-9]{2}-[0-9]{2}).*/\1/' || true)
+  if [ -z "$first_entry_date" ]; then
+    log_error "$LOG_FILE" "docs/log.md não contém nenhuma seção no formato obrigatório '## 📅 AAAA-MM-DD — <Título>'"
+  elif [ -n "$log_fm_ts" ] && [ "$log_fm_ts" != "$first_entry_date" ]; then
+    log_error "$LOG_FILE" "Divergência em docs/log.md: o frontmatter timestamp ('$log_fm_ts') não coincide com a data da entrada mais recente ('$first_entry_date')"
+  fi
+fi
+
+# 5. Se --verify-sync ativo, validar se mudanças em código/infra possuem correspondente em docs/
+if [ "$VERIFY_SYNC" = true ]; then
+  if command -v git &>/dev/null && git -C "$PROJECT_ROOT" rev-parse --is-inside-work-tree &>/dev/null; then
+    diff_target=""
+    if git -C "$PROJECT_ROOT" rev-parse --verify origin/main &>/dev/null; then
+      diff_target="origin/main"
+    elif git -C "$PROJECT_ROOT" rev-parse --verify main &>/dev/null; then
+      diff_target="main"
+    elif git -C "$PROJECT_ROOT" rev-parse --verify HEAD~1 &>/dev/null; then
+      diff_target="HEAD~1"
+    fi
+
+    changed_files=$( { [ -n "$diff_target" ] && git -C "$PROJECT_ROOT" diff --name-only "$diff_target" 2>/dev/null || true; git -C "$PROJECT_ROOT" status --porcelain 2>/dev/null | sed -E 's/^...//; s/.* -> //'; } | sort -u )
+
+    if [ -n "$changed_files" ]; then
+      code_patterns="^(backend/|frontend/|terraform/|deploy/|scripts/|\.github/|\.agents/)"
+      code_changed=$(echo "$changed_files" | grep -E "$code_patterns" || true)
+
+      if [ -n "$code_changed" ]; then
+        docs_changed=$(echo "$changed_files" | grep -E "^docs/" || true)
+        log_changed=$(echo "$changed_files" | grep -E "^docs/log\.md$" || true)
+
+        if [ -z "$docs_changed" ]; then
+          log_error "$DOCS_DIR" "Zero-Divergence Violation: Arquivos de código/infraestrutura foram alterados, mas nenhum documento sob 'docs/' foi atualizado."
+        elif [ -z "$log_changed" ]; then
+          log_error "$DOCS_DIR/log.md" "Zero-Divergence Violation: Modificações de código e docs/ detectadas, mas 'docs/log.md' não foi atualizado com o registro da intervenção."
+        fi
+      fi
+    fi
+  else
+    echo "ℹ️ [Docs] Ambiente Git não detectado; verificação de sincronização ignorada."
+  fi
+fi
+
 if [ $ERRORS -ne 0 ]; then
   echo "❌ [Docs] Falha na validação da documentação: $ERRORS erro(s) encontrado(s)."
   exit 1
 fi
 
-echo "✓ [Docs] OK ($FILE_COUNT arquivos e $LINK_COUNT links locais validados com sucesso)"
+sync_msg=""
+if [ "$VERIFY_SYNC" = true ]; then
+  sync_msg=" [Zero-Divergence verificado]"
+fi
+
+echo "✓ [Docs] OK ($FILE_COUNT arquivos e $LINK_COUNT links locais validados com sucesso$sync_msg)"
 exit 0

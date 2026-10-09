@@ -32,13 +32,13 @@ As rotas são segregadas em dois grupos:
 
 ### 2. Rotas Privadas (Protegidas)
 Renderizadas dentro do shell SaaS principal (`AppLayout`), que engloba a `Sidebar` e a `Topbar`:
-- `/`: Redirecionamento para `/dashboard`.
-- `/dashboard`: KPIs e métricas da temporada ativa.
-- `/seasons`: Gestão de temporadas e eventos.
+- `/`: Redirecionamento automático para `/dashboard`.
+- `/seasons`: Gestão e alternância de eventos/temporadas (item prioritário no topo da barra de navegação). Ao selecionar um evento (via clique na linha ou botão "Definir como Ativo"), a temporada ativa é configurada no `seasonStore` e a aplicação redireciona automaticamente para `/dashboard`.
+- `/dashboard`: Painel analítico de KPIs e métricas da temporada ativa, com atalhos de ação rápida (`+ 🐾` para adicionar cães).
+- `/photographers`: Gestão de fotógrafos parceiros e credenciais.
+- `/people`: Catálogo unificado de pessoas físicas cadastradas.
 - `/clients`: Listagem de clientes da temporada, cães e registros de faturamento.
 - `/clients/:id`: Detalhes cadastrais e galeria de fotos adquiridas pelo cliente.
-- `/people`: Catálogo unificado de pessoas físicas cadastradas.
-- `/photographers`: Gestão de fotógrafos parceiros e credenciais.
 - `/reports`: Extração assíncrona e download de relatórios CSV.
 - `/admin/tenants`: Gestão multi-tenant e planos (restrito a `superadmin`).
 - `/admin/users`: Administração de usuários e papéis (restrito a `admin` e `superadmin`).
