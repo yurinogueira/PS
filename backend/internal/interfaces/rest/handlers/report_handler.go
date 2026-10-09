@@ -469,6 +469,7 @@ func (h *ReportHandler) DownloadDirectClientsPDF(w http.ResponseWriter, r *http.
 // @Failure      401  {object}  httpx.ErrorEnvelope "Não autenticado"
 // @Failure      403  {object}  httpx.ErrorEnvelope "Acesso não autorizado ao arquivo"
 // @Failure      404  {object}  httpx.ErrorEnvelope "Arquivo não encontrado"
+// @Failure      410  {object}  httpx.ErrorEnvelope "Relatório expirado"
 // @Failure      500  {object}  httpx.ErrorEnvelope "Erro interno"
 // @Router       /api/v1/reports/download [get]
 func (h *ReportHandler) DownloadReport(w http.ResponseWriter, r *http.Request) {
@@ -491,6 +492,10 @@ func (h *ReportHandler) DownloadReport(w http.ResponseWriter, r *http.Request) {
 		}
 		if errors.Is(err, reportusecase.ErrUnauthorizedTenant) || errors.Is(err, reportusecase.ErrInvalidReportPath) {
 			httpx.Error(w, http.StatusForbidden, "Acesso não autorizado a este relatório", nil)
+			return
+		}
+		if errors.Is(err, reportusecase.ErrReportExpired) {
+			httpx.Error(w, http.StatusGone, "Este relatório expirou e não está mais disponível para download", nil)
 			return
 		}
 		httpx.Error(w, http.StatusNotFound, "Relatório não encontrado ou expirado", nil)

@@ -9,6 +9,7 @@ const (
 	StatusProcessing Status = "processing"
 	StatusCompleted  Status = "completed"
 	StatusFailed     Status = "failed"
+	StatusExpired    Status = "expired"
 )
 
 type ReportType string
@@ -47,5 +48,7 @@ type ReportJob struct {
 	Error       string         `json:"error,omitempty" bson:"error,omitempty"`
 	CreatedAt   time.Time      `json:"created_at" bson:"created_at"`
 	CompletedAt *time.Time     `json:"completed_at,omitempty" bson:"completed_at,omitempty"`
+	ExpiresAt   *time.Time     `json:"expires_at,omitempty" bson:"expires_at,omitempty"`
+	ExpiredAt   *time.Time     `json:"expired_at,omitempty" bson:"expired_at,omitempty"`
 	DurationMS  int64          `json:"duration_ms,omitempty" bson:"duration_ms,omitempty"`
 }

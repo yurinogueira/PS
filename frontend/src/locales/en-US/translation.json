@@ -563,6 +563,7 @@
     "errors": {
       "forbidden": "Access denied: this report belongs to another tenant.",
       "notFound": "Report not found or link expired.",
+      "expired": "This report has expired and is no longer available for download.",
       "default": "Unable to download report. Verify the file exists and you have permission."
     }
   },
@@ -589,11 +590,13 @@
       "empty": "No export jobs found for the selected filters.",
       "downloadTooltip": "Download generated file",
       "errorTooltip": "Error: {{error}}",
+      "expiredTooltip": "File expired after retention period (30 days) and purged from storage.",
       "statusLabels": {
         "pending": "Pending",
         "processing": "Processing",
         "completed": "Completed",
-        "failed": "Failed"
+        "failed": "Failed",
+        "expired": "Expired"
       },
       "types": {
         "clients_csv": "Clients Overview (CSV)",

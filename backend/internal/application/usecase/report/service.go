@@ -32,6 +32,7 @@ import (
 var (
 	ErrUnauthorizedTenant = errors.New("unauthorized tenant access to report")
 	ErrInvalidReportPath  = errors.New("invalid report path")
+	ErrReportExpired      = errors.New("report has expired")
 )
 
 type Service struct {
@@ -1146,6 +1147,17 @@ func (s *Service) GetReportFile(ctx context.Context, tenantID, relativePath stri
 		return nil, ErrUnauthorizedTenant
 	}
 
+	if s.reportRepo != nil {
+		if job, err := s.reportRepo.FindByFilePath(ctx, tenantID, cleanPath); err == nil && job != nil {
+			if job.Status == reportdomain.StatusExpired {
+				return nil, ErrReportExpired
+			}
+			if job.ExpiresAt != nil && time.Now().UTC().After(*job.ExpiresAt) {
+				return nil, ErrReportExpired
+			}
+		}
+	}
+
 	return s.storageProvider.Get(ctx, cleanPath)
 }
 
@@ -1407,6 +1419,8 @@ func (s *Service) StartJob(ctx context.Context, job *reportdomain.ReportJob) (*r
 
 		completed := time.Now().UTC()
 		j.CompletedAt = &completed
+		expires := completed.Add(30 * 24 * time.Hour)
+		j.ExpiresAt = &expires
 		j.DurationMS = time.Since(start).Milliseconds()
 
 		if genErr != nil {
@@ -1438,4 +1452,66 @@ func (s *Service) GetJob(ctx context.Context, id, tenantID string) (*reportdomai
 		return nil, errors.New("report repository not configured")
 	}
 	return s.reportRepo.GetByID(ctx, id, tenantID)
+}
+
+func (s *Service) CleanupExpiredReports(ctx context.Context, retentionDuration time.Duration, batchSize int) (int, error) {
+	if s.reportRepo == nil {
+		return 0, nil
+	}
+	if retentionDuration <= 0 {
+		retentionDuration = 30 * 24 * time.Hour
+	}
+	if batchSize <= 0 {
+		batchSize = 50
+	}
+
+	cutoff := time.Now().UTC().Add(-retentionDuration)
+	totalPurged := 0
+
+	for {
+		select {
+		case <-ctx.Done():
+			return totalPurged, ctx.Err()
+		default:
+		}
+
+		jobs, err := s.reportRepo.FindExpiredCompleted(ctx, cutoff, batchSize)
+		if err != nil {
+			return totalPurged, fmt.Errorf("failed to query expired report jobs: %w", err)
+		}
+		if len(jobs) == 0 {
+			break
+		}
+
+		now := time.Now().UTC()
+		for _, job := range jobs {
+			select {
+			case <-ctx.Done():
+				return totalPurged, ctx.Err()
+			default:
+			}
+
+			if job.FilePath != "" && s.storageProvider != nil {
+				if delErr := s.storageProvider.Delete(ctx, job.FilePath); delErr != nil {
+					log.Printf("[REPORT-CLEANUP] Note: file %s could not be deleted from storage: %v", job.FilePath, delErr)
+				}
+			}
+
+			if err := s.reportRepo.MarkAsExpired(ctx, job.ID, now); err != nil {
+				log.Printf("[REPORT-CLEANUP] Failed to mark job %s as expired: %v", job.ID, err)
+				continue
+			}
+			totalPurged++
+		}
+
+		if len(jobs) < batchSize {
+			break
+		}
+	}
+
+	if totalPurged > 0 {
+		log.Printf("[REPORT-CLEANUP] Expired reports cleanup completed. Total purged: %d", totalPurged)
+	}
+
+	return totalPurged, nil
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -1079,6 +1080,7 @@ func (m *mockTestJobRepo) GetByID(ctx context.Context, id, tenantID string) (*re
 	}
 	return nil, errors.New("not found")
 }
+
 func (m *mockTestJobRepo) List(ctx context.Context, filter reportport.ListFilter) (*reportport.ListResult, error) {
 	var matched []*reportdomain.ReportJob
 	for _, j := range m.jobs {
@@ -1094,6 +1096,39 @@ func (m *mockTestJobRepo) List(ctx context.Context, filter reportport.ListFilter
 		Page:  filter.Page,
 		Limit: filter.Limit,
 	}, nil
+}
+
+func (m *mockTestJobRepo) FindByFilePath(ctx context.Context, tenantID, filePath string) (*reportdomain.ReportJob, error) {
+	for _, j := range m.jobs {
+		if j.TenantID == tenantID && j.FilePath == filePath {
+			return j, nil
+		}
+	}
+	return nil, errors.New("not found")
+}
+
+func (m *mockTestJobRepo) FindExpiredCompleted(ctx context.Context, cutoff time.Time, limit int) ([]*reportdomain.ReportJob, error) {
+	var matched []*reportdomain.ReportJob
+	for _, j := range m.jobs {
+		if j.Status == reportdomain.StatusCompleted && (j.CreatedAt.Before(cutoff) || j.CreatedAt.Equal(cutoff)) {
+			matched = append(matched, j)
+			if limit > 0 && len(matched) >= limit {
+				break
+			}
+		}
+	}
+	return matched, nil
+}
+
+func (m *mockTestJobRepo) MarkAsExpired(ctx context.Context, id string, expiredAt time.Time) error {
+	for _, j := range m.jobs {
+		if j.ID == id {
+			j.Status = reportdomain.StatusExpired
+			j.ExpiredAt = &expiredAt
+			return nil
+		}
+	}
+	return errors.New("not found")
 }
 
 func TestGenerateDynamicPaymentCSV(t *testing.T) {
@@ -1434,5 +1469,206 @@ func TestGenerateClientsCSV_PhotoCompetitionsPriorityAndFallback(t *testing.T) {
 	// Line 3: PHOTO_2 without photo competitions, should fallback to dog's "Campeão Adulto Cão"
 	if !strings.Contains(lines[2], "Campeão Adulto Cão") {
 		t.Errorf("line 3 should fallback to dog's won competitions, got: %s", lines[2])
+	}
+}
+
+func TestCleanupExpiredReports_PurgesOldCompletedReports(t *testing.T) {
+	now := time.Now().UTC()
+	oldDate := now.Add(-35 * 24 * time.Hour)
+	recentDate := now.Add(-5 * 24 * time.Hour)
+
+	oldFilePath := "reports/tenant_tenant-1/old_report.csv"
+	recentFilePath := "reports/tenant_tenant-1/recent_report.csv"
+
+	jobRepo := &mockTestJobRepo{
+		jobs: []*reportdomain.ReportJob{
+			{
+				ID:        "job-old-1",
+				TenantID:  "tenant-1",
+				Status:    reportdomain.StatusCompleted,
+				FilePath:  oldFilePath,
+				CreatedAt: oldDate,
+			},
+			{
+				ID:        "job-recent-1",
+				TenantID:  "tenant-1",
+				Status:    reportdomain.StatusCompleted,
+				FilePath:  recentFilePath,
+				CreatedAt: recentDate,
+			},
+			{
+				ID:        "job-pending-old",
+				TenantID:  "tenant-1",
+				Status:    reportdomain.StatusPending,
+				CreatedAt: oldDate,
+			},
+		},
+	}
+
+	storage := &mockStorageProvider{
+		files: map[string][]byte{
+			oldFilePath:    []byte("old,report,data"),
+			recentFilePath: []byte("recent,report,data"),
+		},
+	}
+
+	svc := NewService(&mockClientRepo{}, &mockPersonRepo{people: make(map[string]*persondomain.Person)}, &mockPhotographerRepo{}, storage, &mockEmailSender{}, "http://localhost:8080").
+		WithReportRepo(jobRepo)
+
+	purged, err := svc.CleanupExpiredReports(context.Background(), 30*24*time.Hour, 50)
+	if err != nil {
+		t.Fatalf("unexpected error during cleanup: %v", err)
+	}
+	if purged != 1 {
+		t.Fatalf("expected exactly 1 purged report, got %d", purged)
+	}
+
+	// Verify old file was deleted from storage
+	if _, exists := storage.files[oldFilePath]; exists {
+		t.Errorf("expected old file %s to be deleted from storage", oldFilePath)
+	}
+
+	// Verify recent file is still in storage
+	if _, exists := storage.files[recentFilePath]; !exists {
+		t.Errorf("expected recent file %s to remain in storage", recentFilePath)
+	}
+
+	// Verify job statuses
+	jobOld, _ := jobRepo.GetByID(context.Background(), "job-old-1", "tenant-1")
+	if jobOld.Status != reportdomain.StatusExpired {
+		t.Errorf("expected job-old-1 status to be expired, got %s", jobOld.Status)
+	}
+	if jobOld.ExpiredAt == nil {
+		t.Errorf("expected job-old-1 ExpiredAt to be set")
+	}
+
+	jobRecent, _ := jobRepo.GetByID(context.Background(), "job-recent-1", "tenant-1")
+	if jobRecent.Status != reportdomain.StatusCompleted {
+		t.Errorf("expected job-recent-1 status to remain completed, got %s", jobRecent.Status)
+	}
+
+	jobPending, _ := jobRepo.GetByID(context.Background(), "job-pending-old", "tenant-1")
+	if jobPending.Status != reportdomain.StatusPending {
+		t.Errorf("expected job-pending-old status to remain pending, got %s", jobPending.Status)
+	}
+}
+
+func TestCleanupExpiredReports_BatchingAndContextCancel(t *testing.T) {
+	now := time.Now().UTC()
+	oldDate := now.Add(-40 * 24 * time.Hour)
+
+	var jobs []*reportdomain.ReportJob
+	storageFiles := make(map[string][]byte)
+
+	for i := 1; i <= 5; i++ {
+		path := fmt.Sprintf("reports/tenant_t1/file_%d.csv", i)
+		jobs = append(jobs, &reportdomain.ReportJob{
+			ID:        fmt.Sprintf("job-%d", i),
+			TenantID:  "t1",
+			Status:    reportdomain.StatusCompleted,
+			FilePath:  path,
+			CreatedAt: oldDate,
+		})
+		storageFiles[path] = []byte("data")
+	}
+
+	jobRepo := &mockTestJobRepo{jobs: jobs}
+	storage := &mockStorageProvider{files: storageFiles}
+	svc := NewService(&mockClientRepo{}, &mockPersonRepo{people: make(map[string]*persondomain.Person)}, &mockPhotographerRepo{}, storage, &mockEmailSender{}, "http://localhost:8080").
+		WithReportRepo(jobRepo)
+
+	// Batch size 2: 5 items should take 3 iterations
+	purged, err := svc.CleanupExpiredReports(context.Background(), 30*24*time.Hour, 2)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if purged != 5 {
+		t.Fatalf("expected 5 purged, got %d", purged)
+	}
+	if len(storage.files) != 0 {
+		t.Fatalf("expected all files deleted from storage, got %d left", len(storage.files))
+	}
+
+	// Test context cancellation stops early
+	cancelledCtx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	purgedCancelled, err := svc.CleanupExpiredReports(cancelledCtx, 30*24*time.Hour, 10)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context.Canceled error, got: %v", err)
+	}
+	if purgedCancelled != 0 {
+		t.Fatalf("expected 0 purged with cancelled context, got %d", purgedCancelled)
+	}
+}
+
+func TestGetReportFile_ExpiredReturnsError(t *testing.T) {
+	path := "reports/tenant_t1/expired_file.csv"
+	storage := &mockStorageProvider{
+		files: map[string][]byte{
+			path: []byte("some,data"),
+		},
+	}
+
+	now := time.Now().UTC()
+	jobRepo := &mockTestJobRepo{
+		jobs: []*reportdomain.ReportJob{
+			{
+				ID:        "job-1",
+				TenantID:  "t1",
+				FilePath:  path,
+				Status:    reportdomain.StatusExpired,
+				ExpiredAt: &now,
+			},
+		},
+	}
+
+	svc := NewService(&mockClientRepo{}, &mockPersonRepo{people: make(map[string]*persondomain.Person)}, &mockPhotographerRepo{}, storage, &mockEmailSender{}, "http://localhost:8080").
+		WithReportRepo(jobRepo)
+
+	_, err := svc.GetReportFile(context.Background(), "t1", path)
+	if !errors.Is(err, ErrReportExpired) {
+		t.Fatalf("expected ErrReportExpired, got %v", err)
+	}
+}
+
+func TestStartJob_SetsExpiresAtOnCompletion(t *testing.T) {
+	jobRepo := &mockTestJobRepo{}
+	storage := &mockStorageProvider{files: make(map[string][]byte)}
+
+	svc := NewService(&mockClientRepo{}, &mockPersonRepo{people: make(map[string]*persondomain.Person)}, &mockPhotographerRepo{}, storage, &mockEmailSender{}, "http://localhost:8080").
+		WithReportRepo(jobRepo)
+
+	job := &reportdomain.ReportJob{
+		TenantID: "tenant-1",
+		Type:     reportdomain.TypeClientsCSV,
+		RequestedBy: reportdomain.UserSummary{
+			UserName:  "Admin",
+			UserEmail: "admin@ps.com",
+		},
+	}
+
+	started, err := svc.StartJob(context.Background(), job)
+	if err != nil {
+		t.Fatalf("failed to start job: %v", err)
+	}
+
+	// Wait for background completion
+	time.Sleep(150 * time.Millisecond)
+
+	updated, err := svc.GetJob(context.Background(), started.ID, "tenant-1")
+	if err != nil {
+		t.Fatalf("failed to get job: %v", err)
+	}
+
+	if updated.Status != reportdomain.StatusCompleted {
+		t.Fatalf("expected completed status, got %s", updated.Status)
+	}
+	if updated.ExpiresAt == nil {
+		t.Fatalf("expected ExpiresAt to be populated")
+	}
+	expectedMin := time.Now().UTC().Add(29 * 24 * time.Hour)
+	if updated.ExpiresAt.Before(expectedMin) {
+		t.Errorf("expected ExpiresAt to be ~30 days in future, got %v", *updated.ExpiresAt)
 	}
 }

@@ -218,6 +218,18 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
             />
           </Tooltip>
         );
+      case "expired":
+        return (
+          <Tooltip title={t("exports.table.expiredTooltip")}>
+            <Chip
+              size="small"
+              color="default"
+              variant="outlined"
+              label={t("exports.table.statusLabels.expired")}
+              sx={{ fontWeight: 600, color: "text.secondary" }}
+            />
+          </Tooltip>
+        );
       default:
         return <Chip size="small" label={status} />;
     }
@@ -352,6 +364,15 @@ export const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
                             <IconButton size="small" color="error">
                               <ErrorOutlineRoundedIcon fontSize="small" />
                             </IconButton>
+                          </Tooltip>
+                        )}
+                        {job.status === "expired" && (
+                          <Tooltip title={t("exports.table.expiredTooltip")}>
+                            <span>
+                              <IconButton size="small" disabled>
+                                <DownloadRoundedIcon fontSize="small" />
+                              </IconButton>
+                            </span>
                           </Tooltip>
                         )}
                       </TableCell>

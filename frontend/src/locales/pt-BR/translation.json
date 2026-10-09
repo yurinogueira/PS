@@ -563,6 +563,7 @@
     "errors": {
       "forbidden": "Acesso negado: este relatório pertence a outro tenant.",
       "notFound": "Relatório não encontrado ou link expirado.",
+      "expired": "Este relatório expirou e não está mais disponível para download.",
       "default": "Não foi possível baixar o relatório. Verifique se o arquivo ainda existe e se você tem permissão de acesso."
     }
   },
@@ -589,11 +590,13 @@
       "empty": "Nenhuma exportação encontrada para os filtros selecionados.",
       "downloadTooltip": "Baixar arquivo gerado",
       "errorTooltip": "Erro: {{error}}",
+      "expiredTooltip": "Arquivo expirado após o período de retenção (30 dias) e purgado do armazenamento.",
       "statusLabels": {
         "pending": "Pendente",
         "processing": "Processando",
         "completed": "Concluído",
-        "failed": "Falha"
+        "failed": "Falha",
+        "expired": "Expirado"
       },
       "types": {
         "clients_csv": "Clientes Geral (CSV)",
