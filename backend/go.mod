@@ -6,8 +6,8 @@ require (
 	github.com/go-pdf/fpdf v0.9.0
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.6
-	go.mongodb.org/mongo-driver/v2 v2.9.1
-	golang.org/x/crypto v0.57.0
+	go.mongodb.org/mongo-driver/v2 v2.9.2
+	golang.org/x/crypto v0.58.0
 )
 
 require (
@@ -25,8 +25,8 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/sync v0.23.0 // indirect
-	golang.org/x/text v0.42.0 // indirect
-	golang.org/x/tools v0.49.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
+	golang.org/x/tools v0.51.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
