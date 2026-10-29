@@ -7,7 +7,7 @@ tags:
   - changelog
   - okf
   - index
-timestamp: 2026-10-09
+timestamp: 2026-10-29
 ---
 
 # 📜 Log de Modificações da Base de Conhecimento — PS
@@ -16,6 +16,11 @@ Este arquivo é o **Índice Cronológico Central** de modificações do **PS (Ph
 Para evitar arquivos excessivamente extensos e otimizar o consumo de tokens pelos agentes de inteligência artificial, o detalhamento das intervenções de cada data é particionado em arquivos diários dedicados na pasta `docs/logs/`.
 
 Para acessar o índice estrutural completo de toda a documentação, consulte o [Catálogo Canônico (docs/index.md)](index.md).
+
+---
+
+## 📅 [2026-10-29](logs/2026-10-29.md) — Migração de Storage para OCI Object Storage via Terraform (PAR)
+- **[Migração para OCI Object Storage com PAR](logs/2026-10-29.md#🎯-migração-do-storage-para-oci-object-storage-via-terraform-com-par-e-cicd-automatizado)**: Provedor `STORAGE_PROVIDER=oci` ativado no PS, gerenciamento 100% como código de Pre-Authenticated Request (PAR) com Terraform e resolução automática de endpoint a partir do `terraform.tfstate` remoto no workflow de deploy do Backend.
 
 ---
 
