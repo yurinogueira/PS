@@ -8,7 +8,7 @@ tags:
   - media
   - path-traversal
   - oci-object-storage
-timestamp: 2026-10-02
+timestamp: 2026-10-29
 ---
 
 # 📸 Armazenamento e Gestão de Mídia — PS
@@ -39,8 +39,10 @@ type StorageService interface {
    - Utilizado em ambiente de desenvolvimento local e execução via Docker Compose.
    - Armazena arquivos sob o volume montado `/data/storage`.
 2. **OCI Object Storage (`backend/internal/infrastructure/storage/oci`)**:
-   - Utilizado em ambiente de produção na nuvem da Oracle Cloud Infrastructure.
-   - Armazena imagens em buckets privados protegidos com URLs pré-assinadas (*Pre-authenticated Requests - PAR*) de expiração temporária.
+   - Utilizado em ambiente de produção na nuvem da Oracle Cloud Infrastructure (`STORAGE_PROVIDER=oci`).
+   - Armazena arquivos e relatórios no bucket privado `ps-files`.
+   - Utiliza Pre-Authenticated Request (PAR) com permissões `AnyObjectReadWrite` e listagem gerenciadas como código via Terraform (`oci_objectstorage_preauthrequest.files_par`).
+   - O endpoint autenticado é resolvido dinamicamente no pipeline de deploy a partir do estado do Terraform (`terraform.tfstate`) na OCI.
 
 ---
 
