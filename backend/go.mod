@@ -6,7 +6,7 @@ require (
 	github.com/go-pdf/fpdf v0.9.0
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.6
-	go.mongodb.org/mongo-driver/v2 v2.9.2
+	go.mongodb.org/mongo-driver/v2 v2.9.3
 	golang.org/x/crypto v0.58.0
 )
 
