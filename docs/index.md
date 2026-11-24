@@ -105,6 +105,7 @@ Histórico imutável de decisões de engenharia:
 ### 6. 📜 Trilha de Auditoria & Histórico de Modificações
 - [Índice Cronológico Central de Logs](log.md): Catálogo geral com sumário das intervenções por data e links para os registros detalhados sob `docs/logs/`.
 - **Registros Diários Particionados (`logs/`)**:
+  - [2026-11-24](logs/2026-11-24.md): Atualização de dependências do frontend (PR #161, PR #162) e compatibilização de testes com `jsdom` 31.
   - [2026-10-09](logs/2026-10-09.md): Intervenções em UI, Segurança, Limpeza e Governança Contínua.
   - [2026-10-07](logs/2026-10-07.md): Atualização do MongoDB para versão 9 no Docker Compose.
   - [2026-10-05](logs/2026-10-05.md): Atualizações de dependências (Vite) e provedores OCI no Terraform.

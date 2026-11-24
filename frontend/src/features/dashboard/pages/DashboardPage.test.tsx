@@ -215,14 +215,18 @@ describe("DashboardPage", () => {
       screen.getAllByText("Golden Retriever").length,
     ).toBeGreaterThanOrEqual(1);
 
-    // Test clicking Cachorros & Fotos button
+    // Test clicking Cachorros & Fotos button (hidden: true includes mobile/desktop breakpoint variants in jsdom >= 31)
     const dogBtns = screen.getAllByRole("button", {
       name: /Cachorros & Fotos/i,
+      hidden: true,
     });
     expect(dogBtns.length).toBeGreaterThanOrEqual(2);
 
     // Test clicking Editar Dados in card/table opens modal
-    const editBtns = screen.getAllByRole("button", { name: /Editar Dados/i });
+    const editBtns = screen.getAllByRole("button", {
+      name: /Editar Dados/i,
+      hidden: true,
+    });
     expect(editBtns.length).toBeGreaterThanOrEqual(2);
     fireEvent.click(editBtns[1]); // Mobile card button
 

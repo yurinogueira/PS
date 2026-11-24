@@ -7,7 +7,7 @@ tags:
   - changelog
   - okf
   - index
-timestamp: 2026-10-29
+timestamp: 2026-11-24
 ---
 
 # 📜 Log de Modificações da Base de Conhecimento — PS
@@ -16,6 +16,11 @@ Este arquivo é o **Índice Cronológico Central** de modificações do **PS (Ph
 Para evitar arquivos excessivamente extensos e otimizar o consumo de tokens pelos agentes de inteligência artificial, o detalhamento das intervenções de cada data é particionado em arquivos diários dedicados na pasta `docs/logs/`.
 
 Para acessar o índice estrutural completo de toda a documentação, consulte o [Catálogo Canônico (docs/index.md)](index.md).
+
+---
+
+## 📅 [2026-11-24](logs/2026-11-24.md) — Atualização de Dependências do Frontend (PR #161 e PR #162)
+- **[Dependências Frontend e jsdom 31](logs/2026-11-24.md#🎯-atualização-de-dependências-do-frontend-e-correção-de-testes-pr-161)** (PR #161, PR #162): Merge do PR #162 (`minimatch`, `eslint`, `typescript-eslint`), atualização das 14 dependências em `frontend/` e compatibilização de `DashboardPage.test.tsx` (`hidden: true`) com avaliação de `@media` queries no `jsdom` 31.
 
 ---
 
